@@ -3,15 +3,20 @@
   "WorkspaceRootPath": "D:\\1Nagisa\\CPP\\newtons-cpp\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\1Nagisa\\CPP\\newtons-cpp\\newtons-cpp\\Math.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:newtons-cpp\\Math.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\1Nagisa\\CPP\\newtons-cpp\\newtons-cpp\\Vector3.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:newtons-cpp\\Vector3.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\1Nagisa\\CPP\\newtons-cpp\\newtons-cpp\\Vector2.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:newtons-cpp\\Vector2.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\1Nagisa\\CPP\\newtons-cpp\\newtons-cpp\\newtons-cpp.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:newtons-cpp\\newtons-cpp.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|CMake Overview Pages||{B1CAA5B0-FEB1-4350-8AB9-F895876842F2}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\1Nagisa\\CPP\\newtons-cpp\\newtons-cpp\\newtons-cpp.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:newtons-cpp\\newtons-cpp.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     }
   ],
   "DocumentGroupContainers": [
@@ -21,42 +26,58 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 1,
+          "SelectedChildIndex": 0,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "newtons-cpp.h",
-              "DocumentMoniker": "D:\\1Nagisa\\CPP\\newtons-cpp\\newtons-cpp\\newtons-cpp.h",
-              "RelativeDocumentMoniker": "newtons-cpp\\newtons-cpp.h",
-              "ToolTip": "D:\\1Nagisa\\CPP\\newtons-cpp\\newtons-cpp\\newtons-cpp.h",
-              "RelativeToolTip": "newtons-cpp\\newtons-cpp.h",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAA==",
+              "DocumentIndex": 0,
+              "Title": "Math.h",
+              "DocumentMoniker": "D:\\1Nagisa\\CPP\\newtons-cpp\\newtons-cpp\\Math.h",
+              "RelativeDocumentMoniker": "newtons-cpp\\Math.h",
+              "ToolTip": "D:\\1Nagisa\\CPP\\newtons-cpp\\newtons-cpp\\Math.h",
+              "RelativeToolTip": "newtons-cpp\\Math.h",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACUAAAAWAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2024-09-01T15:44:54.091Z",
+              "WhenOpened": "2024-09-01T16:19:31.89Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "newtons-cpp.cpp",
-              "DocumentMoniker": "D:\\1Nagisa\\CPP\\newtons-cpp\\newtons-cpp\\newtons-cpp.cpp",
-              "RelativeDocumentMoniker": "newtons-cpp\\newtons-cpp.cpp",
-              "ToolTip": "D:\\1Nagisa\\CPP\\newtons-cpp\\newtons-cpp\\newtons-cpp.cpp",
-              "RelativeToolTip": "newtons-cpp\\newtons-cpp.cpp",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAWAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2024-09-01T15:44:15.959Z",
+              "DocumentIndex": 2,
+              "Title": "Vector2.h",
+              "DocumentMoniker": "D:\\1Nagisa\\CPP\\newtons-cpp\\newtons-cpp\\Vector2.h",
+              "RelativeDocumentMoniker": "newtons-cpp\\Vector2.h",
+              "ToolTip": "D:\\1Nagisa\\CPP\\newtons-cpp\\newtons-cpp\\Vector2.h",
+              "RelativeToolTip": "newtons-cpp\\Vector2.h",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAK0AAAACAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2024-09-01T16:19:44.799Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 1,
-              "Title": "CMake Overview Pages",
-              "DocumentMoniker": "CMake Overview Pages",
-              "ToolTip": "CMake Overview Pages",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
-              "WhenOpened": "2024-09-01T15:43:19.093Z",
+              "Title": "Vector3.h",
+              "DocumentMoniker": "D:\\1Nagisa\\CPP\\newtons-cpp\\newtons-cpp\\Vector3.h",
+              "RelativeDocumentMoniker": "newtons-cpp\\Vector3.h",
+              "ToolTip": "D:\\1Nagisa\\CPP\\newtons-cpp\\newtons-cpp\\Vector3.h",
+              "RelativeToolTip": "newtons-cpp\\Vector3.h",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAOIAAAAWAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2024-09-01T16:19:09.959Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "newtons-cpp.cpp",
+              "DocumentMoniker": "D:\\1Nagisa\\CPP\\newtons-cpp\\newtons-cpp\\newtons-cpp.cpp",
+              "RelativeDocumentMoniker": "newtons-cpp\\newtons-cpp.cpp",
+              "ToolTip": "D:\\1Nagisa\\CPP\\newtons-cpp\\newtons-cpp\\newtons-cpp.cpp",
+              "RelativeToolTip": "newtons-cpp\\newtons-cpp.cpp",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABwAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2024-09-01T15:44:15.959Z",
               "EditorCaption": ""
             }
           ]
