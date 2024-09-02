@@ -1,5 +1,5 @@
-.vs
-out
+.vs/
+out/
 
 CMakeLists.txt.user
 CMakeCache.txt
