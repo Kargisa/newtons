@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cmath>
+
 namespace Newtons {
 	class Math {
 	public:
@@ -17,7 +19,7 @@ namespace Newtons {
 	}
 
 	inline float Math::Sqrt(float value) {
-		return sqrt(value);
+		return std::sqrt(value);
 	}
 
 	inline float Math::Lerp(float a, float b, float t) {
@@ -25,14 +27,14 @@ namespace Newtons {
 	}
 
 	inline float Math::Min(float a, float b) {
-		return fmin(a, b);
+		return std::fmin(a, b);
 	}
 
 	inline float Math::Max(float a, float b) {
-		return fmax(a, b);
+		return std::fmax(a, b);
 	}
 
 	inline float Math::Abs(float value) {
-		return abs(value);
+		return std::abs(value);
 	}
 } // namespace Newtons
