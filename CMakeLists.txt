@@ -9,7 +9,9 @@ if (POLICY CMP0141)
   set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
 endif()
 
-project ("newtons-cpp")
+project ("newtons")
 
 # Include sub-projects.
-add_subdirectory ("newtons-cpp")
+add_subdirectory ("newtons-engine")
+add_subdirectory ("newtons-editor")
+add_subdirectory ("Lib")
