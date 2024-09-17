@@ -9,6 +9,7 @@
 #include <map>
 #include <optional>
 #include <set>
+#include <debug/assertions.h>
 
 #define GREEN_COLOR "\033[32m"
 #define RED_COLOR "\033[31m"
@@ -48,10 +49,10 @@ private:
 		"VK_LAYER_KHRONOS_validation"
 	};
 
-#ifdef NDEBUG
-	const bool enableValidationLayers = false;
-#else
+#ifdef DEBUG
 	const bool enableValidationLayers = true;
+#else
+	const bool enableValidationLayers = false;
 #endif
 
 private:
