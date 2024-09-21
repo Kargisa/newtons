@@ -10,7 +10,9 @@
       "cacheVariables": {
         "CMAKE_C_COMPILER": "cl.exe",
         "CMAKE_CXX_COMPILER": "cl.exe",
-        "CMAKE_CXX_STANDARD": "20"
+        "CMAKE_CXX_STANDARD": "20",
+        "CMAKE_CXX_FLAGS_RELEASE": "/MD",
+        "CMAKE_CXX_FLAGS_DEBUG": "-DDEBUG /MDd"
       },
       "condition": {
         "type": "equals",
@@ -27,8 +29,7 @@
         "strategy": "external"
       },
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_CXX_FLAGS_DEBUG": "-DDEBUG"
+        "CMAKE_BUILD_TYPE": "Debug"
       }
     },
     {
@@ -52,8 +53,7 @@
         "strategy": "external"
       },
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_CXX_FLAGS_DEBUG": "-DDEBUG"
+        "CMAKE_BUILD_TYPE": "Debug"
       }
     },
     {
@@ -78,7 +78,9 @@
       "cacheVariables": {
         "CMAKE_C_COMPILER": "gcc",
         "CMAKE_CXX_COMPILER": "g++",
-        "CMAKE_CXX_STANDARD": "17"
+        "CMAKE_CXX_STANDARD": "20",
+        "CMAKE_CXX_FLAGS_DEBUG": "-DDEBUG"
+
       },
       "architecture": {
         "value": "x64",
@@ -95,8 +97,7 @@
       "displayName": "x64 Linux Debug",
       "inherits": "linux-base",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_CXX_FLAGS_DEBUG": "-DDEBUG"
+        "CMAKE_BUILD_TYPE": "Debug"
       }
     },
     {
@@ -125,14 +126,26 @@
   ],
   "buildPresets": [
     {
+      "name": "linux-build-base",
+      "hidden": true,
+      "displayName": "Linux Build Base",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
       "name": "x64-linux-build-debug",
       "displayName": "x64 Linux Build Debug",
-      "configurePreset": "x64-linux-debug"
+      "configurePreset": "x64-linux-debug",
+      "inherits": "linux-build-base"
     },
     {
       "name": "x64-linux-build-release",
       "displayName": "x64 Linux Build Release",
-      "configurePreset": "x64-linux-release"
+      "configurePreset": "x64-linux-release",
+      "inherits": "linux-build-base"
     }
   ]
 }
