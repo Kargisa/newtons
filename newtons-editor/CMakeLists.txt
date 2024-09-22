@@ -14,4 +14,6 @@ find_package(Vulkan REQUIRED)
 
 target_link_libraries(newtons-editor PRIVATE newtons-engine PRIVATE glfw PRIVATE Vulkan::Vulkan)
 
+add_subdirectory("shaders")
+
 # TODO: Add tests and install targets if needed.
