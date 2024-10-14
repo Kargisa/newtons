@@ -11,9 +11,8 @@ if (CMAKE_VERSION VERSION_GREATER 3.12)
 endif()
 
 find_package(Vulkan REQUIRED)
-find_package(glm REQUIRED)
 
-target_link_libraries(newtons-editor PRIVATE newtons-engine PRIVATE glfw PRIVATE Vulkan::Vulkan PRIVATE glm::glm)
+target_link_libraries(newtons-editor PRIVATE newtons-engine PRIVATE glfw PRIVATE Vulkan::Vulkan PRIVATE glm)
 
 add_subdirectory("shaders")
 
