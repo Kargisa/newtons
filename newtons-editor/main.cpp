@@ -205,6 +205,12 @@ private:
 	{
 		CleanupSwapchain();
 
+		for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+			vkDestroyBuffer(_device, _uniformBuffers[i], nullptr);
+			vkFreeMemory(_device, _uniformBuffersMemory[i], nullptr);
+		}
+
+		vkDestroyDescriptorPool(_device, _descriptorPool, nullptr);
 		vkDestroyDescriptorSetLayout(_device, _descriptorSetLayout, nullptr);
 
 		vkDestroyBuffer(_device, _indexBuffer, nullptr);
@@ -223,9 +229,6 @@ private:
 			vkDestroySemaphore(_device, _renderFinishedSemaphores[i], nullptr);
 			vkDestroyFence(_device, _inFlightFences[i], nullptr);
 		}
-
-		vkDestroyDescriptorPool(_device, _descriptorPool, nullptr);
-		vkDestroyDescriptorSetLayout(_device, _descriptorSetLayout, nullptr);
 
 		vkDestroyCommandPool(_device, _commandPool, nullptr);
 
@@ -1011,6 +1014,9 @@ private:
 	}
 
 	void DrawFrame() {
+
+		auto start = std::chrono::high_resolution_clock::now();
+
 		vkWaitForFences(_device, 1, &_inFlightFences[_currentFrame], VK_TRUE, UINT64_MAX);
 
 		uint32_t imageIndex;
@@ -1065,7 +1071,7 @@ private:
 		result = vkQueuePresentKHR(_presentQueue, &presentInfo);
 
 		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || _framebufferResized) {
-			_framebufferResized = true;
+			_framebufferResized = false;
 			RecreateSwapChain();
 		}
 		else if (result != VK_SUCCESS) {
@@ -1073,6 +1079,9 @@ private:
 		}
 
 		_currentFrame = (_currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+
+		auto end = std::chrono::high_resolution_clock::now();
+		std::cout << (end - start) / 1000000.0f << "\n";
 	}
 
 	void CreateSyncObjects() {
@@ -1282,8 +1291,8 @@ private:
 
 		UniformBufferObject ubo{};
 		ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-		ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-		ubo.proj = glm::perspective(glm::radians(60.0f), _swapChainExtent.width / (float) _swapChainExtent.height, 0.1f, 10.0f);
+		ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 5.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+		ubo.proj = glm::perspective(glm::radians(60.0f), _swapChainExtent.width / (float) _swapChainExtent.height, 0.01f, 100.0f);
 		ubo.proj[1][1] *= -1;
 
 		memcpy(_uniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
