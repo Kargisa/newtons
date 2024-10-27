@@ -23,6 +23,12 @@
 #define RED_COLOR "\033[31m"
 #define WHITE_COLOR "\033[37m"
 
+#ifdef DEBUG
+	#define LOG(x) std::cout << x << std::endl;
+#else
+	#define LOG(x)
+#endif
+
 struct QueueFamilyIndices {
 	std::optional<uint32_t> graphicsFamily;
 	std::optional<uint32_t> presentFamily;
@@ -314,16 +320,14 @@ private:
 	bool CheckExtensionsSupport(const std::vector<const char*>& requiredExtensions, const std::vector<VkExtensionProperties>& extensions)
 	{
 
-#ifdef DEBUG
-		std::cout << "Extensions:\n";
+		LOG("Extensions:");
 
 		for (const auto& extension : extensions)
-			std::cout << "\t" << extension.extensionName << "\n";
+			LOG("\t" << extension.extensionName);
 
-		std::cout << "\n";
+		LOG("\n")
 
-		std::cout << "Required extensions:\n";
-#endif
+		LOG("Required extensions:");
 
 		uint16_t foundExtensionsCount = 0;
 
@@ -336,9 +340,7 @@ private:
 			{
 				if (std::strcmp(requiredExtension, extension.extensionName)) {
 					found = true;
-#ifdef DEBUG
 					foundExtensionsCount++;
-#endif
 					break;
 				}
 			}
@@ -346,17 +348,16 @@ private:
 			if (!found)
 				success = false;
 
-#ifdef DEBUG
-			std::cout << "\t" << "Required extension" << RED_COLOR << (found ? " " : " NOT ") << WHITE_COLOR << "found: " << requiredExtension << "\n";
-#endif
+			LOG("\t" << "Required extension" << RED_COLOR << (found ? " " : " NOT ") << WHITE_COLOR << "found: " << requiredExtension);
 		}
 
-#ifdef DEBUG
-		if (foundExtensionsCount == requiredExtensions.size())
-			std::cout << "\t" << GREEN_COLOR << "ALL " << WHITE_COLOR << "required extensions found\n";
-		else
-			std::cout << "\t" << RED_COLOR << "NOT ALL " << WHITE_COLOR << "required extensions found\n";
-#endif
+		if (foundExtensionsCount == requiredExtensions.size()) {
+			LOG("\t" << GREEN_COLOR << "ALL " << WHITE_COLOR << "required extensions found");
+		}
+		else {
+			LOG("\t" << RED_COLOR << "NOT ALL " << WHITE_COLOR << "required extensions found");
+		}
+
 		return success;
 	}
 
@@ -1015,7 +1016,7 @@ private:
 
 	void DrawFrame() {
 
-		auto start = std::chrono::high_resolution_clock::now();
+		//auto start = std::chrono::high_resolution_clock::now();
 
 		vkWaitForFences(_device, 1, &_inFlightFences[_currentFrame], VK_TRUE, UINT64_MAX);
 
@@ -1062,9 +1063,11 @@ private:
 		presentInfo.waitSemaphoreCount = 1;
 		presentInfo.pWaitSemaphores = signalSemaphores;
 
-		VkSwapchainKHR swapChains[] = { _swapChain };
-		presentInfo.swapchainCount = 1;
-		presentInfo.pSwapchains = swapChains;
+		std::array<VkSwapchainKHR, 1> swapChains = std::array<VkSwapchainKHR, 1>();
+		swapChains[0] = _swapChain;
+
+		presentInfo.swapchainCount = swapChains.size();
+		presentInfo.pSwapchains = swapChains.data();
 		presentInfo.pImageIndices = &imageIndex;
 		presentInfo.pResults = nullptr; // Optional
 
@@ -1080,8 +1083,8 @@ private:
 
 		_currentFrame = (_currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 
-		auto end = std::chrono::high_resolution_clock::now();
-		std::cout << (end - start) / 1000000.0f << "\n";
+		//auto end = std::chrono::high_resolution_clock::now();
+		//LOG((end - start) / 1000000.0f);
 	}
 
 	void CreateSyncObjects() {
