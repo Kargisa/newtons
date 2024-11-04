@@ -16,5 +16,6 @@ target_link_libraries(newtons-editor PRIVATE newtons-engine PRIVATE glfw PRIVATE
 
 
 file (COPY "shaders/compiledShaders/" DESTINATION shaders)
+file (COPY "imgs" DESTINATION .)
 
 # TODO: Add tests and install targets if needed.
