@@ -4,7 +4,7 @@
 
 # Add source to this project's executable.
 
-add_executable (newtons-editor "main.cpp" )
+add_executable (newtons-editor "main.cpp" "obj_reader.h" "hash.h")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET newtons-editor PROPERTY CXX_STANDARD 20)
@@ -17,5 +17,6 @@ target_link_libraries(newtons-editor PRIVATE newtons-engine PRIVATE glfw PRIVATE
 
 file (COPY "shaders/compiledShaders/" DESTINATION shaders)
 file (COPY "imgs" DESTINATION .)
+file (COPY "models" DESTINATION .)
 
 # TODO: Add tests and install targets if needed.
