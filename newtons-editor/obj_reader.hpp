@@ -36,14 +36,13 @@ namespace obj {
 		return result;
 	}
 
-	Object ReadObjFile(const char* path) {
+	void ReadObjFile(const char* path, Object& object) {
 		std::ifstream file(path);
 		if (!file.is_open()) {
 			throw std::runtime_error("Failed to open obj file");
 		}
 
 		std::string line;
-		Object object;
 
 		while (std::getline(file, line)) {
 			if (line[0] == '#') {
@@ -83,6 +82,5 @@ namespace obj {
 			}
 
 		}
-		return object;
 	}
 }

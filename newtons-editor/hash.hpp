@@ -1,5 +1,6 @@
 #pragma once
 
+namespace nwt{
 class Hash {
 public:
 	static void HashCombine(size_t& lhs, size_t rhs);
@@ -12,4 +13,5 @@ inline void Hash::HashCombine(size_t& lhs, size_t rhs) {
 	else {
 		lhs ^= rhs + static_cast<size_t>(0x9e3779b9) + (lhs << 6) + (lhs >> 2);
 	}
+}
 }
