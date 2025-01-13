@@ -3,6 +3,7 @@
 #include <iostream>
 #include "Mathf.hpp"
 #include "Vec3.hpp"
+#include <string>
 
 namespace nwt
 {
@@ -43,7 +44,7 @@ namespace nwt
 		Vec2& operator*=(float other);
 		Vec2& operator/=(float other);
 
-		const char* toString() const;
+		std::string toString() const;
 	};
 
 	//
@@ -185,8 +186,8 @@ namespace nwt
 		return *this;
 	}
 
-	inline const char* Vec2::toString() const{
-		return ("(" + std::to_string(x) + "," + std::to_string(y) + ")").c_str();
+	inline std::string Vec2::toString() const{
+		return ("(" + std::to_string(x) + "," + std::to_string(y) + ")");
 	}
 
 } // namespace Newtons

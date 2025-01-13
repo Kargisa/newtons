@@ -27,6 +27,7 @@
 #include "hash.hpp"
 #include "vertex.hpp"
 #include "transformationMatrices.hpp"
+//#include "mat4x4.hpp"
 
 #define GREEN_COLOR "\033[32m"
 #define RED_COLOR "\033[31m"
@@ -113,7 +114,6 @@ private:
 
 	uint32_t _currentFrame = 0;
 	static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
-
 	const std::vector<const char*> validationLayers = {
 		"VK_LAYER_KHRONOS_validation"
 	};
@@ -261,9 +261,9 @@ private:
 
 		VkApplicationInfo appInfo = {};
 		appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-		appInfo.pApplicationName = "Hello Triangle";
+		appInfo.pApplicationName = "NEWTONS";
 		appInfo.applicationVersion = VK_MAKE_VERSION(0, 0, 1);
-		appInfo.apiVersion = VK_API_VERSION_1_4;
+		appInfo.apiVersion = VK_API_VERSION_1_3;
 
 		VkInstanceCreateInfo createInfo = {};
 		createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
@@ -1646,11 +1646,15 @@ private:
 				vertices.push_back(vertex);
 			}
 
+			//LOG(vertex.pos.x << " " << vertex.pos.y << " " << vertex.pos.z);
+
 			indices.push_back(map[vertex]);
 			// if (indices.size() % 3 == 0){
 			// 	std::swap(indices[indices.size() - 2], indices[indices.size() - 3]); // INFO: test for clockwise drawing order
 			// }
 		}
+
+		
 	}
 
 	static std::vector<char> readShaderFile(const std::string& filename) {
@@ -1672,8 +1676,6 @@ private:
 	}
 };
 }
-
-#include "mesh.hpp"
 
 int main() {
 	nwt::NewtonsVulkanEngine app;

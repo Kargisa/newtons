@@ -50,7 +50,7 @@ namespace nwt
 
 		explicit operator Vec2() const;
 
-		const char* toString() const;
+		std::string toString() const;
 	};
 
 	//
@@ -220,7 +220,7 @@ namespace nwt
 		return {x, y};
 	}
 
-	inline const char* Vec3::toString() const{
-		return ("(" + std::to_string(x) + "," + std::to_string(y) + "," + std::to_string(z) + ")").c_str();
+	inline std::string Vec3::toString() const{
+		return ("(" + std::to_string(x) + "," + std::to_string(y) + "," + std::to_string(z) + ")");
 	}
 } // namespace Newtons

@@ -11,15 +11,15 @@ namespace nwt {
 		static constexpr float RadToDeg = 57.29578f;
 		static constexpr float DegToRad = 0.017453292f;
 	public:
-		static constexpr float sqrt(float value);
+		static float sqrt(float value);
 		static constexpr float lerp(float a, float b, float t);
 		static constexpr float min(float a, float b);
 		static constexpr float max(float a, float b);
 		static constexpr float abs(float value);
-		static constexpr float pow(float a, float n);
+		static float pow(float a, float n);
 	};
 
-	inline constexpr float Mathf::sqrt(float value) {
+	inline float Mathf::sqrt(float value) {
 		return std::sqrt(value);
 	}
 
@@ -39,7 +39,7 @@ namespace nwt {
 		return value < 0 ? -value : value;
 	}
 
-	inline constexpr float Mathf::pow(float a, float n){
+	inline float Mathf::pow(float a, float n){
 		return std::powf(a, n);
 	}
 } // namespace nwt

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Vec3.hpp"
-#include "Vec2.hpp"
+#include "vec3.hpp"
+#include "vec2.hpp"
 #include <vector>
 #include <cstdint>
 

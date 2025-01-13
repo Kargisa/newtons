@@ -1,4 +1,5 @@
 #pragma once
+#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES // helps with alignmet requirements
 #include <glm/glm.hpp>
 
 #include "hash.hpp"
