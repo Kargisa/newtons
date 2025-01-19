@@ -4,7 +4,7 @@
 
 # Add source to this project's executable.
 
-add_executable (newtons-editor "main.cpp" "obj_reader.hpp" "hash.hpp" "vertex.hpp" "vertex.cpp" "transformationMatrices.hpp" "mesh.cpp" "mesh.hpp" "stb_image.h")
+add_executable (newtons-editor "main.cpp" "obj_reader.hpp" "vertex.hpp" "vertex.cpp" "transformationMatrices.hpp" "mesh.cpp" "mesh.hpp" "stb_image.h")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET newtons-editor PROPERTY CXX_STANDARD 26)

@@ -27,7 +27,6 @@
 #include "hash.hpp"
 #include "vertex.hpp"
 #include "transformationMatrices.hpp"
-//#include "mat4x4.hpp"
 
 #define GREEN_COLOR "\033[32m"
 #define RED_COLOR "\033[31m"

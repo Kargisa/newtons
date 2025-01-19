@@ -1,7 +1,6 @@
 #include "vertex.hpp"
 
 #include <vulkan/vulkan.h>
-#include <glm/glm.hpp>
 #include <array>
 
 namespace nwt{

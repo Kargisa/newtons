@@ -3,7 +3,7 @@
 #
 
 # Add source to this project's executable.
-add_library (newtons-utils INTERFACE "vec3.hpp" "mathf.hpp" "vec2.hpp" "mat4x4.hpp" "vec4.hpp")
+add_library (newtons-utils INTERFACE "vec3.hpp" "mathf.hpp" "vec2.hpp" "mat4x4.hpp" "vec4.hpp" "hash.hpp" "quaternion.hpp")
 
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)

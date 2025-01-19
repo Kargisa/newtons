@@ -3,6 +3,7 @@
 #include <iostream>
 #include "Mathf.hpp"
 #include "Vec3.hpp"
+#include "hash.hpp"
 #include <string>
 
 namespace nwt
@@ -10,39 +11,42 @@ namespace nwt
 	struct alignas(8) Vec2
 	{
 		float x, y;
-		Vec2(float x, float y)
+		constexpr Vec2(float x, float y)
 			: x(x), y(y) {}
-		Vec2()
+		constexpr Vec2()
 			: x(0), y(0) {}
 
-		static Vec2 up();
-		static Vec2 down();
-		static Vec2 left();
-		static Vec2 right();
+		static constexpr Vec2 up();
+		static constexpr Vec2 down();
+		static constexpr Vec2 left();
+		static constexpr Vec2 right();
 
-		static Vec2 scale(const Vec2& a, const Vec2& b);
-		static float dot(const Vec2& a, const Vec2& b);
+		static constexpr Vec2 scale(const Vec2& a, const Vec2& b);
+		static constexpr float dot(const Vec2& a, const Vec2& b);
 		static float distance(const Vec2& a, const Vec2& b);
-		static Vec2 lerp(const Vec2& a, const Vec2& b, float t);
+		static constexpr Vec2 lerp(const Vec2& a, const Vec2& b, float t);
 
-		float sqrMagnitude() const;
+		constexpr float sqrMagnitude() const;
 		float magnitude() const;
-		Vec2 normalized() const;
-		void normalize();
+		static Vec2 normalize(const Vec2& vec);
+		Vec2 normalized();
 
-		bool operator==(const Vec2& other) const;
-		bool operator!=(const Vec2& other) const;
+		//static Vec2 rotate(const Vec2& v, float angle);
 
-		Vec2 operator+(const Vec2& other) const;
-		Vec2 operator-(const Vec2& other) const;
-		Vec2 operator*(float scalar) const;
-		friend Vec2 operator*(float scalar, const Vec2& v);
-		Vec2 operator/(float scalar) const;
+		constexpr bool operator==(const Vec2& other) const;
+		constexpr bool operator!=(const Vec2& other) const;
 
-		Vec2& operator+=(const Vec2& other);
-		Vec2& operator-=(const Vec2& other);
-		Vec2& operator*=(float other);
-		Vec2& operator/=(float other);
+		constexpr Vec2 operator+(const Vec2& other) const;
+		constexpr Vec2 operator-(const Vec2& other) const;
+		constexpr Vec2 operator-() const;
+		constexpr Vec2 operator*(float scalar) const;
+		friend constexpr Vec2 operator*(float scalar, const Vec2& v);
+		constexpr Vec2 operator/(float scalar) const;
+
+		constexpr Vec2& operator+=(const Vec2& other);
+		constexpr Vec2& operator-=(const Vec2& other);
+		constexpr Vec2& operator*=(float other);
+		constexpr Vec2& operator/=(float other);
 
 		std::string toString() const;
 	};
@@ -51,32 +55,32 @@ namespace nwt
 	// Static functions
 	//
 
-	inline Vec2 Vec2::up()
+	inline constexpr Vec2 Vec2::up()
 	{
 		return Vec2(0, 1);
 	}
 
-	inline Vec2 Vec2::down()
+	inline constexpr Vec2 Vec2::down()
 	{
 		return Vec2(0, -1);
 	}
 
-	inline Vec2 Vec2::left()
+	inline constexpr Vec2 Vec2::left()
 	{
 		return Vec2(-1, 0);
 	}
 
-	inline Vec2 Vec2::right()
+	inline constexpr Vec2 Vec2::right()
 	{
 		return Vec2(1, 0);
 	}
 
-	inline Vec2 Vec2::scale(const Vec2& a, const Vec2& b)
+	inline constexpr Vec2 Vec2::scale(const Vec2& a, const Vec2& b)
 	{
 		return Vec2(a.x * b.x, a.y * b.y);
 	}
 
-	inline float Vec2::dot(const Vec2& a, const Vec2& b)
+	inline constexpr float Vec2::dot(const Vec2& a, const Vec2& b)
 	{
 		return a.x * b.x + a.y * b.y;
 	}
@@ -86,7 +90,7 @@ namespace nwt
 		return (b - a).magnitude();
 	}
 
-	inline Vec2 Vec2::lerp(const Vec2& a, const Vec2& b, float t)
+	inline constexpr Vec2 Vec2::lerp(const Vec2& a, const Vec2& b, float t)
 	{
 		return a + (b - a) * t;
 	}
@@ -95,7 +99,7 @@ namespace nwt
 	// Member functions
 	//
 
-	inline float Vec2::sqrMagnitude() const
+	inline constexpr float Vec2::sqrMagnitude() const
 	{
 		return x * x + y * y;
 	}
@@ -105,81 +109,91 @@ namespace nwt
 		return Mathf::sqrt(x * x + y * y);
 	}
 
-	inline Vec2 Vec2::normalized() const
+	inline Vec2 Vec2::normalize(const Vec2& vec)
 	{
 		// TODO: Avoid division by zero in Debug mode
-		float magnitude = this->magnitude();
-		return Vec2(x / magnitude, y / magnitude);
+		float magnitude = vec.magnitude();
+		return vec / magnitude;
 	}
 
-	inline void Vec2::normalize()
+	inline Vec2 Vec2::normalized()
 	{
 		float magnitude = this->magnitude();
-		x /= magnitude;
-		y /= magnitude;
+
+		return { x / magnitude, y / magnitude };
 	}
+	
+	//constexpr Vec2 rotate(const Vec2& v, float angle) {
+	//	return {v.x * Mathf::cos(angle) - v.y * Mathf::sin(angle), v.x * Mathf::sin(angle) + v.y * Mathf::cos(angle)};
+	//}
+
 
 	//
 	// Operators
 	//
 
-	inline bool Vec2::operator==(const Vec2& other) const
+	inline constexpr bool Vec2::operator==(const Vec2& other) const
 	{
 		return (x == other.x && y == other.y);
 	}
 
-	inline bool Vec2::operator!=(const Vec2& other) const
+	inline constexpr bool Vec2::operator!=(const Vec2& other) const
 	{
 		return !(*this == other);
 	}
 
-	inline Vec2 Vec2::operator+(const Vec2& other) const
+	inline constexpr Vec2 Vec2::operator+(const Vec2& other) const
 	{
 		return Vec2(x + other.x, y + other.y);
 	}
 
-	inline Vec2 Vec2::operator-(const Vec2& other) const
+	inline constexpr Vec2 Vec2::operator-(const Vec2& other) const
 	{
 		return Vec2(x - other.x, y - other.y);
 	}
 
-	inline Vec2 Vec2::operator*(float scalar) const
+	inline constexpr Vec2 Vec2::operator-() const
+	{
+		return Vec2(-x, -y);
+	}
+
+	inline constexpr Vec2 Vec2::operator*(float scalar) const
 	{
 		return Vec2(x * scalar, y * scalar);
 	}
 
-	inline Vec2 operator*(float scalar, const Vec2& other)
+	inline constexpr Vec2 operator*(float scalar, const Vec2& other)
 	{
 		return other * scalar;
 	}
 
-	inline Vec2 Vec2::operator/(float scalar) const
+	inline constexpr Vec2 Vec2::operator/(float scalar) const
 	{
 		return Vec2(x / scalar, y / scalar);
 	}
 
-	inline Vec2& Vec2::operator+=(const Vec2& other)
+	inline constexpr Vec2& Vec2::operator+=(const Vec2& other)
 	{
 		x += other.x;
 		y += other.y;
 		return *this;
 	}
 
-	inline Vec2& Vec2::operator-=(const Vec2& other)
+	inline constexpr Vec2& Vec2::operator-=(const Vec2& other)
 	{
 		x -= other.x;
 		y -= other.y;
 		return *this;
 	}
 
-	inline Vec2& Vec2::operator*=(float scalar)
+	inline constexpr Vec2& Vec2::operator*=(float scalar)
 	{
 		x *= scalar;
 		y *= scalar;
 		return *this;
 	}
 
-	inline Vec2& Vec2::operator/=(float scalar)
+	inline constexpr Vec2& Vec2::operator/=(float scalar)
 	{
 		x /= scalar;
 		y /= scalar;
@@ -190,4 +204,15 @@ namespace nwt
 		return ("(" + std::to_string(x) + "," + std::to_string(y) + ")");
 	}
 
-} // namespace Newtons
+} // namespace nwt
+
+namespace std {
+	template<>
+	struct hash<nwt::Vec2> {
+		size_t operator()(nwt::Vec2 const& vec) const {
+			size_t combinedHash = hash<float>()(vec.x);
+			nwt::Hash::HashCombine(combinedHash, hash<float>()(vec.y));
+			return combinedHash;
+		}
+	};
+}

@@ -17,6 +17,8 @@ namespace nwt {
 		static constexpr float max(float a, float b);
 		static constexpr float abs(float value);
 		static float pow(float a, float n);
+		static float sin(float x);
+		static float cos(float x);
 	};
 
 	inline float Mathf::sqrt(float value) {
@@ -42,4 +44,14 @@ namespace nwt {
 	inline float Mathf::pow(float a, float n){
 		return std::powf(a, n);
 	}
+
+	inline float Mathf::sin(float x){
+		return std::sinf(x);
+	}
+
+	inline float Mathf::cos(float x){
+		return std::cos(x);
+	}
+
+
 } // namespace nwt
