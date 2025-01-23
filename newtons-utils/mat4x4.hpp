@@ -31,14 +31,21 @@ namespace nwt {
 		constexpr Vec4 getRow(char row) const;
 		constexpr Vec4 getCol(char col) const;
 
+		void setRow(char row, float x, float y, float z, float w);
+		void setRow(char row, const Vec4& value);
+
+		void setCol(char col, float x, float y, float z, float w);
+		void setCol(char col, const Vec4& value);
 
 		constexpr Mat4x4 operator*(const Mat4x4& other) const;
 		constexpr Vec4 operator*(const Vec4& vec) const;
+		constexpr Mat4x4 operator*(float scalar) const;
+		friend constexpr Mat4x4 operator*(float scalar, const Mat4x4& mat);
 
 		constexpr float& operator[](char n);
 		constexpr float operator[](char n) const;
 
-		constexpr std::string toString() const;
+		std::string toString() const;
 	};
 
 
@@ -113,6 +120,39 @@ namespace nwt {
 		};
 	}
 
+	inline void Mat4x4::setRow(char row, float x, float y, float z, float w){
+		(*this)[row + 0] = x;
+		(*this)[row + 4] = y;
+		(*this)[row + 8] = z;
+		(*this)[row + 12] = w;
+	}
+
+	inline void Mat4x4::setRow(char row, const Vec4& value){
+		(*this)[row + 0] = value.x;
+		(*this)[row + 4] = value.y;
+		(*this)[row + 8] = value.z;
+		(*this)[row + 12] = value.w;
+	}
+
+	inline void Mat4x4::setCol(char col, float x, float y, float z, float w){
+		const char c = col * 4;
+		(*this)[0 + c] = x;
+		(*this)[1 + c] = y;
+		(*this)[2 + c] = z;
+		(*this)[3 + c] = w;
+	}
+
+	inline void Mat4x4::setCol(char col, const Vec4& value){
+		const char c = col * 4;
+		(*this)[0 + c] = value.x;
+		(*this)[1 + c] = value.y;
+		(*this)[2 + c] = value.z;
+		(*this)[3 + c] = value.w;
+	}
+
+	//
+	// Operators
+	//
 
 	inline constexpr Mat4x4 Mat4x4::operator*(const Mat4x4& other) const {
 		Vec4 r0 = getRow(0);
@@ -220,6 +260,36 @@ namespace nwt {
 		}
 
 		// TODO: Error handling
+	}
+
+
+	inline constexpr Mat4x4 Mat4x4::operator*(float scalar) const{
+		Mat4x4 result;
+		result.m00 = m00 * scalar;
+		result.m10 = m10 * scalar;
+		result.m20 = m20 * scalar;
+		result.m30 = m30 * scalar;
+
+		result.m01 = m01 * scalar;
+		result.m11 = m11 * scalar;
+		result.m21 = m12 * scalar;
+		result.m31 = m13 * scalar;
+
+		result.m02 = m02 * scalar;
+		result.m12 = m12 * scalar;
+		result.m22 = m22 * scalar;
+		result.m32 = m23 * scalar;
+
+		result.m03 = m03 * scalar;
+		result.m13 = m13 * scalar;
+		result.m23 = m23 * scalar;
+		result.m33 = m33 * scalar;
+
+		return result;
+	}
+
+	inline constexpr Mat4x4 operator*(float scalar, const Mat4x4& mat){
+		return mat * scalar;
 	}
 
 	inline std::string Mat4x4::toString() const {

@@ -19,6 +19,8 @@ namespace nwt {
 		static float pow(float a, float n);
 		static float sin(float x);
 		static float cos(float x);
+		static float asin(float x);
+		static float acos(float x);
 	};
 
 	inline float Mathf::sqrt(float value) {
@@ -51,6 +53,14 @@ namespace nwt {
 
 	inline float Mathf::cos(float x){
 		return std::cos(x);
+	}
+
+	inline float Mathf::asin(float x){
+		return std::asin(x);
+	}
+
+	inline float Mathf::acos(float x){
+		return std::acos(x);
 	}
 
 

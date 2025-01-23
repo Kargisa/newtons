@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Mathf.hpp"
-#include "Vec3.hpp"
+#include "mathf.hpp"
+#include "vec3.hpp"
 #include "hash.hpp"
 
 #include <iostream>

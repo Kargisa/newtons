@@ -1,8 +1,7 @@
 #pragma once
 
 #include <iostream>
-#include "Mathf.hpp"
-#include "Vec3.hpp"
+#include "mathf.hpp"
 #include "hash.hpp"
 #include <string>
 
@@ -25,6 +24,7 @@ namespace nwt
 		static constexpr float dot(const Vec2& a, const Vec2& b);
 		static float distance(const Vec2& a, const Vec2& b);
 		static constexpr Vec2 lerp(const Vec2& a, const Vec2& b, float t);
+		static constexpr float angle(const Vec2& a, const Vec2& b);
 
 		constexpr float sqrMagnitude() const;
 		float magnitude() const;
@@ -93,6 +93,10 @@ namespace nwt
 	inline constexpr Vec2 Vec2::lerp(const Vec2& a, const Vec2& b, float t)
 	{
 		return a + (b - a) * t;
+	}
+
+	inline constexpr float Vec2::angle(const Vec2& a, const Vec2& b){
+		return Mathf::acos(Vec2::dot(a, b) / (a.magnitude() * b.magnitude()));
 	}
 
 	//

@@ -1676,16 +1676,28 @@ private:
 };
 }
 
+#include "mat4x4.hpp"
+
 int main() {
 	nwt::NewtonsVulkanEngine app;
 
-	try {
-		app.run();
-	}
-	catch (const std::exception& e) {
-		std::cerr << e.what() << std::endl;
-		return EXIT_FAILURE;
-	}
+	LOG((nwt::Vec2::angle(nwt::Vec2{15, 1.24f}, nwt::Vec2{15, 1.24f})));
+	LOG(nwt::Vec2(15, 1.24f).toString());
+	LOG(nwt::Vec2(15, 1.24f).magnitude());
+	LOG(nwt::Vec2::dot(nwt::Vec2(15, 1.24f), nwt::Vec2(15, 1.24f)));
+	LOG(nwt::Vec2::dot(nwt::Vec2(15, 1.24f), nwt::Vec2(15, 1.24f)) / (nwt::Vec2(15, 1.24f).magnitude() * nwt::Vec2(15, 1.24f).magnitude()));
+	float one = nwt::Vec2::dot(nwt::Vec2(15, 1.24f), nwt::Vec2(15, 1.24f)) / (nwt::Vec2(15, 1.24f).magnitude() * nwt::Vec2(15, 1.24f).magnitude()); // THIS SHOULD BE ONE BUT ISN'T
+	LOG(nwt::Mathf::acos(one));
+	LOG(static_cast<double>(one) * 10000000000000000000000000000000000.0);
+
+
+	// try {
+	// 	app.run();
+	// }
+	// catch (const std::exception& e) {
+	// 	std::cerr << e.what() << std::endl;
+	// 	return EXIT_FAILURE;
+	// }
 
 	return EXIT_SUCCESS;
 }

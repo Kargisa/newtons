@@ -1,8 +1,8 @@
 #pragma once
 
 #include <iostream>
-#include "Mathf.hpp"
-#include "Vec2.hpp"
+#include "mathf.hpp"
+#include "vec2.hpp"
 #include "hash.hpp"
 
 namespace nwt
@@ -14,6 +14,8 @@ namespace nwt
 			: x(x), y(y), z(z) {}
 		constexpr Vec3()
 			: x(0), y(0), z(0) {}
+
+		static constexpr float epsilon = 1e-6f;
 
 		static constexpr Vec3 up();
 		static constexpr Vec3 down();
@@ -27,13 +29,12 @@ namespace nwt
 		static constexpr Vec3 cross(const Vec3& a, const Vec3& b);
 		static float distance(const Vec3& a, const Vec3& b);
 		static constexpr Vec3 lerp(const Vec3& a, const Vec3& b, float t);
+		static constexpr float angle(const Vec3& a, const Vec3& b);
 
 		float constexpr sqrMagnitude() const;
 		float magnitude() const;
 		static Vec3 normalize(const Vec3& vec);
 		Vec3 normalized();
-
-		//constexpr Vec3 lookAt(const Vec3& eye, const Vec3& center);
 
 		constexpr bool operator==(const Vec3& other) const;
 		constexpr bool operator!=(const Vec3& other) const;
@@ -118,6 +119,11 @@ namespace nwt
 		return a + (b - a) * t;
 	}
 
+	inline constexpr float Vec3::angle(const Vec3& a, const Vec3& b){
+		return Mathf::acos(Vec3::dot(a, b) / (a.magnitude() * b.magnitude()));
+	}
+
+
 	//
 	// Member functions
 	//
@@ -152,7 +158,11 @@ namespace nwt
 
 	inline constexpr bool Vec3::operator==(const Vec3& other) const
 	{
-		return (x == other.x && y == other.y && z == other.z);
+		// float xDiff = x - other.x;
+		// float yDiff = y - other.y;
+		// float zDiff = z - other.z;
+		// return ((xDiff <= epsilon && xDiff >= -epsilon) && (yDiff <= epsilon && yDiff >= -epsilon) && (zDiff <= epsilon && zDiff >= -epsilon));
+		return x == other.x && y == other.y && z == other.z; 
 	}
 
 	inline constexpr bool Vec3::operator!=(const Vec3& other) const

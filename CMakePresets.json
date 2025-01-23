@@ -1,5 +1,5 @@
 ﻿{
-  "version": 3,
+  "version": 10,
   "configurePresets": [
     {
       "name": "windows-base",
@@ -10,7 +10,7 @@
       "cacheVariables": {
         "CMAKE_C_COMPILER": "cl.exe",
         "CMAKE_CXX_COMPILER": "cl.exe",
-        "CMAKE_CXX_STANDARD": "20",
+        "CMAKE_CXX_STANDARD": "26",
         "CMAKE_CXX_FLAGS_RELEASE": "-DRELEASE /MD",
         "CMAKE_CXX_FLAGS_DEBUG": "-DDEBUG /MDd"
       },
@@ -78,9 +78,9 @@
       "cacheVariables": {
         "CMAKE_C_COMPILER": "gcc",
         "CMAKE_CXX_COMPILER": "g++",
-        "CMAKE_CXX_STANDARD": "20",
+        "CMAKE_CXX_STANDARD": "26",
+        "CMAKE_CXX_FLAGS_RELEASE": "-DRELEASE",
         "CMAKE_CXX_FLAGS_DEBUG": "-DDEBUG"
-
       },
       "architecture": {
         "value": "x64",
@@ -146,6 +146,26 @@
       "displayName": "x64 Linux Build Release",
       "configurePreset": "x64-linux-release",
       "inherits": "linux-build-base"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "linux-test-base",
+      "hidden": true,
+      "displayName": "Linux Test Base",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "x64-linux-test",
+      "displayName": "x64 Linux Test",
+      "configurePreset": "x64-linux-debug",
+      "inherits": "linux-test-base",
+      "output": { "outputOnFailure": true },
+      "execution": {}
     }
   ]
 }

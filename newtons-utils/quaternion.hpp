@@ -18,10 +18,11 @@ namespace nwt {
 
 		static constexpr Quaternion identity();
 
-		static Quaternion conjugate(const Quaternion& q);
-		constexpr Quaternion conjugated();
+		static constexpr Quaternion conjugate(const Quaternion& q);
+		constexpr Quaternion conjugated() const;
 
 		static constexpr Vec3 rotateVector(const Quaternion& q, const Vec3& v);
+		static Quaternion fromEuler(float x, float y, float z);
 
 		constexpr Quaternion operator*(const Quaternion& q) const;
 		constexpr Quaternion operator*(float scalar) const;
@@ -35,11 +36,11 @@ namespace nwt {
 		return { 1, 0, 0, 0 };
 	}
 
-	inline Quaternion Quaternion::conjugate(const Quaternion& q) {
-		return { q.w, {-q.x, -q.y, -q.z} };
+	inline constexpr Quaternion Quaternion::conjugate(const Quaternion& q) {
+		return { q.w, -q.x, -q.y, -q.z };
 	}
 
-	inline constexpr Quaternion Quaternion::conjugated() {
+	inline constexpr Quaternion Quaternion::conjugated() const{
 		return { w, -x, -y, -z };
 	}
 
@@ -50,6 +51,26 @@ namespace nwt {
 			(q.w * q.w - i.sqrMagnitude()) * v +
 			2.0f * q.w * Vec3(i.y * v.z - i.z * v.y, i.z * v.x - i.x * v.z, i.x * v.y - i.y * v.x);
 	}
+
+	// 3-2-1 (Z-Y-X)
+	inline Quaternion Quaternion::fromEuler(float x, float y, float z){
+		float cx = Mathf::cos(x * 0.5f);
+		float sx = Mathf::sin(x * 0.5f);
+		
+		float cy = Mathf::cos(y * 0.5f);
+		float sy = Mathf::sin(y * 0.5f);
+		
+		float cz = Mathf::cos(z * 0.5f);
+		float sz = Mathf::sin(z * 0.5f);
+
+		return{
+			cx * cy * cz + sx * sy * sz,
+			sx * cy * cz - cx * sy * sz,
+			cx * sy * cz + sx * cy * sz,
+			cx * cy * sz - sx * sy * cz
+		};
+	}
+
 
 	//
 	// Operators
