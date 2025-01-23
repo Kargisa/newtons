@@ -1677,17 +1677,18 @@ private:
 }
 
 #include "mat4x4.hpp"
+#include <glm/gtx/vector_angle.hpp>
 
 int main() {
 	nwt::NewtonsVulkanEngine app;
 
-	try {
-		app.run();
-	}
-	catch (const std::exception& e) {
-		std::cerr << e.what() << std::endl;
-		return EXIT_FAILURE;
-	}
+	// try {
+	// 	app.run();
+	// }
+	// catch (const std::exception& e) {
+	// 	std::cerr << e.what() << std::endl;
+	// 	return EXIT_FAILURE;
+	// }
 
 	return EXIT_SUCCESS;
 }

@@ -24,7 +24,7 @@ namespace nwt
 		static constexpr float dot(const Vec2& a, const Vec2& b);
 		static float distance(const Vec2& a, const Vec2& b);
 		static constexpr Vec2 lerp(const Vec2& a, const Vec2& b, float t);
-		static constexpr float angle(const Vec2& a, const Vec2& b);
+		static float angle(const Vec2& a, const Vec2& b);
 
 		constexpr float sqrMagnitude() const;
 		float magnitude() const;
@@ -95,8 +95,8 @@ namespace nwt
 		return a + (b - a) * t;
 	}
 
-	inline constexpr float Vec2::angle(const Vec2& a, const Vec2& b){
-		return Mathf::acos(Vec2::dot(a, b) / (a.magnitude() * b.magnitude()));
+	inline float Vec2::angle(const Vec2& a, const Vec2& b){
+		return Mathf::acos(Mathf::clamp(Vec2::dot(a, b) / (a.magnitude() * b.magnitude()), -1, 1));
 	}
 
 	//

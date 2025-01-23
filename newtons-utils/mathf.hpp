@@ -17,6 +17,8 @@ namespace nwt {
 		static constexpr float max(float a, float b);
 		static constexpr float abs(float value);
 		static float pow(float a, float n);
+		static float clamp(float x, float min, float max);
+		static float clamp01(float x);
 		static float sin(float x);
 		static float cos(float x);
 		static float asin(float x);
@@ -47,20 +49,28 @@ namespace nwt {
 		return std::powf(a, n);
 	}
 
+	inline float Mathf::clamp(float x, float min, float max){
+		return x > max ? max : (x < min ? min : x);
+	}
+
+	inline float Mathf::clamp01(float x){
+		return x > 1 ? 1 : (x < 0 ? 0 : x);
+	}
+
 	inline float Mathf::sin(float x){
 		return std::sinf(x);
 	}
 
 	inline float Mathf::cos(float x){
-		return std::cos(x);
+		return std::cosf(x);
 	}
 
 	inline float Mathf::asin(float x){
-		return std::asin(x);
+		return std::asinf(x);
 	}
 
 	inline float Mathf::acos(float x){
-		return std::acos(x);
+		return std::acosf(x);
 	}
 
 
