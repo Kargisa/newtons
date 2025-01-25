@@ -15,8 +15,6 @@ namespace nwt
 		constexpr Vec3()
 			: x(0), y(0), z(0) {}
 
-		static constexpr float epsilon = 1e-6f;
-
 		static constexpr Vec3 up();
 		static constexpr Vec3 down();
 		static constexpr Vec3 left();
@@ -158,11 +156,7 @@ namespace nwt
 
 	inline constexpr bool Vec3::operator==(const Vec3& other) const
 	{
-		// float xDiff = x - other.x;
-		// float yDiff = y - other.y;
-		// float zDiff = z - other.z;
-		// return ((xDiff <= epsilon && xDiff >= -epsilon) && (yDiff <= epsilon && yDiff >= -epsilon) && (zDiff <= epsilon && zDiff >= -epsilon));
-		return x == other.x && y == other.y && z == other.z; 
+		return Mathf::inEpsilon(x -other.x) && Mathf::inEpsilon(y - other.y) && Mathf::inEpsilon(z - other.z); 
 	}
 
 	inline constexpr bool Vec3::operator!=(const Vec3& other) const

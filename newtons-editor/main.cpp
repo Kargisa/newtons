@@ -27,6 +27,9 @@
 #include "hash.hpp"
 #include "vertex.hpp"
 #include "transformationMatrices.hpp"
+#include "mat4x4.hpp"
+#include "vec3.hpp"
+#include "mathf.hpp"
 
 #define GREEN_COLOR "\033[32m"
 #define RED_COLOR "\033[31m"
@@ -1268,7 +1271,10 @@ private:
 		float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 
 		TransformationMatrices ubo{};
-		ubo.model = glm::rotate(glm::mat4(1.0f), 0 * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+		// ubo.model = glm::rotate(glm::mat4(1.0f), 0 * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+		// ubo.model = Mat4x4::rotate({Mathf::cos(-45 / 2 * Mathf::DegToRad), 0, 0, Mathf::sin(-45 / 2 * Mathf::DegToRad)});
+		ubo.model = Mat4x4::identity();
+
 		ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 		ubo.proj = glm::perspective(glm::radians(60.0f), _swapChainExtent.width / (float)_swapChainExtent.height, 0.01f, 100.0f);
 		ubo.proj[1][1] *= -1;
@@ -1674,21 +1680,18 @@ private:
 		return buffer;
 	}
 };
-}
-
-#include "mat4x4.hpp"
-#include <glm/gtx/vector_angle.hpp>
+} // namespace nwt
 
 int main() {
 	nwt::NewtonsVulkanEngine app;
 
-	// try {
-	// 	app.run();
-	// }
-	// catch (const std::exception& e) {
-	// 	std::cerr << e.what() << std::endl;
-	// 	return EXIT_FAILURE;
-	// }
+	try {
+		app.run();
+	}
+	catch (const std::exception& e) {
+		std::cerr << e.what() << std::endl;
+		return EXIT_FAILURE;
+	}
 
 	return EXIT_SUCCESS;
 }

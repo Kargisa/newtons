@@ -7,6 +7,7 @@ namespace nwt {
 	class Mathf {
 	public:
 		Mathf() = delete;
+		static constexpr float epsilon = 1e-6f;
 		static constexpr float PI = 3.1415927f;
 		static constexpr float RadToDeg = 57.29578f;
 		static constexpr float DegToRad = 0.017453292f;
@@ -23,6 +24,8 @@ namespace nwt {
 		static float cos(float x);
 		static float asin(float x);
 		static float acos(float x);
+
+		static constexpr bool inEpsilon(float x);
 	};
 
 	inline float Mathf::sqrt(float value) {
@@ -73,5 +76,8 @@ namespace nwt {
 		return std::acosf(x);
 	}
 
+	inline constexpr bool Mathf::inEpsilon(float x){
+		return x > -epsilon && x < epsilon;
+	}
 
 } // namespace nwt

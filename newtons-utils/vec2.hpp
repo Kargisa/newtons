@@ -138,7 +138,7 @@ namespace nwt
 
 	inline constexpr bool Vec2::operator==(const Vec2& other) const
 	{
-		return (x == other.x && y == other.y);
+		return Mathf::inEpsilon(x - other.x) && Mathf::inEpsilon(y - other.y);
 	}
 
 	inline constexpr bool Vec2::operator!=(const Vec2& other) const

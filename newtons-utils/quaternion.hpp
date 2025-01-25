@@ -24,6 +24,9 @@ namespace nwt {
 		static constexpr Vec3 rotateVector(const Quaternion& q, const Vec3& v);
 		static Quaternion fromEuler(float x, float y, float z);
 
+		constexpr bool operator==(const Quaternion& q) const;
+		constexpr bool operator!=(const Quaternion& q) const;
+
 		constexpr Quaternion operator*(const Quaternion& q) const;
 		constexpr Quaternion operator*(float scalar) const;
 		friend constexpr Quaternion operator*(float scalar, const Quaternion& v);
@@ -71,10 +74,17 @@ namespace nwt {
 		};
 	}
 
-
 	//
 	// Operators
 	//
+
+	inline constexpr bool Quaternion::operator==(const Quaternion& q) const{
+		return Mathf::inEpsilon(w - q.w) && Mathf::inEpsilon(x - q.x) && Mathf::inEpsilon(y - q.y) && Mathf::inEpsilon(z - q.z);
+	}
+
+	inline constexpr bool Quaternion::operator!=(const Quaternion& q) const{
+		return !((*this) == q);
+	}
 
 	inline constexpr Quaternion Quaternion::operator*(const Quaternion& q) const {
 		Vec3 v1 = { x, y, z };

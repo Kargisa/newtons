@@ -20,6 +20,16 @@ namespace nwt {
 				m02(col2.x), m12(col2.y), m22(col2.z), m32(col2.w),
 				m03(col3.x), m13(col3.y), m23(col3.z), m33(col3.w) {}
 
+		constexpr Mat4x4(float m00, float m10, float m20, float m30,
+						 float m01, float m11, float m21, float m31,
+						 float m02, float m12, float m22, float m32,
+						 float m03, float m13, float m23, float m33)
+						 : m00(m00), m10(m10), m20(m20), m30(m30),
+						   m01(m01), m11(m11), m21(m21), m31(m31),
+						   m02(m02), m12(m12), m22(m22), m32(m32),
+						   m03(m03), m13(m13), m23(m23), m33(m33) {}
+
+
 		Mat4x4() {}
 
 		static constexpr Mat4x4 identity();
@@ -37,6 +47,9 @@ namespace nwt {
 		void setCol(char col, float x, float y, float z, float w);
 		void setCol(char col, const Vec4& value);
 
+		constexpr bool operator==(const Mat4x4& mat) const;
+		constexpr bool operator!=(const Mat4x4& mat) const;
+
 		constexpr Mat4x4 operator*(const Mat4x4& other) const;
 		constexpr Vec4 operator*(const Vec4& vec) const;
 		constexpr Mat4x4 operator*(float scalar) const;
@@ -47,7 +60,6 @@ namespace nwt {
 
 		std::string toString() const;
 	};
-
 
 	inline constexpr Mat4x4 Mat4x4::identity() {
 		return {
@@ -72,25 +84,27 @@ namespace nwt {
 		float num11 = q.w * num2;
 		float num12 = q.w * num3;
 
-		Mat4x4 result;
-		result.m00 = 1 - (num5 + num6);
-		result.m10 = num7 + num12;
-		result.m20 = num8 - num11;
-		result.m30 = 0;
-		result.m01 = num7 - num12;
-		result.m11 = 1 - (num4 + num6);
-		result.m21 = num9 + num10;
-		result.m31 = 0;
-		result.m02 = num8 + num11;
-		result.m12 = num9 - num10;
-		result.m22 = 1 - (num4 + num5);
-		result.m32 = 0;
-		result.m03 = 0;
-		result.m13 = 0;
-		result.m23 = 0;
-		result.m33 = 1;
+		return Mat4x4{
+			1 - (num5 + num6),
+			num7 + num12,
+			num8 - num11,
+			0,
 
-		return result;
+			num7 - num12,
+			1 - (num4 + num6),
+			num9 + num10,
+			0,
+
+			num8 + num11,
+			num9 - num10,
+			1 - (num4 + num5),
+			0,
+
+			0,
+			0,
+			0,
+			1
+		};
 	}
 
 	inline constexpr float& Mat4x4::getValue(char row, char col) {
@@ -111,7 +125,7 @@ namespace nwt {
 	}
 
 	inline constexpr Vec4 Mat4x4::getCol(char col) const {
-		const char c = col * 4;
+		char c = col * 4;
 		return {
 			(*this)[0 + c],
 			(*this)[1 + c],
@@ -153,6 +167,17 @@ namespace nwt {
 	//
 	// Operators
 	//
+
+	inline constexpr bool Mat4x4::operator==(const Mat4x4& mat) const{
+		return (Mathf::inEpsilon(m00 - mat.m00) && Mathf::inEpsilon(m10 - mat.m10) && Mathf::inEpsilon(m20 - mat.m20) && Mathf::inEpsilon(m30 - mat.m30) ||
+			Mathf::inEpsilon(m01 - mat.m01) && Mathf::inEpsilon(m11 - mat.m11) && Mathf::inEpsilon(m21 - mat.m21) && Mathf::inEpsilon(m31 - mat.m31) ||
+			Mathf::inEpsilon(m02 - mat.m02) && Mathf::inEpsilon(m12 - mat.m12) && Mathf::inEpsilon(m22 - mat.m22) && Mathf::inEpsilon(m32 - mat.m32) ||
+			Mathf::inEpsilon(m03 - mat.m03) && Mathf::inEpsilon(m13 - mat.m13) && Mathf::inEpsilon(m23 - mat.m23) && Mathf::inEpsilon(m33 - mat.m33));
+	}
+
+	inline constexpr bool Mat4x4::operator!=(const Mat4x4& mat) const{
+		return !((*this) == mat);
+	}
 
 	inline constexpr Mat4x4 Mat4x4::operator*(const Mat4x4& other) const {
 		Vec4 r0 = getRow(0);
@@ -264,28 +289,27 @@ namespace nwt {
 
 
 	inline constexpr Mat4x4 Mat4x4::operator*(float scalar) const{
-		Mat4x4 result;
-		result.m00 = m00 * scalar;
-		result.m10 = m10 * scalar;
-		result.m20 = m20 * scalar;
-		result.m30 = m30 * scalar;
+		return {
+			m00 * scalar,
+			m10 * scalar,
+			m20 * scalar,
+			m30 * scalar,
 
-		result.m01 = m01 * scalar;
-		result.m11 = m11 * scalar;
-		result.m21 = m12 * scalar;
-		result.m31 = m13 * scalar;
+			m01 * scalar,
+			m11 * scalar,
+			m21 * scalar,
+			m31 * scalar,
 
-		result.m02 = m02 * scalar;
-		result.m12 = m12 * scalar;
-		result.m22 = m22 * scalar;
-		result.m32 = m23 * scalar;
+			m02 * scalar,
+			m12 * scalar,
+			m22 * scalar,
+			m32 * scalar,
 
-		result.m03 = m03 * scalar;
-		result.m13 = m13 * scalar;
-		result.m23 = m23 * scalar;
-		result.m33 = m33 * scalar;
-
-		return result;
+			m03 * scalar,
+			m13 * scalar,
+			m23 * scalar,
+			m33 * scalar
+		};
 	}
 
 	inline constexpr Mat4x4 operator*(float scalar, const Mat4x4& mat){
