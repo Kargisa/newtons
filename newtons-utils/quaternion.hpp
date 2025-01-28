@@ -17,12 +17,17 @@ namespace nwt {
 			: w(w), x(im.x), y(im.y), z(im.z) {}
 
 		static constexpr Quaternion identity();
+		bool isNormalized() const;
+		Quaternion normalized() const;
+
+		float magnitude() const;
 
 		static constexpr Quaternion conjugate(const Quaternion& q);
 		constexpr Quaternion conjugated() const;
 
 		static constexpr Vec3 rotateVector(const Quaternion& q, const Vec3& v);
 		static Quaternion fromEuler(float x, float y, float z);
+		static Quaternion fromTo(const Vec3& from, const Vec3& to);
 
 		constexpr bool operator==(const Quaternion& q) const;
 		constexpr bool operator!=(const Quaternion& q) const;
@@ -38,6 +43,22 @@ namespace nwt {
 	inline constexpr Quaternion Quaternion::identity() {
 		return { 1, 0, 0, 0 };
 	}
+
+	inline bool Quaternion::isNormalized() const {
+		return Mathf::inEpsilon(Mathf::sqrt(x * x + y * y + z * z + w * w) - 1.0f);
+	}
+
+	inline Quaternion Quaternion::normalized() const {
+		float magnitude = this->magnitude();
+
+		return Quaternion{ x / magnitude, y / magnitude, z / magnitude, w / magnitude };
+	}
+
+	inline float Quaternion::magnitude() const {
+		return Mathf::sqrt(x * x + y * y + z * z + w * w);
+	}
+
+	
 
 	inline constexpr Quaternion Quaternion::conjugate(const Quaternion& q) {
 		return { q.w, -q.x, -q.y, -q.z };
@@ -72,6 +93,12 @@ namespace nwt {
 			cx * sy * cz + sx * cy * sz,
 			cx * cy * sz - sx * sy * cz
 		};
+	}
+
+	inline Quaternion Quaternion::fromTo(const Vec3& from, const Vec3& to) {
+		Vec3 dir = Vec3::cross(from, to);
+		float real = Mathf::sqrt(from.sqrMagnitude() * to.sqrMagnitude() * Vec3::dot(from, to));
+		return Quaternion{real, dir}.normalized();
 	}
 
 	//

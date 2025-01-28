@@ -22,8 +22,10 @@ namespace nwt {
 		static float clamp01(float x);
 		static float sin(float x);
 		static float cos(float x);
+		static float tan(float x);
 		static float asin(float x);
 		static float acos(float x);
+		static float atan(float x);
 
 		static constexpr bool inEpsilon(float x);
 	};
@@ -68,6 +70,10 @@ namespace nwt {
 		return std::cosf(x);
 	}
 
+	inline float Mathf::tan(float x) {
+		return std::tanf(x);
+	}
+
 	inline float Mathf::asin(float x){
 		return std::asinf(x);
 	}
@@ -75,6 +81,11 @@ namespace nwt {
 	inline float Mathf::acos(float x){
 		return std::acosf(x);
 	}
+	
+	inline float Mathf::atan(float x) {
+		return std::atanf(x);
+	}
+
 
 	inline constexpr bool Mathf::inEpsilon(float x){
 		return x > -epsilon && x < epsilon;

@@ -29,6 +29,11 @@ namespace nwt {
 						   m02(m02), m12(m12), m22(m22), m32(m32),
 						   m03(m03), m13(m13), m23(m23), m33(m33) {}
 
+		//Mat4x4()
+		//	: m00(0), m10(0), m20(0), m30(0),
+		//	m01(0), m11(0), m21(0), m31(0),
+		//	m02(0), m12(0), m22(0), m32(0),
+		//	m03(0), m13(0), m23(0), m33(0) {}
 
 		Mat4x4() {}
 
@@ -46,6 +51,11 @@ namespace nwt {
 
 		void setCol(char col, float x, float y, float z, float w);
 		void setCol(char col, const Vec4& value);
+
+		static constexpr Mat4x4 ortho(float left, float right, float top, float bottom, float near, float far);
+		static Mat4x4 perspective(float fov, float aspect, float near, float far);
+
+		static Mat4x4 lookAt(const Vec3& pos, const Vec3& target);
 
 		constexpr bool operator==(const Mat4x4& mat) const;
 		constexpr bool operator!=(const Mat4x4& mat) const;
@@ -163,6 +173,58 @@ namespace nwt {
 		(*this)[2 + c] = value.z;
 		(*this)[3 + c] = value.w;
 	}
+
+	inline constexpr Mat4x4 Mat4x4::ortho(float left, float right, float bottom, float top, float near, float far) {
+		float rml = right - left;
+		float lmr = left - right;
+		float tmb = top - bottom;
+		float bmt = bottom - top;
+		float fmn = far - near;
+
+		return { 
+			2.0f / rml, 0, 0, 0, 
+			0, 2.0f / tmb, 0, 0, 
+			0, 0, 1.0f / fmn, 0, 
+			-(right + left) / rml, -(top + bottom) / tmb, -near / fmn, 1.0f 
+		};
+	}
+
+	inline Mat4x4 Mat4x4::perspective(float fov, float aspect, float near, float far) {
+		float tanHalfFOV = Mathf::tan(fov / 2.0f);
+		
+		Mat4x4 result;
+
+		result[0] = 1.0f / (aspect * tanHalfFOV);
+		result[4] = 1.0f / (tanHalfFOV);
+		result[8] = far / (far - near);
+		result[14] = 1.0f;
+		result[11] = -(far * near) / (far - near);
+
+		//Result[0][0] = static_cast<T>(1) / (aspect * tanHalfFovy);
+		//Result[1][1] = static_cast<T>(1) / (tanHalfFovy);
+		//Result[2][2] = zFar / (zFar - zNear);
+		//Result[2][3] = static_cast<T>(1);
+		//Result[3][2] = -(zFar * zNear) / (zFar - zNear);
+
+		return result;
+	}
+
+	inline Mat4x4 Mat4x4::lookAt(const Vec3& pos, const Vec3& target) {
+		Vec3 forward = (target - pos).normalized();
+		Vec3 right = Vec3::cross(Vec3::up(), forward).normalized();
+		Vec3 up = Vec3::cross(forward, right);
+
+		Mat4x4 result = Mat4x4::identity();
+
+		result.setCol(0, right.x, right.y, right.z, 0);
+		result.setCol(1, up.x, up.y, up.z, 0);
+		result.setCol(2, forward.x, forward.y, forward.z, 0);
+		result.setCol(3, -Vec3::dot(right, pos), -Vec3::dot(up, pos), -Vec3::dot(forward, pos), 1.0f);
+		//result.setCol(3, pos.x, pos.y, pos.z, 1.0f);
+
+		return result;
+	}
+
 
 	//
 	// Operators

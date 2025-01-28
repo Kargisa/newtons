@@ -13,7 +13,7 @@ project ("newtons")
 
 enable_testing()
 
-# Include sub-projects.
+# Include sub-projects. 
 add_subdirectory ("newtons-utils")
 add_subdirectory ("newtons-editor")
 add_subdirectory ("Lib")

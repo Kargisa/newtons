@@ -2,6 +2,7 @@
 #define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES // helps with alignmet requirements
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#define GLM_FORCE_LEFT_HANDED
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -30,6 +31,7 @@
 #include "mat4x4.hpp"
 #include "vec3.hpp"
 #include "mathf.hpp"
+#include "transform.hpp"
 
 #define GREEN_COLOR "\033[32m"
 #define RED_COLOR "\033[31m"
@@ -121,7 +123,7 @@ private:
 	};
 
 	const std::vector<const char*> deviceExtensions = {
-		VK_KHR_SWAPCHAIN_EXTENSION_NAME
+		VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 	};
 
 	std::vector<Vertex> vertices;
@@ -1263,7 +1265,6 @@ private:
 			vkMapMemory(_device, _uniformBuffersMemory[i], 0, bufferSize, 0, &_uniformBuffersMapped[i]);
 		}
 	}
-
 	void updateUniformBuffer(uint32_t currentFrame) {
 		static auto startTime = std::chrono::high_resolution_clock::now();
 
@@ -1273,10 +1274,18 @@ private:
 		TransformationMatrices ubo{};
 		// ubo.model = glm::rotate(glm::mat4(1.0f), 0 * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 		// ubo.model = Mat4x4::rotate({Mathf::cos(-45 / 2 * Mathf::DegToRad), 0, 0, Mathf::sin(-45 / 2 * Mathf::DegToRad)});
-		ubo.model = Mat4x4::identity();
 
-		ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-		ubo.proj = glm::perspective(glm::radians(60.0f), _swapChainExtent.width / (float)_swapChainExtent.height, 0.01f, 100.0f);
+		Transform modelTransform({-1.0f, 0.0f, 0.0f}, Quaternion::fromEuler(90.0f * Mathf::DegToRad, 0.0f, 90.0f * Mathf::DegToRad), {1.0f, 1.0f, -1.0f });
+
+		ubo.model = modelTransform.localToWorldMatrix();
+
+		ubo.view = glm::lookAt(glm::vec3(4.0f, 4.0f, -5.0f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		//ubo.view = Mat4x4::lookAt(Vec3(2.0f, 2.0f, -3.0f), Vec3(0.0f, 0.0f, 0.0f));
+		ubo.proj = glm::perspective(glm::radians(45.0f), _swapChainExtent.width / (float)_swapChainExtent.height, 0.01f, 100.0f);
+		//ubo.proj = Mat4x4::perspective(60.0f * Mathf::DegToRad, _swapChainExtent.width / (float)_swapChainExtent.height, 0.01f, 100.0f);
+		//ubo.proj = nwt::Mat4x4::ortho(-4, 4, -2, 2, 1, 100);
+		//ubo.proj = glm::ortho(-4, 4, -2, 2, 1, 100);
+		//ubo.proj[5] *= -1;
 		ubo.proj[1][1] *= -1;
 
 		memcpy(_uniformBuffersMapped[currentFrame], &ubo, sizeof(ubo));
@@ -1682,8 +1691,27 @@ private:
 };
 } // namespace nwt
 
-int main() {
+#include "transform.hpp"
+#include "vec3.hpp"
+
+//#ifdef _WIN32
+//#include <windows.h>
+//int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+//#else
+int main()
+//#endif
+{
 	nwt::NewtonsVulkanEngine app;
+
+	nwt::Transform modelTransform({ 0, 0, 6 }, nwt::Quaternion::fromEuler(0 * nwt::Mathf::DegToRad, 0, 0 * nwt::Mathf::DegToRad), { 1, 1, 1 });
+
+	//LOG(modelTransform.localToWorldMatrix().toString());
+
+	glm::mat4 mat = glm::mat4(1.0f);
+	mat[2][2] = 6;
+
+
+	//LOG(nwt::Mat4x4::perspective(60.0f * nwt::Mathf::DegToRad, 1, 1, 100.0f).toString());
 
 	try {
 		app.run();

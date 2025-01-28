@@ -6,7 +6,10 @@
 namespace nwt{
 struct TransformationMatrices {
 	Mat4x4 model;
+	//glm::mat4 model;
+	//Mat4x4 view;
 	glm::mat4 view;
+	//Mat4x4 proj;
 	glm::mat4 proj;
 };
 } // namespace nwt
