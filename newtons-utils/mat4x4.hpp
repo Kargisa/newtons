@@ -14,10 +14,10 @@ namespace nwt {
 		// float m20, m21, m22, m23; //
 		// float m30, m31, m32, m33; //
 
-		float m00, m10, m20, m30; // switching cols with rows here may be a better memory layout,
-		float m01, m11, m21, m31; // because cols are more frequently accessed.
-		float m02, m12, m22, m32; //
-		float m03, m13, m23, m33; //
+		float m00, m10, m20, m30;
+		float m01, m11, m21, m31;
+		float m02, m12, m22, m32;
+		float m03, m13, m23, m33;
 
 		constexpr Mat4x4(const Vec4& col0, const Vec4& col1, const Vec4& col2, const Vec4& col3)
 			:	m00(col0.x), m10(col0.y), m20(col0.z), m30(col0.w),
@@ -200,8 +200,8 @@ namespace nwt {
 		Mat4x4 result;
 
 		result[0] = 1.0f / (aspect * tanHalfFOV);
-		result[4] = 1.0f / (tanHalfFOV);
-		result[8] = far / (far - near);
+		result[5] = 1.0f / (tanHalfFOV);
+		result[10] = far / (far - near);
 		result[14] = 1.0f;
 		result[11] = -(far * near) / (far - near);
 
@@ -224,7 +224,7 @@ namespace nwt {
 		result.setCol(0, right.x, right.y, right.z, 0);
 		result.setCol(1, up.x, up.y, up.z, 0);
 		result.setCol(2, forward.x, forward.y, forward.z, 0);
-		result.setCol(3, -Vec3::dot(right, pos), -Vec3::dot(up, pos), -Vec3::dot(forward, pos), 1.0f);
+		result.setRow(3, -Vec3::dot(right, pos), -Vec3::dot(up, pos), -Vec3::dot(forward, pos), 1.0f);
 		//result.setCol(3, pos.x, pos.y, pos.z, 1.0f);
 
 		return result;
@@ -385,10 +385,10 @@ namespace nwt {
 
 	inline std::string Mat4x4::toString() const {
 		return (
-			std::to_string(m00) + "," + std::to_string(m01) + "," + std::to_string(m02) + "," + std::to_string(m03) + "\n" +
-			std::to_string(m10) + "," + std::to_string(m11) + "," + std::to_string(m12) + "," + std::to_string(m13) + "\n" +
-			std::to_string(m20) + "," + std::to_string(m21) + "," + std::to_string(m22) + "," + std::to_string(m23) + "\n" +
-			std::to_string(m30) + "," + std::to_string(m31) + "," + std::to_string(m32) + "," + std::to_string(m33)
+			std::to_string(m00) + ", " + std::to_string(m01) + ", " + std::to_string(m02) + ", " + std::to_string(m03) + "\n" +
+			std::to_string(m10) + ", " + std::to_string(m11) + ", " + std::to_string(m12) + ", " + std::to_string(m13) + "\n" +
+			std::to_string(m20) + ", " + std::to_string(m21) + ", " + std::to_string(m22) + ", " + std::to_string(m23) + "\n" +
+			std::to_string(m30) + ", " + std::to_string(m31) + ", " + std::to_string(m32) + ", " + std::to_string(m33)
 			);
 	}
 } // namespace nwt

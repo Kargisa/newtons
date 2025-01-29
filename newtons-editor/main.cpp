@@ -1275,18 +1275,18 @@ private:
 		// ubo.model = glm::rotate(glm::mat4(1.0f), 0 * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 		// ubo.model = Mat4x4::rotate({Mathf::cos(-45 / 2 * Mathf::DegToRad), 0, 0, Mathf::sin(-45 / 2 * Mathf::DegToRad)});
 
-		Transform modelTransform({-5.0f, 0.0f, 0.0f}, Quaternion::fromEuler(0.0f * Mathf::DegToRad, 90.0f * Mathf::DegToRad, -90.0f * Mathf::DegToRad), {1.0f, 1.0f, -1.0f });
+		Transform modelTransform({0.0f, 0.0f, 0.0f}, Quaternion::fromEuler(0.0f * Mathf::DegToRad, 90.0f * Mathf::DegToRad, -90.0f * Mathf::DegToRad), {1.0f, 1.0f, -1.0f });
 
 		ubo.model = modelTransform.localToWorldMatrix();
 
-		ubo.view = glm::lookAt(glm::vec3(4.0f, 4.0f, -5.0f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-		//ubo.view = Mat4x4::lookAt(Vec3(2.0f, 2.0f, -3.0f), Vec3(0.0f, 0.0f, 0.0f));
-		ubo.proj = glm::perspective(glm::radians(45.0f), _swapChainExtent.width / (float)_swapChainExtent.height, 0.01f, 100.0f);
-		//ubo.proj = Mat4x4::perspective(60.0f * Mathf::DegToRad, _swapChainExtent.width / (float)_swapChainExtent.height, 0.01f, 100.0f);
+		// ubo.view = glm::lookAt(glm::vec3(4.0f, 4.0f, -5.0f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		ubo.view = Mat4x4::lookAt(Vec3(4.0f, 4.0f, -5.0f), Vec3(0.0f, 0.0f, 0.0f));
+		// ubo.proj = glm::perspective(glm::radians(60.0f), _swapChainExtent.width / (float)_swapChainExtent.height, 0.01f, 100.0f);
+		ubo.proj = Mat4x4::perspective(60.0f * Mathf::DegToRad, _swapChainExtent.width / (float)_swapChainExtent.height, 0.01f, 100.0f);
 		//ubo.proj = nwt::Mat4x4::ortho(-4, 4, -2, 2, 1, 100);
-		//ubo.proj = glm::ortho(-4, 4, -2, 2, 1, 100);
-		//ubo.proj[5] *= -1;
-		ubo.proj[1][1] *= -1;
+		// ubo.proj = glm::ortho(-8, 8, -4, 4, 1, 100);
+		ubo.proj[5] *= -1;
+		// ubo.proj[1][1] *= -1;
 
 		memcpy(_uniformBuffersMapped[currentFrame], &ubo, sizeof(ubo));
 	}
@@ -1703,13 +1703,43 @@ int main()
 {
 	nwt::NewtonsVulkanEngine app;
 
-	nwt::Transform modelTransform({ 0, 0, 6 }, nwt::Quaternion::fromEuler(0 * nwt::Mathf::DegToRad, 0, 0 * nwt::Mathf::DegToRad), { 1, 1, 1 });
 
-	//LOG(modelTransform.localToWorldMatrix().toString());
+	// nwt::Transform modelTransform({-1.0f, 0.0f, 0.0f}, nwt::Quaternion::fromEuler(0.0f * nwt::Mathf::DegToRad, 90.0f * nwt::Mathf::DegToRad, -90.0f * nwt::Mathf::DegToRad), {1.0f, 1.0f, -1.0f });
 
-	glm::mat4 mat = glm::mat4(1.0f);
-	mat[2][2] = 6;
+	// LOG(modelTransform.localToWorldMatrix().toString());
 
+
+	glm::mat4 glmMat = glm::lookAt(glm::vec3(4.0f, 4.0f, -5.0f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+
+	nwt::Mat4x4 nwtMat = nwt::Mat4x4::lookAt(nwt::Vec3(4.0f, 4.0f, -5.0f), nwt::Vec3(-1.0f, 0.0f, 0.0f));
+	
+
+	LOG(nwtMat.toString());
+	LOG("\n-------------------\n");
+	LOG(
+		glmMat[0][0] << " " << glmMat[0][1] << " " << glmMat[0][2] << " " << glmMat[0][3] << "\n" <<
+		glmMat[1][0] << " " << glmMat[1][1] << " " << glmMat[1][2] << " " << glmMat[1][3] << "\n" <<
+		glmMat[2][0] << " " << glmMat[2][1] << " " << glmMat[2][2] << " " << glmMat[2][3] << "\n" <<
+		glmMat[3][0] << " " << glmMat[3][1] << " " << glmMat[3][2] << " " << glmMat[3][3] << "\n"
+
+	);
+	LOG("\n-------------------\n");
+
+	glmMat = glm::perspective(glm::radians(60.0f), 1080 / (float)1920, 0.01f, 100.0f);
+	nwtMat = nwt::Mat4x4::perspective(60.0f * nwt::Mathf::DegToRad, 1080 / (float)1920, 0.01f, 100.0f);
+
+	LOG("WHAAAT\n")
+
+	LOG(nwtMat.toString());
+	LOG("\n-------------------\n");
+	LOG(
+		glmMat[0][0] << " " << glmMat[0][1] << " " << glmMat[0][2] << " " << glmMat[0][3] << "\n" <<
+		glmMat[1][0] << " " << glmMat[1][1] << " " << glmMat[1][2] << " " << glmMat[1][3] << "\n" <<
+		glmMat[2][0] << " " << glmMat[2][1] << " " << glmMat[2][2] << " " << glmMat[2][3] << "\n" <<
+		glmMat[3][0] << " " << glmMat[3][1] << " " << glmMat[3][2] << " " << glmMat[3][3] << "\n"
+
+	);
 
 	//LOG(nwt::Mat4x4::perspective(60.0f * nwt::Mathf::DegToRad, 1, 1, 100.0f).toString());
 
