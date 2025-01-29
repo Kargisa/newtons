@@ -1275,7 +1275,7 @@ private:
 		// ubo.model = glm::rotate(glm::mat4(1.0f), 0 * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 		// ubo.model = Mat4x4::rotate({Mathf::cos(-45 / 2 * Mathf::DegToRad), 0, 0, Mathf::sin(-45 / 2 * Mathf::DegToRad)});
 
-		Transform modelTransform({-1.0f, 0.0f, 0.0f}, Quaternion::fromEuler(90.0f * Mathf::DegToRad, 0.0f, 90.0f * Mathf::DegToRad), {1.0f, 1.0f, -1.0f });
+		Transform modelTransform({-5.0f, 0.0f, 0.0f}, Quaternion::fromEuler(0.0f * Mathf::DegToRad, 90.0f * Mathf::DegToRad, -90.0f * Mathf::DegToRad), {1.0f, 1.0f, -1.0f });
 
 		ubo.model = modelTransform.localToWorldMatrix();
 

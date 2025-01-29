@@ -9,10 +9,15 @@
 
 namespace nwt {
 	struct alignas(16) Mat4x4 {
-		float m00, m01, m02, m03; // switching cols with rows here may be a better memory layout,
-		float m10, m11, m12, m13; // because cols are more frequently accessed.
-		float m20, m21, m22, m23; //
-		float m30, m31, m32, m33; //
+		// float m00, m01, m02, m03; // switching cols with rows here may be a better memory layout,
+		// float m10, m11, m12, m13; // because cols are more frequently accessed.
+		// float m20, m21, m22, m23; //
+		// float m30, m31, m32, m33; //
+
+		float m00, m10, m20, m30; // switching cols with rows here may be a better memory layout,
+		float m01, m11, m21, m31; // because cols are more frequently accessed.
+		float m02, m12, m22, m32; //
+		float m03, m13, m23, m33; //
 
 		constexpr Mat4x4(const Vec4& col0, const Vec4& col1, const Vec4& col2, const Vec4& col3)
 			:	m00(col0.x), m10(col0.y), m20(col0.z), m30(col0.w),
