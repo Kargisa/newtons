@@ -16,7 +16,7 @@ endif()
 
 find_package(Vulkan REQUIRED)
 
-target_link_libraries(newtons-editor PRIVATE newtons-utils PRIVATE glfw PRIVATE Vulkan::Vulkan PRIVATE glm)
+target_link_libraries(newtons-editor PRIVATE newtons-utils PRIVATE glfw PRIVATE Vulkan::Vulkan)
 
 
 file (COPY "shaders/compiledShaders/" DESTINATION shaders)
