@@ -1,20 +1,12 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
-#include <chrono>
-#include <iostream>
+#include "pch.hpp"
+
 #include <stdexcept>
 #include <cstdlib>
-#include <vector>
-#include <array>
 #include <cstring>
-#include <map>
-#include <optional>
-#include <set>
-#include <limits>
-#include <algorithm>
 #include <fstream>
-#include <unordered_map>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -1264,10 +1256,11 @@ private:
 
 		TransformationMatrices ubo{};
 
-		Transform modelTransform({2.0f, 0.0f, 0.0f}, Quaternion::fromEuler(0.0f * Mathf::DegToRad, 90.0f * Mathf::DegToRad, -90.0f * Mathf::DegToRad), {1.0f, 1.0f, -1.0f });
+		Transform modelTransform({0.0f, 0.0f, 0.0f}, Quaternion::fromEuler(0.0f * Mathf::DegToRad, 90.0f * Mathf::DegToRad, -90.0f * Mathf::DegToRad), {1.0f, 1.0f, -1.0f });
 		ubo.model = modelTransform.localToWorldMatrix();
 		ubo.view = Mat4x4::lookAt(Vec3(0.0f, 2.0f, -5.0f), Vec3(0.0f, 0.0f, 0.0f));
 		ubo.proj = Mat4x4::perspective(60.0f * Mathf::DegToRad, _swapChainExtent.width / (float)_swapChainExtent.height, 0.01f, 100.0f);
+		// ubo.proj = Mat4x4::ortho(-4, 4, -2, 2, 1, 100);
 		ubo.proj[5] *= -1;
 
 		memcpy(_uniformBuffersMapped[currentFrame], &ubo, sizeof(ubo));
