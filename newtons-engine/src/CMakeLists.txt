@@ -1,7 +1,7 @@
 # if (WIN32)
 # add_executable (newtons-editor WIN32 "main.cpp" "obj_reader.hpp" "vertex.hpp" "vertex.cpp" "transformationMatrices.hpp" "mesh.cpp" "mesh.hpp" "stb_image.h")
 # else()
-add_library(newtons-engine STATIC "newtons/main.cpp" "newtons/mesh.cpp" "newtons/application.cpp" "newtons/window/window.cpp" "newtons/event/event.cpp")
+add_library(newtons-engine STATIC "newtons/main.cpp" "newtons/mesh.cpp" "newtons/application.cpp" "newtons/window/window.cpp" )
 # endif()
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)

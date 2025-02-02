@@ -6,6 +6,7 @@ Window::Window(int width, int height, const char* name = "NEWTONS"){
 
     _window = glfwCreateWindow(width, height, name, nullptr, nullptr);
     glfwSetWindowUserPointer(_window, this);
+    //glfwSetKeyCallback
 }
 
 Window::~Window() {
