@@ -1,16 +1,25 @@
 #include "window.hpp"
 
 namespace nwt{
-Window::Window(int width, int height, const char* name = "NEWTONS"){
-    glfwInit();
 
-    _window = glfwCreateWindow(width, height, name, nullptr, nullptr);
-    glfwSetWindowUserPointer(_window, this);
-    //glfwSetKeyCallback
+void Window::setEventCallback(EventFunc func)
+{
+    _data.eventCallback = func;
 }
 
-Window::~Window() {
-    
+int Window::getWidth() const
+{
+    return _data.width;
+}
+
+int Window::getHeight() const
+{
+    return _data.height;
+}
+
+void Window::destroy()
+{
+    delete this;
 }
 
 } // namespace nwt

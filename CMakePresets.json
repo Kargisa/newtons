@@ -11,6 +11,7 @@
         "CMAKE_C_COMPILER": "cl.exe",
         "CMAKE_CXX_COMPILER": "cl.exe",
         "CMAKE_CXX_STANDARD": "20",
+        "CMAKE_CXX_FLAGS": "-DNWT_WINDOWS",
         "CMAKE_CXX_FLAGS_RELEASE": "-DRELEASE /MD",
         "CMAKE_CXX_FLAGS_DEBUG": "-DDEBUG /MDd"
       },
@@ -79,6 +80,7 @@
         "CMAKE_C_COMPILER": "gcc",
         "CMAKE_CXX_COMPILER": "g++",
         "CMAKE_CXX_STANDARD": "20",
+        "CMAKE_CXX_FLAGS": "-DNWT_LINUX",
         "CMAKE_CXX_FLAGS_RELEASE": "-DRELEASE",
         "CMAKE_CXX_FLAGS_DEBUG": "-DDEBUG"
       },

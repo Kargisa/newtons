@@ -1,7 +1,7 @@
 # if (WIN32)
 # add_executable (newtons-editor WIN32 "main.cpp" "obj_reader.hpp" "vertex.hpp" "vertex.cpp" "transformationMatrices.hpp" "mesh.cpp" "mesh.hpp" "stb_image.h")
 # else()
-add_library(newtons-engine STATIC "newtons/main.cpp" "newtons/mesh.cpp" "newtons/application.cpp" "newtons/window/window.cpp" )
+add_library(newtons-engine SHARED "newtons/main.cpp" "newtons/mesh.cpp" "newtons/application.cpp" "newtons/window/window.cpp" "newtons/window/window.hpp" "newtons/renderer/vulkanRenderer.cpp" "newtons/platform/linux/linuxWindow.cpp" "newtons/platform/windows/windowsWindow.cpp")
 # endif()
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
@@ -10,7 +10,9 @@ endif()
 
 find_package(Vulkan REQUIRED)
 
-target_link_libraries(newtons-engine PRIVATE newtons-utils PRIVATE glfw PRIVATE Vulkan::Vulkan)
+target_link_libraries(newtons-engine PRIVATE newtons-utils PUBLIC glfw PUBLIC Vulkan::Vulkan)
 
 target_include_directories(newtons-engine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_precompile_headers(newtons-engine PRIVATE "newtons/pch.hpp")
+
+target_compile_definitions(newtons-engine PRIVATE NWT_EXPORTS)

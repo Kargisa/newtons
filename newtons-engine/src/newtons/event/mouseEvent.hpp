@@ -3,16 +3,16 @@
 #include "event.hpp"
 
 namespace nwt {
-class MouseMovedEvent : public Event {
+class NWT_API MouseMovedEvent : public Event {
 private:
 	float _posX, _posY;
 
 public:
 	MouseMovedEvent(float posX, float posY)
-		: _posX(posX), _posY(posY){}
+		: _posX(posX), _posY(posY) {}
 
 public:
-	constexpr EventType getEventType() override {
+	EventType getEventType() const override {
 		return EventType::MouseMoved;
 	}
 
@@ -26,7 +26,7 @@ public:
 	
 };
 
-class MousePressedEvent : public Event {
+class NWT_API MousePressedEvent : public Event {
 private:
 	int _button;
 
@@ -35,7 +35,7 @@ public:
 		: _button(button) {}
 
 public:
-	constexpr EventType getEventType() override {
+	EventType getEventType() const override {
 		return EventType::MousePressed;
 	}
 
@@ -44,7 +44,7 @@ public:
 	}
 };
 
-class MouseReleasedEvent : public Event {
+class NWT_API MouseReleasedEvent : public Event {
 private:
 	int _button;
 
@@ -53,7 +53,7 @@ public:
 		: _button(button) {}
 
 public:
-	constexpr EventType getEventType() override {
+	EventType getEventType() const override {
 		return EventType::MouseReleased;
 	}
 
@@ -62,7 +62,7 @@ public:
 	}
 };
 
-class MouseScrolledEvent : public MouseEvent {
+class NWT_API MouseScrolledEvent : public Event {
 private:
 	float _offsetX, _offsetY;
 
@@ -71,16 +71,16 @@ public:
 		: _offsetX(offsetX), _offsetY(offsetY) {}
 
 public:
-	constexpr EventType getEventType() override {
+	EventType getEventType() const override {
 		return EventType::MouseScrolled;
 	}
 
 	float getX() const {
-		return _offset.x;
+		return _offsetX;
 	}
 
 	float getY() const {
-		return _offset.y;
+		return _offsetY;
 	}
 };
 

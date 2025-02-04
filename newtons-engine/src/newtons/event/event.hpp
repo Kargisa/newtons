@@ -3,7 +3,7 @@
 #include "../pch.hpp"
 
 namespace nwt {
-class Event {
+class NWT_API Event {
 public:
 	enum class EventType {
 		WindowResized, WindowClosed,
@@ -11,9 +11,9 @@ public:
 		MouseMoved, MousePressed, MouseReleased, MouseScrolled
 	};
 
+protected:
+	Event() {}
 public:
-	Event() = delete;
-public:
-	virtual constexpr EventType getEventType() = 0;
+	virtual EventType getEventType() const = 0;
 };
 } // namespace nwt

@@ -3,14 +3,14 @@
 #include "event.hpp"
 
 namespace nwt {
-class WindowClosedEvent : public Event {
+class NWT_API WindowClosedEvent : public Event {
 public:
-	constexpr EventType getEventType() override {
+	EventType getEventType() const override {
 		return EventType::WindowClosed;
 	}
 };
 
-class WindowResizedEvent : public Event {
+class NWT_API WindowResizedEvent : public Event {
 private:
 	int _width, _height;
 
@@ -19,7 +19,7 @@ public:
 		: _width(width), _height(height) {}
 
 public:
-	constexpr EventType getEventType() override {
+	EventType getEventType() const override {
 		return EventType::WindowResized;
 	}
 
@@ -32,5 +32,4 @@ public:
 	}
 
 };
-
 } // namespace nwt

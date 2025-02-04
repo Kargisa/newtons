@@ -1,19 +1,47 @@
 #pragma once
 
-#include <GLFW/glfw3.h>
+#include "newtons/pch.hpp"
+#include "newtons/event/mouseEvent.hpp"
+#include "newtons/event/keyEvent.hpp"
+#include "newtons/event/windowEvent.hpp"
+
+#include <vulkan/vulkan.h>
+
+#include <functional>
 
 namespace nwt{
-class Window{
-    GLFWwindow* _window;
 
-    static const int WIDTH = 720;
-    static const int HEIGHT = 405;
+typedef std::function<void(const Event&)> EventFunc;
 
-public:
-    Window(int width, int height, const char* name);
-    ~Window();
-
-public:
-    
+struct NWT_API WindowData{
+    const char* name;
+    int width;
+    int height;
+    EventFunc eventCallback;
 };
+
+class NWT_API Window{
+protected:
+    WindowData _data;
+
+    Window() = default;
+public:
+    virtual ~Window() = default;
+
+private:
+    virtual void init() = 0;
+    virtual void createCallbacks() = 0;
+
+public:
+    virtual void setEventCallback(EventFunc func);
+    virtual int getWidth() const;
+    virtual int getHeight() const;
+
+    virtual void createVulkanSurface(VkInstance instance, const VkAllocationCallbacks* allocator, VkSurfaceKHR* surface) = 0;
+    virtual void* getNativeWindow() = 0;
+
+    virtual void destroy();
+};
+
+
 } // namespace nwt
