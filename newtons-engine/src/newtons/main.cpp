@@ -1524,7 +1524,6 @@
 // 	}
 
 // 	void createTextureImageView() {
-
 // 		_textureImageView = createImageView(_textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
 // 	}
 
@@ -1645,7 +1644,7 @@
 // 			// }
 // 		}
 
-		
+
 // 	}
 
 // 	static std::vector<char> readShaderFile(const std::string& filename) {

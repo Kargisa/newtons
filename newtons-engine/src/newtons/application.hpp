@@ -5,7 +5,6 @@
 #include "window/window.hpp"
 #include "newtons/platform/linux/linuxWindow.hpp"
 #include "newtons/platform/windows/windowsWindow.hpp"
-#include "newtons/renderer/vulkanRenderer.hpp"
 
 namespace nwt{
 
@@ -20,11 +19,12 @@ public:
     virtual ~Application();
 
 public:
+    void init();
     void run();
     Window* const getWindow();
 
 public:
-    static Application* instace();
+    static Application* instance();
 
 private:
     void initWindow();

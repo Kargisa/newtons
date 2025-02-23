@@ -14,6 +14,7 @@
 #include <chrono>
 #include <memory>
 #include <functional>
+#include <cstring>
 
 #include "logging/log.hpp"
 #include "newtons/api.hpp"

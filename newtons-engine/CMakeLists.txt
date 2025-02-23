@@ -6,9 +6,9 @@
 
 
 
-file (COPY "shaders/compiledShaders/" DESTINATION shaders)
-file (COPY "imgs" DESTINATION .)
-file (COPY "models" DESTINATION .)
+# file (COPY "shaders/compiledShaders/" DESTINATION shaders)
+# file (COPY "imgs" DESTINATION .)
+# file (COPY "models" DESTINATION .)
 
 add_subdirectory(src)
 

@@ -1,27 +1,32 @@
 #include "application.hpp"
 #include <GLFW/glfw3.h>
 
-namespace nwt{
+namespace nwt {
     Application* Application::s_instance = nullptr;
 
-    Application::Application()
-    {
-        if (s_instance == nullptr){
-            s_instance = this;
-        }
-        else{
-            return;
-        }
+    Application::Application() {
+
     }
 
-    Application::~Application()
-    {
-        if (s_instance == this){
+    Application::~Application() {
+        if (s_instance == this) {
             s_instance = nullptr;
         }
     }
 
-    void Application::run(){
+    void Application::init() {
+
+    }
+
+    void Application::run() {
+        if (s_instance == nullptr) {
+            s_instance = this;
+        }
+        else {
+            return;
+        }
+
+
         initWindow();
         initVulkan();
 
@@ -35,8 +40,7 @@ namespace nwt{
         return _window;
     }
 
-    Application* Application::instace()
-    {
+    Application* Application::instance() {
         return s_instance;
     }
 
@@ -47,21 +51,20 @@ namespace nwt{
 #elif NWT_WINDOWS
         _window = WindowsWindow::create(720, 405, "NEWTONS");
 #endif
-        _window->setEventCallback([&](const Event& e){
-            if (e.getEventType() == Event::EventType::WindowClosed){
+        _window->setEventCallback([&](const Event& e) {
+            if (e.getEventType() == Event::EventType::WindowClosed) {
                 _running = false;
             }
-        });
+            });
     }
 
-    void Application::initVulkan()
-    {
+    void Application::initVulkan() {
 
     }
 
     void Application::mainLoop()
     {
-        while (_running){
+        while (_running) {
             glfwPollEvents();
         }
     }
@@ -69,6 +72,8 @@ namespace nwt{
     void Application::cleanup()
     {
         _window->destroy();
+
+        s_instance = nullptr;
     }
 
 } // namespace nwt
