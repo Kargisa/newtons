@@ -569,7 +569,7 @@ namespace nwt
         }
     }
 
-    void VulkanContext::createGraphicsPipeline() {
+    void VulkanContext::createGraphicsPipeline(const std::vector<char>& vertBinaries, const std::vector<char>& fragBinaries) {
 
     }
 

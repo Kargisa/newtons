@@ -11,7 +11,7 @@ namespace nwt
         std::optional<uint32_t> graphicsFamily;
         std::optional<uint32_t> presentFamily;
 
-        inline bool isComplete()
+        inline bool isComplete() const
         {
             return graphicsFamily.has_value() && presentFamily.has_value();
         }
@@ -62,7 +62,7 @@ namespace nwt
         VkDescriptorSetLayout _descriptorSetLayout;
 
     protected:
-        inline VulkanContext() = default;
+        VulkanContext() = default;
 
     public:
         virtual ~VulkanContext();
@@ -94,7 +94,7 @@ namespace nwt
         void createImageViews();
         void createRenderPass();
         void createDescriptorSetLayout();
-        void createGraphicsPipeline();
+        void createGraphicsPipeline(const std::vector<char>& vertBinaries, const std::vector<char>& fragBinaries);
 
     public:
         static GraphicsContext* createContext();

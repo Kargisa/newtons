@@ -44,7 +44,7 @@ namespace nwt {
 
 		static constexpr Mat4x4 identity();
 		static constexpr Mat4x4 rotate(const Quaternion& q);
-		constexpr Mat4x4 transposed() const;
+		Mat4x4 transposed() const;
 
 		constexpr float& getValue(char row, char col);
 		constexpr float getValue(char row, char col) const;
@@ -123,7 +123,7 @@ namespace nwt {
 		};
 	}
 
-	inline constexpr Mat4x4 Mat4x4::transposed() const{
+	inline Mat4x4 Mat4x4::transposed() const{
 		Mat4x4 result;
 
 		result.setRow(0, getCol(0));

@@ -11,7 +11,7 @@ namespace nwt {
 
     class GraphicsContext {
     protected:
-        inline GraphicsContext() = default;
+        GraphicsContext() = default;
 
     public:
         inline virtual ~GraphicsContext() {}
