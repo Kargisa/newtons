@@ -13,13 +13,16 @@ namespace nwt{
     public:
         virtual ~LinuxWindow();
 
-    private:
         virtual void init() override;
         virtual void createCallbacks() override;
-        virtual void createVulkanSurface(VkInstance instance, const VkAllocationCallbacks* allocator, VkSurfaceKHR* surface) override;
         virtual void* getNativeWindow() override;
+        virtual void getFramebufferSize(int* width, int* height) override;
+
+        virtual void destroy() override;
     
-    public:
+        virtual void createVulkanSurface(VkInstance instance, const VkAllocationCallbacks* allocator, VkSurfaceKHR* surface) override;
+        virtual const char** getVulkanExtensions(uint32_t* count) override;
+
         static LinuxWindow* create(int width, int height, const char* name);
 
     };

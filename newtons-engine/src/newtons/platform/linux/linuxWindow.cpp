@@ -104,14 +104,34 @@ namespace nwt
         });
     }
 
+
+    void* LinuxWindow::getNativeWindow() {
+        return _window;
+    }
+
+    void LinuxWindow::getFramebufferSize(int* width, int* height) {
+        glfwGetFramebufferSize(_window, width, height);
+        while (*width == 0 || *height == 0) {
+            glfwWaitEvents();
+            glfwGetFramebufferSize(_window, width, height);
+        }
+    }
+
+    void LinuxWindow::destroy() {
+
+    }
+
+    // ********************************
+    // ************ Vulkan ************
+    // ********************************
+
     void LinuxWindow::createVulkanSurface(VkInstance instance, const VkAllocationCallbacks* allocator, VkSurfaceKHR* surface)
     {
         glfwCreateWindowSurface(instance, _window, allocator, surface);
     }
 
-    void *LinuxWindow::getNativeWindow()
-    {
-        return _window;
+    const char** LinuxWindow::getVulkanExtensions(uint32_t* count) {
+        return glfwGetRequiredInstanceExtensions(count);
     }
 
     LinuxWindow* LinuxWindow::create(int width, int height, const char* name = "NEWTONS")

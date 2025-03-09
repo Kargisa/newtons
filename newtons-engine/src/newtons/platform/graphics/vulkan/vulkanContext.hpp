@@ -1,7 +1,7 @@
 #pragma once
 
 #include "newtons/pch.hpp"
-#include "newtons/renderer/graphicsContext.hpp"
+#include "newtons/graphics/graphicsContext.hpp"
 #include <vulkan/vulkan.h>
 
 namespace nwt
@@ -30,6 +30,27 @@ namespace nwt
         std::vector<VkImage> images;
         std::vector<VkImageView> imageViews;
         VkFormat imageFormat;
+        std::vector<VkFramebuffer> framebuffers;
+        bool framebufferResized = false;
+    };
+
+    struct VulkanGraphicsPipelineData {
+        VkPipeline pipeline;
+        VkPipelineLayout layout;
+
+        VulkanGraphicsPipelineData() = default;
+        VulkanGraphicsPipelineData(const VkPipeline& pipeline, const VkPipelineLayout& layout)
+            : pipeline(pipeline), layout(layout) {}
+    };
+
+    struct VulkanDepthResources {
+        VkImage image;
+        VkImageView imageView;
+        VkDeviceMemory memory;
+
+        VulkanDepthResources() = default;
+        VulkanDepthResources(const VkImage& image, const VkImageView& imageView, const VkDeviceMemory& memory)
+            : image(image), imageView(imageView), memory(memory) {}
     };
 
     // *********************************************
@@ -48,6 +69,14 @@ namespace nwt
         static constexpr bool _enableValidationLayers = false;
 #endif
 
+        static constexpr int MAX_FRAMES_IN_FLIGHT = 3;
+        int _currentFrame;
+
+        std::vector<VkFence> _inFlightFences;
+        std::vector<VkSemaphore> _imageAvailableSemaphores;
+ 	    std::vector<VkSemaphore> _renderFinishedSemaphores;
+
+
         VkInstance _instance;
         VkSurfaceKHR _surface;
         const std::vector<const char*> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
@@ -56,10 +85,16 @@ namespace nwt
         VkQueue _graphicsQueue;
         VkQueue _presentQueue;
 
-        VulkanSwapchainData _swapchain;
+        VulkanSwapchainData _swapChain;
+        std::unordered_map<uint32_t, VulkanGraphicsPipelineData> _graphicsPipelines;
 
         VkRenderPass _renderPass;
         VkDescriptorSetLayout _descriptorSetLayout;
+
+        VkCommandPool _graphicsCommandPool;
+        std::vector<VkCommandBuffer> _graphicsCommandBuffers;
+
+        VulkanDepthResources _depth;
 
     protected:
         VulkanContext() = default;
@@ -69,6 +104,8 @@ namespace nwt
 
         virtual void init() override;
         virtual void* getNativeContext() override;
+
+        virtual void drawFrame() override;
 
     private:
         bool checkValidationLayersSupport();
@@ -84,17 +121,29 @@ namespace nwt
         VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
         VkFormat findDepthFormat();
         bool hasStencilComponent(VkFormat format);
+        VkShaderModule createShaderModule(uint32_t* code, uint32_t size) const;
+        uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+        void createGraphicsPipeline(uint32_t* vertBinaries, uint32_t vSize, const std::string& vEntry, uint32_t* fragBinaries, uint32_t fSize, const std::string& fEntry, uint32_t id);
+        void createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
+        void recreateSwapChain();
 
-
-        void createInstance(const char** thirdPartyExtrensions, size_t thirdPartySize);
+        void createInstance();
         void createSurface();
         void pickPhysicalDevice();
         void createLogicalDevice();
         void createSwapChain();
-        void createImageViews();
+        void createSwapchainImageViews();
         void createRenderPass();
+        void createSyncObjects();
         void createDescriptorSetLayout();
-        void createGraphicsPipeline(const std::vector<char>& vertBinaries, const std::vector<char>& fragBinaries);
+        void createDepthResources();
+        void createGraphicsCommandPool();
+        void createCommandBuffers();
+        void createFramebuffers();
+
+        void cleanupSwapchain();
+
+        void recordCommandBuffer(VkCommandBuffer commandBuffer);
 
     public:
         static GraphicsContext* createContext();

@@ -1,11 +1,13 @@
 #include "application.hpp"
 #include <GLFW/glfw3.h>
+#include "newtons/platform/linux/linuxWindow.hpp"
+#include "newtons/platform/windows/windowsWindow.hpp"
 
 namespace nwt {
     Application* Application::s_instance = nullptr;
 
     Application::Application() {
-
+        
     }
 
     Application::~Application() {

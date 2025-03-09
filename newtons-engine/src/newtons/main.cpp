@@ -150,11 +150,11 @@
 // 		createRenderPass();
 // 		createDescriptorSetLayout();
 // 		createGraphicsPipeline();
-
-
 // 		createCommandPool();
 // 		createDepthResources();
 // 		createFramebuffers();
+
+
 // 		createTextureImage();
 // 		createTextureImageView();
 // 		createTextureSampler();
@@ -1099,7 +1099,6 @@
 // 				throw std::runtime_error("failed to create synchronization objects for a frame!");
 // 			}
 // 		}
-
 // 	}
 
 // 	void recreateSwapChain() {

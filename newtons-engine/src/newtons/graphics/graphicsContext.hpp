@@ -19,6 +19,8 @@ namespace nwt {
         virtual void init() = 0;
         virtual void* getNativeContext() = 0;
 
+        virtual void drawFrame() = 0;
+
         static GraphicsContext* createContext(GraphicsAPI api);
 
     private:

@@ -1,7 +1,20 @@
 # if (WIN32)
 # add_executable (newtons-editor WIN32 "main.cpp" "obj_reader.hpp" "vertex.hpp" "vertex.cpp" "transformationMatrices.hpp" "mesh.cpp" "mesh.hpp" "stb_image.h")
 # else()
-add_library(newtons-engine STATIC "newtons/main.cpp" "newtons/mesh.cpp" "newtons/application.cpp" "newtons/window/window.cpp" "newtons/window/window.hpp" "newtons/platform/renderer/vulkan/vulkanContext.cpp" "newtons/platform/linux/linuxWindow.cpp" "newtons/platform/windows/windowsWindow.cpp" "newtons/renderer/graphicsFrame.cpp" "newtons/renderer/graphics.cpp")
+add_library(newtons-engine STATIC 
+"newtons/main.cpp" 
+"newtons/mesh.cpp" 
+"newtons/application.cpp" 
+"newtons/window/window.cpp" 
+"newtons/window/window.hpp" 
+"newtons/platform/graphics/vulkan/vulkanContext.cpp" 
+"newtons/platform/linux/linuxWindow.cpp" 
+"newtons/platform/windows/windowsWindow.cpp" 
+"newtons/platform/graphics/vulkan/vulkanVertex.cpp" 
+"newtons/graphics/graphicsFrame.cpp" 
+"newtons/graphics/graphics.cpp" 
+"newtons/platform/graphics/vulkan/vulkanShader.cpp"
+)
 # endif()
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)

@@ -2,7 +2,6 @@
 .vscode/
 
 out/
-*.spv
 
 CMakeLists.txt.user
 CMakeCache.txt
