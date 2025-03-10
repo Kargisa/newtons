@@ -1,9 +1,11 @@
 #pragma once
 
-#include "newtons/pch.hpp"
-#include "newtons/graphics/graphicsContext.hpp"
 #include <vulkan/vulkan.h>
 
+#include "newtons/pch.hpp"
+#include "newtons/graphics/graphicsContext.hpp"
+#include "vulkanGraphicsPipeline.hpp"
+#include "vulkanSwapchain.hpp"
 namespace nwt
 {
     struct VulkanQueueFamilyIndices
@@ -24,25 +26,6 @@ namespace nwt
         std::vector<VkPresentModeKHR> presentModes;
     };
 
-    struct VulkanSwapchainData {
-        VkSwapchainKHR swapChain;
-        VkExtent2D extent;
-        std::vector<VkImage> images;
-        std::vector<VkImageView> imageViews;
-        VkFormat imageFormat;
-        std::vector<VkFramebuffer> framebuffers;
-        bool framebufferResized = false;
-    };
-
-    struct VulkanGraphicsPipelineData {
-        VkPipeline pipeline;
-        VkPipelineLayout layout;
-
-        VulkanGraphicsPipelineData() = default;
-        VulkanGraphicsPipelineData(const VkPipeline& pipeline, const VkPipelineLayout& layout)
-            : pipeline(pipeline), layout(layout) {}
-    };
-
     struct VulkanDepthResources {
         VkImage image;
         VkImageView imageView;
@@ -50,7 +33,8 @@ namespace nwt
 
         VulkanDepthResources() = default;
         VulkanDepthResources(const VkImage& image, const VkImageView& imageView, const VkDeviceMemory& memory)
-            : image(image), imageView(imageView), memory(memory) {}
+            : image(image), imageView(imageView), memory(memory) {
+        }
     };
 
     // *********************************************
@@ -74,7 +58,7 @@ namespace nwt
 
         std::vector<VkFence> _inFlightFences;
         std::vector<VkSemaphore> _imageAvailableSemaphores;
- 	    std::vector<VkSemaphore> _renderFinishedSemaphores;
+        std::vector<VkSemaphore> _renderFinishedSemaphores;
 
 
         VkInstance _instance;
@@ -85,8 +69,8 @@ namespace nwt
         VkQueue _graphicsQueue;
         VkQueue _presentQueue;
 
-        VulkanSwapchainData _swapChain;
-        std::unordered_map<uint32_t, VulkanGraphicsPipelineData> _graphicsPipelines;
+        VulkanSwapchain _swapChain;
+        std::vector<VulkanGraphicsPipeline> _graphicsPipelines;
 
         VkRenderPass _renderPass;
         VkDescriptorSetLayout _descriptorSetLayout;
@@ -121,9 +105,7 @@ namespace nwt
         VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
         VkFormat findDepthFormat();
         bool hasStencilComponent(VkFormat format);
-        VkShaderModule createShaderModule(uint32_t* code, uint32_t size) const;
         uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
-        void createGraphicsPipeline(uint32_t* vertBinaries, uint32_t vSize, const std::string& vEntry, uint32_t* fragBinaries, uint32_t fSize, const std::string& fEntry, uint32_t id);
         void createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
         void recreateSwapChain();
 

@@ -1,12 +1,14 @@
 #pragma once
 
-#include "newtons/pch.hpp"
+#include <vulkan/vulkan.h>
 #include <filesystem>
+
+#include "newtons/pch.hpp"
 
 namespace nwt {
 	class VulkanShader
 	{
-	public: 
+	public:
 		enum class ShaderType {
 			VERTEX,
 			FRAGMENT
@@ -15,19 +17,20 @@ namespace nwt {
 	public:
 
 		VulkanShader(const std::filesystem::path& vertPath, const std::filesystem::path& fragPath)
-			: _vertPath(vertPath), _fragPath(fragPath) {}
-
-		VulkanShader(const VulkanShader& other)
-			: _vertPath(other._vertPath), _fragPath(other._fragPath) {}
+			: _vertPath(vertPath), _fragPath(fragPath) {
+		}
 
 		~VulkanShader() = default;
 
 		uint32_t* loadShader(ShaderType type, uint32_t* const size) const;
 
+		VkShaderModule createShaderModule(VkDevice device, ShaderType type) const;
+
 	private:
+		uint32_t id;
 		std::filesystem::path _vertPath;
 		std::filesystem::path _fragPath;
-		
+
 		static std::filesystem::path _path;
 	};
 
