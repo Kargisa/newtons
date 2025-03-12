@@ -79,7 +79,7 @@ namespace nwt
         vkResetCommandBuffer(commandBuffer, 0);
 
 
-        recordCommandBuffer(commandBuffer);
+        recordCommandBuffer(commandBuffer, imageIndex);
 
 
         VkSubmitInfo submitInfo{};
@@ -843,7 +843,7 @@ namespace nwt
         vkDestroySwapchainKHR(_device, _swapChain.swapChain, nullptr);
     }
 
-    void VulkanContext::recordCommandBuffer(VkCommandBuffer commandBuffer) {
+    void VulkanContext::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex) {
         VkCommandBufferBeginInfo beginInfo{};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         beginInfo.flags = 0; // Optional

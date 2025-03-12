@@ -2,15 +2,18 @@
 
 #include "pch.hpp"
 #include "application.hpp"
-#include "window/window.hpp"
+#include "newtons/window/window.hpp"
+#include "newtons/graphics/graphicsContext.hpp"
 
-namespace nwt{
+namespace nwt {
 
-    class NWT_API Application{
+    class NWT_API Application {
         static Application* s_instance;
 
         bool _running = true;
         Window* _window;
+        GraphicsContext* _graphicsContext;
+
 
     public:
         Application();
@@ -19,7 +22,8 @@ namespace nwt{
     public:
         void init();
         void run();
-        Window* const getWindow();
+        Window* getWindow();
+        GraphicsContext* getGraphcisContext();
 
     public:
         static Application* instance();

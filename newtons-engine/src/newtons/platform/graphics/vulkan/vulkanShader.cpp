@@ -12,10 +12,10 @@ namespace nwt {
 		switch (type)
 		{
 		case VulkanShader::ShaderType::VERTEX:
-			buffer = reinterpret_cast<uint32_t*>(File::readBinary((_path / _vertPath), fileSize));
+			buffer = reinterpret_cast<uint32_t*>(File::readBinary((_vertPath), fileSize));
 			break;
 		case VulkanShader::ShaderType::FRAGMENT:
-			buffer = reinterpret_cast<uint32_t*>(File::readBinary((_path / _fragPath), fileSize));
+			buffer = reinterpret_cast<uint32_t*>(File::readBinary((_fragPath), fileSize));
 			break;
 		}
 

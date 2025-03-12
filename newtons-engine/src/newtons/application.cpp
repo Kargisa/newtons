@@ -7,7 +7,7 @@ namespace nwt {
     Application* Application::s_instance = nullptr;
 
     Application::Application() {
-        
+
     }
 
     Application::~Application() {
@@ -37,9 +37,12 @@ namespace nwt {
         cleanup();
     }
 
-    Window* const Application::getWindow()
-    {
+    Window* Application::getWindow() {
         return _window;
+    }
+
+    GraphicsContext* Application::getGraphcisContext() {
+        return _graphicsContext;
     }
 
     Application* Application::instance() {

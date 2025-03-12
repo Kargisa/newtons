@@ -4,6 +4,11 @@
 
 namespace nwt
 {
+    GraphicsAPI GraphicsContext::getAPI() const
+    {
+        return _api;
+    }
+
     GraphicsContext* GraphicsContext::createContext(GraphicsAPI api)
     {
         switch (api)

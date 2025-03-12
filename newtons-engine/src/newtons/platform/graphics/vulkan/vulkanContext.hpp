@@ -122,10 +122,12 @@ namespace nwt
         void createGraphicsCommandPool();
         void createCommandBuffers();
         void createFramebuffers();
+        void createShaders();
+        void createGraphicsPipelines();
 
         void cleanupSwapchain();
 
-        void recordCommandBuffer(VkCommandBuffer commandBuffer);
+        void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 
     public:
         static GraphicsContext* createContext();

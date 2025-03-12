@@ -27,11 +27,8 @@ namespace nwt {
 		VkShaderModule createShaderModule(VkDevice device, ShaderType type) const;
 
 	private:
-		uint32_t id;
 		std::filesystem::path _vertPath;
 		std::filesystem::path _fragPath;
-
-		static std::filesystem::path _path;
 	};
 
 
