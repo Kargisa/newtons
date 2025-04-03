@@ -4,34 +4,47 @@
 #include "file.hpp"
 
 namespace nwt {
-    Shader* Shader::create(const std::filesystem::path& path) {
-
+    Shader* Shader::create(const std::filesystem::path& vertPath, const std::filesystem::path& fragPath, const std::string& name) {
 
         switch (Application::instance()->getGraphcisContext()->getAPI()) {
         case GraphicsAPI::VULKAN_API:
-            return new VulkanShader();
-            break;
+            auto pair = _shaders.try_emplace(name, VulkanShader(vertPath, fragPath));
+            if (pair.second) {
+                return &pair.first->second;
+            }
+
+            return nullptr;
         }
+
+        return nullptr;
     }
 
     Shader* Shader::find(const std::string& name) {
-        Shader* shader;
         auto itr = _shaders.find(name);
         if (itr == _shaders.end()) {
             return nullptr;
         }
 
-        return &itr->second();
+        return &itr->second;
     }
 
-    bool Shader::setRootFolder(const std::filesystem::path& path) {
-        if (!File::isDirectory(path)) {
-            return false;
+    uint32_t* Shader::loadShader(ShaderType type, uint32_t* const size) const
+    {
+        uint32_t* buffer = nullptr;
+        size_t fileSize = 0;
+
+        switch (type)
+        {
+        case VulkanShader::ShaderType::VERTEX:
+            buffer = reinterpret_cast<uint32_t*>(File::readBinary((_vertPath), fileSize));
+            break;
+        case VulkanShader::ShaderType::FRAGMENT:
+            buffer = reinterpret_cast<uint32_t*>(File::readBinary((_fragPath), fileSize));
+            break;
         }
 
-        _root = path;
+        *size = static_cast<uint32_t>(fileSize);
+        return buffer;
     }
-
-
 } // namespace nwt
 

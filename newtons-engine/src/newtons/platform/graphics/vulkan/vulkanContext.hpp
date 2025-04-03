@@ -122,8 +122,7 @@ namespace nwt
         void createGraphicsCommandPool();
         void createCommandBuffers();
         void createFramebuffers();
-        void createShaders();
-        void createGraphicsPipelines();
+        void createGraphicsPipeline(const VulkanShader& shader);
 
         void cleanupSwapchain();
 
