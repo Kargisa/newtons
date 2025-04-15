@@ -8,11 +8,9 @@
 namespace nwt {
 
     class NWT_API Application {
-        static Application* s_instance;
-
-        bool _running = true;
-        Window* _window;
-        GraphicsContext* _graphicsContext;
+        static bool _running;
+        static Window* _window;
+        static GraphicsContext* _graphicsContext;
 
 
     public:
@@ -20,19 +18,16 @@ namespace nwt {
         virtual ~Application();
 
     public:
-        void init();
-        void run();
-        Window* getWindow();
-        GraphicsContext* getGraphcisContext();
-
-    public:
-        static Application* instance();
+        static void init();
+        static void run();
+        static Window* getWindow();
+        static GraphicsContext* getGraphcisContext();
 
     private:
-        void initWindow();
-        void initVulkan();
-        void mainLoop();
-        void cleanup();
+        static void initWindow();
+        static void initVulkan();
+        static void mainLoop();
+        static void cleanup();
     };
 
     Application* createApp();

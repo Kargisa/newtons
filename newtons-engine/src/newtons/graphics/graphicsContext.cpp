@@ -9,7 +9,7 @@ namespace nwt
         return _api;
     }
 
-    GraphicsContext* GraphicsContext::createContext(GraphicsAPI api)
+    GraphicsContext* GraphicsContext::create(GraphicsAPI api)
     {
         switch (api)
         {

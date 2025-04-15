@@ -1,19 +1,21 @@
 #include "application.hpp"
+
 #include <GLFW/glfw3.h>
 #include "newtons/platform/linux/linuxWindow.hpp"
 #include "newtons/platform/windows/windowsWindow.hpp"
 
 namespace nwt {
-    Application* Application::s_instance = nullptr;
+    bool Application::_running = true;
+    Window* Application::_window;
+    GraphicsContext* Application::_graphicsContext;
+
 
     Application::Application() {
 
     }
 
     Application::~Application() {
-        if (s_instance == this) {
-            s_instance = nullptr;
-        }
+
     }
 
     void Application::init() {
@@ -21,14 +23,6 @@ namespace nwt {
     }
 
     void Application::run() {
-        if (s_instance == nullptr) {
-            s_instance = this;
-        }
-        else {
-            return;
-        }
-
-
         initWindow();
         initVulkan();
 
@@ -43,10 +37,6 @@ namespace nwt {
 
     GraphicsContext* Application::getGraphcisContext() {
         return _graphicsContext;
-    }
-
-    Application* Application::instance() {
-        return s_instance;
     }
 
     void Application::initWindow()
@@ -77,8 +67,6 @@ namespace nwt {
     void Application::cleanup()
     {
         _window->destroy();
-
-        s_instance = nullptr;
     }
 
 } // namespace nwt

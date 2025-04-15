@@ -23,7 +23,7 @@ namespace nwt {
 
         GraphicsAPI getAPI() const;
 
-        static GraphicsContext* createContext(GraphicsAPI api);
+        static GraphicsContext* create(GraphicsAPI api);
 
     private:
         GraphicsAPI _api;

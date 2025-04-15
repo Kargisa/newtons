@@ -6,6 +6,9 @@
 #include "newtons/graphics/graphicsContext.hpp"
 #include "vulkanGraphicsPipeline.hpp"
 #include "vulkanSwapchain.hpp"
+#include "vulkanDepthBuffer.hpp"
+#include "vulkanRenderPass.hpp"
+
 namespace nwt
 {
     struct VulkanQueueFamilyIndices
@@ -24,17 +27,6 @@ namespace nwt
         VkSurfaceCapabilitiesKHR capabilities;
         std::vector<VkSurfaceFormatKHR> formats;
         std::vector<VkPresentModeKHR> presentModes;
-    };
-
-    struct VulkanDepthResources {
-        VkImage image;
-        VkImageView imageView;
-        VkDeviceMemory memory;
-
-        VulkanDepthResources() = default;
-        VulkanDepthResources(const VkImage& image, const VkImageView& imageView, const VkDeviceMemory& memory)
-            : image(image), imageView(imageView), memory(memory) {
-        }
     };
 
     // *********************************************
@@ -69,16 +61,16 @@ namespace nwt
         VkQueue _graphicsQueue;
         VkQueue _presentQueue;
 
-        VulkanSwapchain _swapChain;
+        VulkanSwapchain _swapchain;
         std::vector<VulkanGraphicsPipeline> _graphicsPipelines;
 
-        VkRenderPass _renderPass;
+        VulkanRenderPass _renderPass;
         VkDescriptorSetLayout _descriptorSetLayout;
 
         VkCommandPool _graphicsCommandPool;
         std::vector<VkCommandBuffer> _graphicsCommandBuffers;
 
-        VulkanDepthResources _depth;
+        VulkanDepthBuffer _depth;
 
     protected:
         VulkanContext() = default;
@@ -90,6 +82,9 @@ namespace nwt
         virtual void* getNativeContext() override;
 
         virtual void drawFrame() override;
+
+        VkDevice getDevice() const;
+        VulkanDepthBuffer* getDepth();
 
     private:
         bool checkValidationLayersSupport();
@@ -129,6 +124,6 @@ namespace nwt
         void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 
     public:
-        static GraphicsContext* createContext();
+        static GraphicsContext* create();
     };
 } // namespace nwt

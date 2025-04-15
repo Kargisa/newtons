@@ -21,7 +21,8 @@ namespace nwt
         }
 
 
-        vkDestroyRenderPass(_device, _renderPass, nullptr);
+        _renderPass.destroy();
+        // vkDestroyRenderPass(_device, _renderPass, nullptr);
 
         vkDestroyCommandPool(_device, _graphicsCommandPool, nullptr);
 
@@ -56,13 +57,21 @@ namespace nwt
         return this;
     }
 
+    VkDevice VulkanContext::getDevice() const {
+        return _device;
+    }
+
+    VulkanDepthBuffer* VulkanContext::getDepth() {
+        return &_depth;
+    }
+
     void VulkanContext::drawFrame() {
         VkCommandBuffer commandBuffer = _graphicsCommandBuffers[_currentFrame];
 
         vkWaitForFences(_device, 1, &_inFlightFences[_currentFrame], VK_TRUE, UINT64_MAX);
 
         uint32_t imageIndex;
-        VkResult result = vkAcquireNextImageKHR(_device, _swapChain.swapChain, UINT64_MAX, _imageAvailableSemaphores[_currentFrame], VK_NULL_HANDLE, &imageIndex);
+        VkResult result = vkAcquireNextImageKHR(_device, _swapchain.getVkSwapchain(), UINT64_MAX, _imageAvailableSemaphores[_currentFrame], VK_NULL_HANDLE, &imageIndex);
 
         if (result == VK_ERROR_OUT_OF_DATE_KHR) {
             recreateSwapChain();
@@ -108,7 +117,7 @@ namespace nwt
         presentInfo.pWaitSemaphores = signalSemaphores;
 
         std::array<VkSwapchainKHR, 1> swapChains = std::array<VkSwapchainKHR, 1>();
-        swapChains[0] = _swapChain.swapChain;
+        swapChains[0] = _swapchain.getVkSwapchain();
 
         presentInfo.swapchainCount = swapChains.size();
         presentInfo.pSwapchains = swapChains.data();
@@ -117,9 +126,9 @@ namespace nwt
 
         result = vkQueuePresentKHR(_presentQueue, &presentInfo);
 
-        if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || _swapChain.framebufferResized) {
+        if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || _swapchain.isFramebufferResized()) {
             recreateSwapChain();
-            _swapChain.framebufferResized = false;
+            _swapchain.framebufferResized = false;
         }
         else if (result != VK_SUCCESS) {
             throw std::runtime_error("failed to present swap chain image!");
@@ -330,7 +339,7 @@ namespace nwt
         }
 
         uint32_t windowExtensionsCount = 0;
-        const char** windowExtensions = Application::instance()->getWindow()->getVulkanExtensions(&windowExtensionsCount);
+        const char** windowExtensions = Application::getWindow()->getVulkanExtensions(&windowExtensionsCount);
 
         std::vector<const char*> requiredExtensions(windowExtensionsCount);
 
@@ -362,7 +371,7 @@ namespace nwt
     }
 
     void VulkanContext::createSurface() {
-        Application::instance()->getWindow()->createVulkanSurface(_instance, nullptr, &_surface);
+        Application::getWindow()->createVulkanSurface(_instance, nullptr, &_surface);
     }
 
     void VulkanContext::pickPhysicalDevice() {
@@ -472,7 +481,7 @@ namespace nwt
 
         int width = 0, height = 0;
 
-        Application::instance()->getWindow()->getFramebufferSize(&width, &height);
+        Application::getWindow()->getFramebufferSize(&width, &height);
 
         VkExtent2D extent(
             static_cast<uint32_t>(width),
@@ -527,16 +536,16 @@ namespace nwt
         createInfo.clipped = VK_TRUE;
         createInfo.oldSwapchain = VK_NULL_HANDLE;
 
-        if (vkCreateSwapchainKHR(_device, &createInfo, nullptr, &_swapChain.swapChain) != VK_SUCCESS) {
+        if (vkCreateSwapchainKHR(_device, &createInfo, nullptr, &_swapchain.getVkSwapchain()) != VK_SUCCESS) {
             throw std::runtime_error("failed to create the swap chain");
         }
 
-        vkGetSwapchainImagesKHR(_device, _swapChain.swapChain, &imgCount, nullptr);
-        _swapChain.images.resize(imgCount);
-        vkGetSwapchainImagesKHR(_device, _swapChain.swapChain, &imgCount, _swapChain.images.data());
+        vkGetSwapchainImagesKHR(_device, _swapchain.getVkSwapchain(), &imgCount, nullptr);
+        _swapchain.getImages().resize(imgCount);
+        vkGetSwapchainImagesKHR(_device, _swapchain.getVkSwapchain(), &imgCount, _swapchain.getImages().data());
 
-        _swapChain.imageFormat = surfaceFormat.format;
-        _swapChain.extent = extent;
+        _swapchain.getImageFormat() = surfaceFormat.format;
+        _swapchain.getExtent() = extent;
     }
 
     VkImageView VulkanContext::createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags) {
@@ -560,11 +569,11 @@ namespace nwt
     }
 
     void VulkanContext::createSwapchainImageViews() {
-        _swapChain.imageViews.resize(_swapChain.images.size());
+        _swapchain.getImageViews().resize(_swapchain.getImages().size());
 
-        for (size_t i = 0; i < _swapChain.images.size(); i++)
+        for (size_t i = 0; i < _swapchain.getImages().size(); i++)
         {
-            _swapChain.imageViews[i] = createImageView(_swapChain.images[i], _swapChain.imageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
+            _swapchain.getImageViews()[i] = createImageView(_swapchain.getImages()[i], _swapchain.getImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT);
         }
     }
 
@@ -602,62 +611,15 @@ namespace nwt
     }
 
     void VulkanContext::createRenderPass() {
-        VkAttachmentDescription colorAttachment{};
-        colorAttachment.format = _swapChain.imageFormat;
-        colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
-        colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        VkRect2D renderArea;
+        renderArea.offset = { 0 ,0 };
+        renderArea.extent = _swapchain.getExtent();
 
-        VkAttachmentDescription depthAttachment{};
-        depthAttachment.format = findDepthFormat();
-        depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
-        depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        VkClearColorValue clearColor = { 0.08f, 0.08f, 0.1f, 1.0f };
+        VkClearDepthStencilValue clearDepthStencil = { 1, 0 };
 
-        VkAttachmentReference colorAttachmentRef{};
-        colorAttachmentRef.attachment = 0;
-        colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-        VkAttachmentReference depthAttachmentRef{};
-        depthAttachmentRef.attachment = 1;
-        depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-        VkSubpassDescription subpass{};
-        subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-        subpass.colorAttachmentCount = 1;
-        subpass.pColorAttachments = &colorAttachmentRef;
-        subpass.pDepthStencilAttachment = &depthAttachmentRef;
-
-        VkSubpassDependency dependency{};
-        dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-        dependency.dstSubpass = 0;
-        dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-        dependency.srcAccessMask = 0;
-        dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-        dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-
-        std::array<VkAttachmentDescription, 2> attachments = { colorAttachment, depthAttachment };
-        VkRenderPassCreateInfo renderPassInfo{};
-        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-        renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
-        renderPassInfo.pAttachments = attachments.data();
-        renderPassInfo.subpassCount = 1;
-        renderPassInfo.pSubpasses = &subpass;
-        renderPassInfo.dependencyCount = 1;
-        renderPassInfo.pDependencies = &dependency;
-
-
-        if (vkCreateRenderPass(_device, &renderPassInfo, nullptr, &_renderPass) != VK_SUCCESS) {
-            throw std::runtime_error("failed to create render pass!");
-        }
+        _renderPass = VulkanRenderPass(_device, clearColor, clearDepthStencil, renderArea);
+        _renderPass.create(_swapchain.getImageFormat(), findDepthFormat());
     }
 
     void VulkanContext::createSyncObjects() {
@@ -758,7 +720,7 @@ namespace nwt
 
     void VulkanContext::recreateSwapChain() {
         int width = 0, height = 0;
-        Application::instance()->getWindow()->getFramebufferSize(&width, &height);
+        Application::getWindow()->getFramebufferSize(&width, &height);
 
         vkDeviceWaitIdle(_device); //TODO: better way to do this than idle
 
@@ -772,7 +734,7 @@ namespace nwt
 
     void VulkanContext::createDepthResources() {
         VkFormat depthFormat = findDepthFormat();
-        createImage(_swapChain.extent.width, _swapChain.extent.height, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, _depth.image, _depth.memory);
+        createImage(_swapchain.getExtent().width, _swapchain.getExtent().height, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, _depth.image, _depth.memory);
         _depth.imageView = createImageView(_depth.image, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
     }
 
@@ -804,24 +766,24 @@ namespace nwt
     }
 
     void VulkanContext::createFramebuffers() {
-        _swapChain.framebuffers.resize(_swapChain.imageViews.size());
+        _renderPass.getFramebuffers().resize(_swapchain.getImageViews().size());
 
-        for (size_t i = 0; i < _swapChain.imageViews.size(); i++) {
+        for (size_t i = 0; i < _swapchain.getImageViews().size(); i++) {
             std::array<VkImageView, 2> attachments = {
-                _swapChain.imageViews[i],
+                _swapchain.getImageViews()[i],
                 _depth.imageView
             };
 
             VkFramebufferCreateInfo framebufferInfo{};
             framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-            framebufferInfo.renderPass = _renderPass;
+            framebufferInfo.renderPass = _renderPass.getVkRenderPass();
             framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
             framebufferInfo.pAttachments = attachments.data();
-            framebufferInfo.width = _swapChain.extent.width;
-            framebufferInfo.height = _swapChain.extent.height;
+            framebufferInfo.width = _swapchain.getExtent().width;
+            framebufferInfo.height = _swapchain.getExtent().height;
             framebufferInfo.layers = 1;
 
-            if (vkCreateFramebuffer(_device, &framebufferInfo, nullptr, &_swapChain.framebuffers[i]) != VK_SUCCESS) {
+            if (vkCreateFramebuffer(_device, &framebufferInfo, nullptr, &_renderPass.getFramebuffers()[i]) != VK_SUCCESS) {
                 throw std::runtime_error("failed to create framebuffer!");
             }
         }
@@ -832,15 +794,15 @@ namespace nwt
         vkDestroyImage(_device, _depth.image, nullptr);
         vkFreeMemory(_device, _depth.memory, nullptr);
 
-        for (auto framebuffer : _swapChain.framebuffers) {
+        for (auto framebuffer : _renderPass.getFramebuffers()) {
             vkDestroyFramebuffer(_device, framebuffer, nullptr);
         }
 
-        for (auto imageView : _swapChain.imageViews) {
+        for (auto imageView : _swapchain.getImageViews()) {
             vkDestroyImageView(_device, imageView, nullptr);
         }
 
-        vkDestroySwapchainKHR(_device, _swapChain.swapChain, nullptr);
+        vkDestroySwapchainKHR(_device, _swapchain.getVkSwapchain(), nullptr);
     }
 
     void VulkanContext::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex) {
@@ -853,22 +815,7 @@ namespace nwt
             throw std::runtime_error("failed to begin recording command buffer!");
         }
 
-        VkRenderPassBeginInfo renderPassInfo{};
-        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        renderPassInfo.renderPass = _renderPass;
-        renderPassInfo.framebuffer = _swapChain.framebuffers[imageIndex];
-
-        renderPassInfo.renderArea.offset = { 0, 0 };
-        renderPassInfo.renderArea.extent = _swapChain.extent;
-
-        std::array<VkClearValue, 2> clearValues{};
-        clearValues[0].color = { {0.08f, 0.08f, 0.1f, 1.0f} };
-        clearValues[1].depthStencil = { 1.0f, 0 };
-
-        renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-        renderPassInfo.pClearValues = clearValues.data();
-
-        vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+        _renderPass.begin(commandBuffer, _swapchain.framebuffers[imageIndex]);
 
         //vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, _graphicsPipeline);
 
@@ -881,17 +828,16 @@ namespace nwt
         VkViewport viewport{};
         viewport.x = 0.0f;
         viewport.y = 0.0f;
-        viewport.width = static_cast<float>(_swapChain.extent.width);
-        viewport.height = static_cast<float>(_swapChain.extent.height);
+        viewport.width = static_cast<float>(_swapchain.getExtent().width);
+        viewport.height = static_cast<float>(_swapchain.getExtent().height);
         viewport.minDepth = 0.0f;
         viewport.maxDepth = 1.0f;
         vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 
         VkRect2D scissor{};
         scissor.offset = { 0, 0 };
-        scissor.extent = _swapChain.extent;
+        scissor.extent = _swapchain.getExtent();
         vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
-
 
         //vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, _pipelineLayout, 0, 1, &_descriptorSets[_currentFrame], 0, nullptr);
 
@@ -901,13 +847,13 @@ namespace nwt
         // draw commands here *************
         // ********************************
 
-        vkCmdEndRenderPass(commandBuffer);
+        _renderPass.end(commandBuffer);
         if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
             throw std::runtime_error("failed to record command buffer!");
         }
     }
 
-    GraphicsContext* VulkanContext::createContext() {
+    GraphicsContext* VulkanContext::create() {
         return new VulkanContext();
     }
 
