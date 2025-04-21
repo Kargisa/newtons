@@ -5,6 +5,7 @@
 #include "vulkanVertex.hpp"
 #include "mathf.hpp"
 #include "newtons/application.hpp"
+#include "vulkanSwapchain.hpp"
 
 namespace nwt
 {
@@ -37,8 +38,8 @@ namespace nwt
         createSurface();
         pickPhysicalDevice();
         createLogicalDevice();
-        createSwapChain();
-        createSwapchainImageViews();
+        createSwapchain();
+        // createSwapchainImageViews();
         createRenderPass();
         createSyncObjects();
         createDescriptorSetLayout();
@@ -59,6 +60,14 @@ namespace nwt
 
     VkDevice VulkanContext::getDevice() const {
         return _device;
+    }
+
+    VkPhysicalDevice VulkanContext::getPhysicalDevice() const {
+        return _physicalDevice;
+    }
+
+    VkSurfaceKHR VulkanContext::getSurface() const {
+        return _surfaces[0];
     }
 
     VulkanDepthBuffer* VulkanContext::getDepth() {
@@ -215,7 +224,11 @@ namespace nwt
         return success;
     }
 
-    VulkanQueueFamilyIndices VulkanContext::findQueueFamilies(const VkPhysicalDevice& device) {
+    VulkanQueueFamilyIndices VulkanContext::findQueueFamilies() {
+        return findQueueFamilies(_physicalDevice);
+    }
+
+    VulkanQueueFamilyIndices VulkanContext::findQueueFamilies(VkPhysicalDevice device) {
         VulkanQueueFamilyIndices indices;
 
         uint32_t queueFamilyCount = 0;
@@ -261,32 +274,6 @@ namespace nwt
         return requiredExtensions.empty();
     }
 
-    VulkanSwapChainSupportDetails VulkanContext::querySwapChainSupport(VkPhysicalDevice device) {
-        VulkanSwapChainSupportDetails details;
-
-        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, _surface, &details.capabilities);
-
-        uint32_t formatCount = 0;
-        vkGetPhysicalDeviceSurfaceFormatsKHR(device, _surface, &formatCount, nullptr);
-
-        if (formatCount != 0)
-        {
-            details.formats.resize(formatCount);
-            vkGetPhysicalDeviceSurfaceFormatsKHR(device, _surface, &formatCount, details.formats.data());
-        }
-
-        uint32_t presentModeCount;
-        vkGetPhysicalDeviceSurfacePresentModesKHR(device, _surface, &presentModeCount, nullptr);
-
-        if (presentModeCount != 0)
-        {
-            details.presentModes.resize(presentModeCount);
-            vkGetPhysicalDeviceSurfacePresentModesKHR(device, _surface, &presentModeCount, details.presentModes.data());
-        }
-
-        return details;
-    }
-
     int VulkanContext::ratePhysicalDevice(VkPhysicalDevice device)
     {
         VkPhysicalDeviceProperties deviceProperties;
@@ -301,7 +288,7 @@ namespace nwt
         bool swapChainAdequate = false;
         if (checkDeviceExtensionSupport(device))
         {
-            VulkanSwapChainSupportDetails swapChainSupport = querySwapChainSupport(device);
+            VulkanSwapchain::SupportDetails swapChainSupport = VulkanSwapchain::querySupportDetails(device, _surface);
             swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
         }
 
@@ -343,8 +330,7 @@ namespace nwt
 
         std::vector<const char*> requiredExtensions(windowExtensionsCount);
 
-        for (uint32_t i = 0; i < windowExtensionsCount; i++)
-        {
+        for (uint32_t i = 0; i < windowExtensionsCount; i++) {
             requiredExtensions[i] = windowExtensions[i];
         }
 
@@ -371,15 +357,15 @@ namespace nwt
     }
 
     void VulkanContext::createSurface() {
-        Application::getWindow()->createVulkanSurface(_instance, nullptr, &_surface);
+        _surfaces.resize(1, nullptr);
+        Application::getWindow()->createVulkanSurface(_instance, nullptr, &_surfaces[0]);
     }
 
     void VulkanContext::pickPhysicalDevice() {
         uint32_t deviceCount = 0;
         vkEnumeratePhysicalDevices(_instance, &deviceCount, nullptr);
 
-        if (deviceCount == 0)
-        {
+        if (deviceCount == 0) {
             throw std::runtime_error("failed to find GPUs with Vulkan support!");
         }
 
@@ -388,8 +374,7 @@ namespace nwt
 
         std::multimap<int, VkPhysicalDevice> candidates;
 
-        for (const auto& device : devices)
-        {
+        for (const auto& device : devices) {
             int score = ratePhysicalDevice(device);
             candidates.insert(std::make_pair(score, device));
         }
@@ -401,57 +386,7 @@ namespace nwt
     }
 
     void VulkanContext::createLogicalDevice() {
-        VulkanQueueFamilyIndices indices = findQueueFamilies(_physicalDevice);
 
-        std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-        std::set<uint32_t> uniqueQueueFamilies = { indices.graphicsFamily.value(), indices.presentFamily.value() };
-
-        float queuePriority = 1.0f;
-        for (uint32_t queueFamily : uniqueQueueFamilies)
-        {
-            VkDeviceQueueCreateInfo queueCreateInfo{};
-            queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-            queueCreateInfo.queueFamilyIndex = queueFamily;
-            queueCreateInfo.queueCount = 1;
-            queueCreateInfo.pQueuePriorities = &queuePriority;
-
-            queueCreateInfos.push_back(queueCreateInfo);
-        }
-
-        // VkDeviceQueueCreateInfo queueCreateInfo = {};
-        // queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-        // queueCreateInfo.queueFamilyIndex = indices.graphicsFamily.value();
-        // queueCreateInfo.queueCount = 1;
-
-        // float queuePriority = 1.0f;
-        // queueCreateInfo.pQueuePriorities = &queuePriority;
-
-        VkPhysicalDeviceFeatures deviceFeatures = {};
-        deviceFeatures.samplerAnisotropy = VK_TRUE;
-
-        VkDeviceCreateInfo createInfo = {};
-        createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-        createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
-        createInfo.pQueueCreateInfos = queueCreateInfos.data();
-        createInfo.pEnabledFeatures = &deviceFeatures;
-
-        createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
-        createInfo.ppEnabledExtensionNames = deviceExtensions.data();
-
-        if constexpr (_enableValidationLayers) {
-            createInfo.enabledLayerCount = static_cast<uint32_t>(_validationLayers.size());
-            createInfo.ppEnabledLayerNames = _validationLayers.data();
-        }
-        else {
-            createInfo.enabledLayerCount = 0;
-        }
-
-        if (vkCreateDevice(_physicalDevice, &createInfo, nullptr, &_device) != VK_SUCCESS) {
-            throw std::runtime_error("failed to create logical device!");
-        }
-
-        vkGetDeviceQueue(_device, indices.graphicsFamily.value(), 0, &_graphicsQueue);
-        vkGetDeviceQueue(_device, indices.presentFamily.value(), 0, &_presentQueue);
     }
 
     VkSurfaceFormatKHR VulkanContext::chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) {
@@ -496,56 +431,8 @@ namespace nwt
         return extent;
     }
 
-    void VulkanContext::createSwapChain() {
-        VulkanSwapChainSupportDetails swapChainDetails = querySwapChainSupport(_physicalDevice);
+    void VulkanContext::createSwapchain() {
 
-        VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainDetails.formats);
-        VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainDetails.presentModes);
-        VkExtent2D extent = chooseSwapExtent(swapChainDetails.capabilities);
-
-        uint32_t imgCount = swapChainDetails.capabilities.minImageCount + 1;
-        if (swapChainDetails.capabilities.maxImageCount > 0 && imgCount > swapChainDetails.capabilities.maxImageCount) {
-            imgCount = swapChainDetails.capabilities.maxImageCount;
-        }
-
-        VkSwapchainCreateInfoKHR createInfo = {};
-        createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-        createInfo.surface = _surface;
-        createInfo.minImageCount = imgCount;
-        createInfo.imageFormat = surfaceFormat.format;
-        createInfo.imageColorSpace = surfaceFormat.colorSpace;
-        createInfo.imageExtent = extent;
-        createInfo.imageArrayLayers = 1;
-        createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-
-        VulkanQueueFamilyIndices indices = findQueueFamilies(_physicalDevice);
-
-        if (indices.graphicsFamily != indices.presentFamily) {
-            createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-            createInfo.queueFamilyIndexCount = 2;
-            uint32_t queueFamilyIndices[] = { indices.graphicsFamily.value(), indices.presentFamily.value() };
-            createInfo.pQueueFamilyIndices = queueFamilyIndices;
-        }
-        else {
-            createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
-        }
-
-        createInfo.preTransform = swapChainDetails.capabilities.currentTransform;
-        createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-        createInfo.presentMode = presentMode;
-        createInfo.clipped = VK_TRUE;
-        createInfo.oldSwapchain = VK_NULL_HANDLE;
-
-        if (vkCreateSwapchainKHR(_device, &createInfo, nullptr, &_swapchain.getVkSwapchain()) != VK_SUCCESS) {
-            throw std::runtime_error("failed to create the swap chain");
-        }
-
-        vkGetSwapchainImagesKHR(_device, _swapchain.getVkSwapchain(), &imgCount, nullptr);
-        _swapchain.getImages().resize(imgCount);
-        vkGetSwapchainImagesKHR(_device, _swapchain.getVkSwapchain(), &imgCount, _swapchain.getImages().data());
-
-        _swapchain.getImageFormat() = surfaceFormat.format;
-        _swapchain.getExtent() = extent;
     }
 
     VkImageView VulkanContext::createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags) {
@@ -568,14 +455,7 @@ namespace nwt
         return imageView;
     }
 
-    void VulkanContext::createSwapchainImageViews() {
-        _swapchain.getImageViews().resize(_swapchain.getImages().size());
 
-        for (size_t i = 0; i < _swapchain.getImages().size(); i++)
-        {
-            _swapchain.getImageViews()[i] = createImageView(_swapchain.getImages()[i], _swapchain.getImageFormat(), VK_IMAGE_ASPECT_COLOR_BIT);
-        }
-    }
 
     VkFormat VulkanContext::findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features) {
         for (VkFormat format : candidates) {
@@ -726,7 +606,7 @@ namespace nwt
 
         cleanupSwapchain();
 
-        createSwapChain();
+        createSwapchain();
         createSwapchainImageViews();
         createDepthResources();
         createFramebuffers();

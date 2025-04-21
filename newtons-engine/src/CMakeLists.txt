@@ -16,6 +16,8 @@ add_library(newtons-engine STATIC
 "newtons/platform/graphics/vulkan/vulkanShader.cpp"
 "newtons/platform/graphics/vulkan/vulkanSwapchain.cpp"
 "newtons/platform/graphics/vulkan/vulkanRenderPass.cpp"
+"newtons/platform/graphics/vulkan/vulkanPhysicalDevice.cpp"
+"newtons/platform/graphics/vulkan/vulkanDevice.cpp"
 )
 # endif()
 

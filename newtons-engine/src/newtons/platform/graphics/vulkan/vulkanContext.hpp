@@ -22,13 +22,6 @@ namespace nwt
         }
     };
 
-    struct VulkanSwapChainSupportDetails
-    {
-        VkSurfaceCapabilitiesKHR capabilities;
-        std::vector<VkSurfaceFormatKHR> formats;
-        std::vector<VkPresentModeKHR> presentModes;
-    };
-
     // *********************************************
     // *************** VulkanContext ***************
     // *********************************************
@@ -54,7 +47,7 @@ namespace nwt
 
 
         VkInstance _instance;
-        VkSurfaceKHR _surface;
+        std::vector<VkSurfaceKHR> _surfaces;
         const std::vector<const char*> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
         VkPhysicalDevice _physicalDevice;
         VkDevice _device;
@@ -84,14 +77,18 @@ namespace nwt
         virtual void drawFrame() override;
 
         VkDevice getDevice() const;
+        VkPhysicalDevice getPhysicalDevice() const;
+        VkSurfaceKHR getSurface() const;
+
         VulkanDepthBuffer* getDepth();
 
-    private:
+    public:
         bool checkValidationLayersSupport();
         bool checkExtensionsSupport(const std::vector<const char*>& requiredExtensions, const std::vector<VkExtensionProperties>& extensions);
-        VulkanQueueFamilyIndices findQueueFamilies(const VkPhysicalDevice& device);
+        VulkanQueueFamilyIndices findQueueFamilies();
+        VulkanQueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
         bool checkDeviceExtensionSupport(VkPhysicalDevice device);
-        VulkanSwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
+        // VulkanSwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
         int ratePhysicalDevice(VkPhysicalDevice device);
         VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
         VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
@@ -108,8 +105,7 @@ namespace nwt
         void createSurface();
         void pickPhysicalDevice();
         void createLogicalDevice();
-        void createSwapChain();
-        void createSwapchainImageViews();
+        void createSwapchain();
         void createRenderPass();
         void createSyncObjects();
         void createDescriptorSetLayout();

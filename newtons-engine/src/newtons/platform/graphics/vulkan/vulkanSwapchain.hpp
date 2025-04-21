@@ -4,20 +4,32 @@
 
 namespace nwt
 {
+
+    struct VulkanContext;
+
     class VulkanSwapchain {
-        VkDevice _device;
+    public:
+        struct SupportDetails {
+            VkSurfaceCapabilitiesKHR capabilities;
+            std::vector<VkSurfaceFormatKHR> formats;
+            std::vector<VkPresentModeKHR> presentModes;
+        };
+
+
+        VulkanContext* _context;
+        bool _framebufferResized = false;
+
         VkSwapchainKHR _vkSwapchain;
         VkExtent2D _extent;
         VkFormat _imageFormat;
         std::vector<VkImage> _images;
         std::vector<VkImageView> _imageViews;
-        bool _framebufferResized = false;
 
         // TODO: create framebuffers etc
     public:
         VulkanSwapchain() {}
-        VulkanSwapchain(VkDevice device, VkExtent2D extent, VkFormat imageFormat)
-            : _device(device), _extent(extent), _imageFormat(imageFormat) {
+        VulkanSwapchain(VulkanContext* context)
+            : _context(context) {
         }
         VulkanSwapchain(const VulkanSwapchain& other);
         VulkanSwapchain(VulkanSwapchain&& other) noexcept;
@@ -34,11 +46,19 @@ namespace nwt
         bool isFramebufferResized() const;
 
         VkResult create();
+        SupportDetails querySupportDetails();
+        static SupportDetails querySupportDetails(VkPhysicalDevice device, VkSurfaceKHR surface);
+        // TODO:
+        VkSurfaceFormatKHR chooseSurfaceFormat(std::vector<VkSurfaceFormatKHR> formats);
+        VkPresentModeKHR choosePresentMode(std::vector<VkPresentModeKHR> presentModes);
+        VkExtent2D chooseExtent(VkSurfaceCapabilitiesKHR capabilities);
 
+        void createImageViews();
+        // END TODO
         void destroy();
 
     private:
         VkResult createFramebuffers();
-
     };
+
 } // namespace nwt
