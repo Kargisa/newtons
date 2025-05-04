@@ -8,6 +8,9 @@
 #include "vulkanSwapchain.hpp"
 #include "vulkanDepthBuffer.hpp"
 #include "vulkanRenderPass.hpp"
+#include "vulkanPhysicalDevice.hpp"
+#include "vulkanDevice.hpp"
+#include "fixedVector.hpp"
 
 namespace nwt
 {
@@ -48,16 +51,17 @@ namespace nwt
 
         VkInstance _instance;
         std::vector<VkSurfaceKHR> _surfaces;
-        const std::vector<const char*> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
-        VkPhysicalDevice _physicalDevice;
-        VkDevice _device;
-        VkQueue _graphicsQueue;
-        VkQueue _presentQueue;
+
+        int _selectedPhysicalDeviceIndex = -1;
+        FixedVector<VulkanPhysicalDevice> _physicalDevices;
+
+        VulkanDevice _device;
 
         VulkanSwapchain _swapchain;
+        VulkanRenderPass _renderPass;
+
         std::vector<VulkanGraphicsPipeline> _graphicsPipelines;
 
-        VulkanRenderPass _renderPass;
         VkDescriptorSetLayout _descriptorSetLayout;
 
         VkCommandPool _graphicsCommandPool;
@@ -76,15 +80,16 @@ namespace nwt
 
         virtual void drawFrame() override;
 
-        VkDevice getDevice() const;
-        VkPhysicalDevice getPhysicalDevice() const;
-        VkSurfaceKHR getSurface() const;
+        const VulkanDevice& getDevice() const;
+        VulkanPhysicalDevice getPhysicalDevice() const;
+        VkSurfaceKHR getVkSurface() const;
 
         VulkanDepthBuffer* getDepth();
 
     public:
         bool checkValidationLayersSupport();
         bool checkExtensionsSupport(const std::vector<const char*>& requiredExtensions, const std::vector<VkExtensionProperties>& extensions);
+        void findPhysicalDevices();
         VulkanQueueFamilyIndices findQueueFamilies();
         VulkanQueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
         bool checkDeviceExtensionSupport(VkPhysicalDevice device);

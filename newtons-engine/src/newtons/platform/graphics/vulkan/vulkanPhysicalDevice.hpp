@@ -3,29 +3,47 @@
 #include <vulkan/vulkan.h>
 
 #include "newtons/pch.hpp"
-#include "vulkanDevice.hpp"
+// #include "vulkanDevice.hpp"
 
 namespace nwt
 {
     struct VulkanContext;
 
+    struct VulkanSwapchainSupportDetails {
+        VkSurfaceCapabilitiesKHR capabilities;
+        std::vector<VkSurfaceFormatKHR> formats;
+        std::vector<VkPresentModeKHR> presentModes;
+    };
+
     class VulkanPhysicalDevice {
     private:
         VulkanContext* _context;
-        VkPhysicalDevice _physicalDevice;
-        uint32_t _physicalDeviceRating;
-        // TODO: Logical Devices
-        std::vector<VulkanDevice> _devices;
+        VkPhysicalDevice _vkPhysicalDevice;
+
+
+        static const std::vector<const char*> _deviceExtensions;
+
     public:
-        VulkanPhysicalDevice(VulkanContext* context)
-            : _context(context) {
+        VulkanPhysicalDevice(VulkanContext* context, VkPhysicalDevice vkPhysicalDevice)
+            : _context(context), _vkPhysicalDevice(vkPhysicalDevice) {
         }
+
+        VulkanPhysicalDevice()
+            : _context(nullptr), _vkPhysicalDevice(nullptr) {
+        }
+
+        // VulkanPhysicalDevice();
+
         ~VulkanPhysicalDevice();
 
-        uint32_t getPhysicalDeviceRating() const;
-        std::vector<VkQueueFamilyProperties> getAvailableQueueFamilyProperties();
-    private:
-        void ratePhysicalDevice();
+        VkPhysicalDevice getVkPhysicalDevice() const;
+
+        uint32_t getRating() const;
+        static const std::vector<const char*> getDeviceExtensions();
+
+        VulkanSwapchainSupportDetails querySwapchainSupportDetails() const;
+        bool hasRequiredExtensionSupport(const std::vector<const char*>& deviceExtensions) const;
+        std::vector<VkQueueFamilyProperties> getAvailableQueueFamilyProperties() const;
     };
 
 } // namespace nwt

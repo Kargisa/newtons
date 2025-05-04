@@ -34,7 +34,7 @@ namespace nwt
     }
 
     VkResult VulkanSwapchain::create() {
-        VkDevice device = _context->getDevice();
+        VkDevice device = _context->getDevice().getVkDevice();
 
         SupportDetails swapChainDetails = querySupportDetails();
 
@@ -49,7 +49,7 @@ namespace nwt
 
         VkSwapchainCreateInfoKHR createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-        createInfo.surface = _context->getSurface();
+        createInfo.surface = _context->getVkSurface();
         createInfo.minImageCount = imgCount;
         createInfo.imageFormat = surfaceFormat.format;
         createInfo.imageColorSpace = surfaceFormat.colorSpace;
@@ -85,11 +85,13 @@ namespace nwt
 
         _imageFormat = surfaceFormat.format;
         _extent = extent;
+
+        return VK_SUCCESS;
     }
 
     VulkanSwapchain::SupportDetails VulkanSwapchain::querySupportDetails() {
-        VkPhysicalDevice device = _context->getPhysicalDevice();
-        VkSurfaceKHR surface = _context->getSurface();
+        VkPhysicalDevice device = _context->getPhysicalDevice().getVkPhysicalDevice();
+        VkSurfaceKHR surface = _context->getVkSurface();
         return querySupportDetails(device, surface);
     }
 
