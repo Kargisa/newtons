@@ -36,10 +36,10 @@ namespace nwt
         score += deviceProps.limits.maxImageDimension2D;
         score += deviceProps.limits.maxImageDimension3D;
 
-        return 0;
+        return score;
     }
 
-    const std::vector<const char*> VulkanPhysicalDevice::getDeviceExtensions() {
+    const std::vector<const char*>& VulkanPhysicalDevice::getDeviceExtensions() {
         return _deviceExtensions;
     }
 
@@ -84,9 +84,7 @@ namespace nwt
     std::vector<VkQueueFamilyProperties> VulkanPhysicalDevice::getAvailableQueueFamilyProperties() const {
         uint32_t count = 0;
         vkGetPhysicalDeviceQueueFamilyProperties(_vkPhysicalDevice, &count, nullptr);
-
-        std::vector<VkQueueFamilyProperties> queueFmilies;
-        queueFmilies.reserve(count);
+        std::vector<VkQueueFamilyProperties> queueFmilies(count);
 
         vkGetPhysicalDeviceQueueFamilyProperties(_vkPhysicalDevice, &count, queueFmilies.data());
 

@@ -21,7 +21,9 @@ namespace nwt
 
     class VulkanDevice
     {
+
     private:
+
         VulkanContext* _context;
         VulkanPhysicalDevice* _physicalDevice;
         VkDevice _device;
@@ -37,7 +39,7 @@ namespace nwt
 
     public:
         VulkanDevice(VulkanContext* context, VulkanPhysicalDevice* physicalDevice)
-            : _context(context), _physicalDevice(physicalDevice) {
+            : _context(context), _physicalDevice(physicalDevice), _device(nullptr) {
         }
 
         VulkanDevice()
@@ -46,7 +48,9 @@ namespace nwt
 
         ~VulkanDevice();
 
-        void create();
+        static VulkanDevice* create(VulkanContext* context, VulkanPhysicalDevice* physicalDevice);
+        void init();
+        void destroy();
 
         VulkanQueueInfo findPresentQueueInfo(const std::vector<VkQueueFamilyProperties>& availableQueueFamilyProps, const std::vector<VulkanQueueInfo>& usedQueues);
         VulkanQueueInfo findGraphicsQueueInfo(const std::vector<VkQueueFamilyProperties>& availableQueueFamilyProps, const std::vector<VulkanQueueInfo>& usedQueues);

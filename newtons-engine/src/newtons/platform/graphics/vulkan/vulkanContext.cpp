@@ -7,26 +7,32 @@
 #include "newtons/application.hpp"
 #include "vulkanSwapchain.hpp"
 
+#include <bitset>
+
 namespace nwt
 {
+    const std::vector<const char*>& VulkanContext::validationLayers() const {
+        return _validationLayers;
+    }
+
 
     VulkanContext::~VulkanContext() {
 
-        cleanupSwapchain();
+        // cleanupSwapchain();
 
-        vkDestroyDescriptorSetLayout(_device.getVkDevice(), _descriptorSetLayout, nullptr);
+        vkDestroyDescriptorSetLayout(_device->getVkDevice(), _descriptorSetLayout, nullptr);
 
         for (size_t i = 0; i < _graphicsPipelines.size(); i++) {
-            _graphicsPipelines[i].cleanup(_device.getVkDevice());
+            _graphicsPipelines[i].cleanup(_device->getVkDevice());
         }
 
 
         _renderPass.destroy();
         // vkDestroyRenderPass(_device, _renderPass, nullptr);
 
-        vkDestroyCommandPool(_device.getVkDevice(), _graphicsCommandPool, nullptr);
+        vkDestroyCommandPool(_device->getVkDevice(), _graphicsCommandPool, nullptr);
 
-        vkDestroyDevice(_device.getVkDevice(), nullptr);
+        delete _device;
 
         for (size_t i = 0; i < _surfaces.size(); i++) {
             vkDestroySurfaceKHR(_instance, _surfaces[i], nullptr);
@@ -40,20 +46,27 @@ namespace nwt
         createSurface();
         findPhysicalDevices();
         pickPhysicalDevice();
-
         createLogicalDevice();
 
+        auto queueProps = getPhysicalDevice().getAvailableQueueFamilyProperties();
+        int i = 0;
+        for (auto&& prop : queueProps) {
+            std::bitset<32> set(prop.queueFlags);
+            LOG_INFO(i << ": " << prop.queueCount << ", flags: " << set);
+            i++;
+        }
 
 
-        createSwapchain();
+
+        // createSwapchain();
         // createSwapchainImageViews();
-        createRenderPass();
-        createSyncObjects();
-        createDescriptorSetLayout();
-        createDepthResources();
-        createGraphicsCommandPool();
-        createCommandBuffers();
-        createFramebuffers();
+        // createRenderPass();
+        // createSyncObjects();
+        // createDescriptorSetLayout();
+        // createDepthResources();
+        // createGraphicsCommandPool();
+        // createCommandBuffers();
+        // createFramebuffers();
         /*
         TODO:
         createShaders();
@@ -65,7 +78,7 @@ namespace nwt
         return this;
     }
 
-    const VulkanDevice& VulkanContext::getDevice() const {
+    const VulkanDevice* VulkanContext::getDevice() const {
         return _device;
     }
 
@@ -77,80 +90,84 @@ namespace nwt
         return _surfaces[0];
     }
 
+    VkInstance VulkanContext::vkInstance() const {
+        return _instance;
+    }
+
     VulkanDepthBuffer* VulkanContext::getDepth() {
         return &_depth;
     }
 
     void VulkanContext::drawFrame() {
-        VkCommandBuffer commandBuffer = _graphicsCommandBuffers[_currentFrame];
+        // VkCommandBuffer commandBuffer = _graphicsCommandBuffers[_currentFrame];
 
-        vkWaitForFences(_device.getVkDevice(), 1, &_inFlightFences[_currentFrame], VK_TRUE, UINT64_MAX);
+        // vkWaitForFences(_device.getVkDevice(), 1, &_inFlightFences[_currentFrame], VK_TRUE, UINT64_MAX);
 
-        uint32_t imageIndex;
-        VkResult result = vkAcquireNextImageKHR(_device.getVkDevice(), _swapchain.getVkSwapchain(), UINT64_MAX, _imageAvailableSemaphores[_currentFrame], VK_NULL_HANDLE, &imageIndex);
+        // uint32_t imageIndex;
+        // VkResult result = vkAcquireNextImageKHR(_device.getVkDevice(), _swapchain.getVkSwapchain(), UINT64_MAX, _imageAvailableSemaphores[_currentFrame], VK_NULL_HANDLE, &imageIndex);
 
-        if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-            recreateSwapChain();
-            return;
-        }
-        else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
-            throw std::runtime_error("failed to acquire swap chain image!");
-        }
+        // if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+        //     recreateSwapChain();
+        //     return;
+        // }
+        // else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
+        //     throw std::runtime_error("failed to acquire swap chain image!");
+        // }
 
-        vkResetFences(_device.getVkDevice(), 1, &_inFlightFences[_currentFrame]);
+        // vkResetFences(_device.getVkDevice(), 1, &_inFlightFences[_currentFrame]);
 
-        //updateUniformBuffer(_currentFrame);
+        // //updateUniformBuffer(_currentFrame);
 
-        vkResetCommandBuffer(commandBuffer, 0);
-
-
-        recordCommandBuffer(commandBuffer, imageIndex);
+        // vkResetCommandBuffer(commandBuffer, 0);
 
 
-        VkSubmitInfo submitInfo{};
-        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        // recordCommandBuffer(commandBuffer, imageIndex);
 
-        VkSemaphore waitSemaphores[] = { _imageAvailableSemaphores[_currentFrame] };
-        VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-        submitInfo.waitSemaphoreCount = 1;
-        submitInfo.pWaitSemaphores = waitSemaphores;
-        submitInfo.pWaitDstStageMask = waitStages;
 
-        submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = &_graphicsCommandBuffers[_currentFrame];
+        // VkSubmitInfo submitInfo{};
+        // submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-        VkSemaphore signalSemaphores[] = { _renderFinishedSemaphores[_currentFrame] };
-        submitInfo.signalSemaphoreCount = 1;
-        submitInfo.pSignalSemaphores = signalSemaphores;
+        // VkSemaphore waitSemaphores[] = { _imageAvailableSemaphores[_currentFrame] };
+        // VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+        // submitInfo.waitSemaphoreCount = 1;
+        // submitInfo.pWaitSemaphores = waitSemaphores;
+        // submitInfo.pWaitDstStageMask = waitStages;
 
-        if (vkQueueSubmit(_device.getVkGraphicsQueue(), 1, &submitInfo, _inFlightFences[_currentFrame]) != VK_SUCCESS) {
-            throw std::runtime_error("failed to submit draw command buffer!");
-        }
+        // submitInfo.commandBufferCount = 1;
+        // submitInfo.pCommandBuffers = &_graphicsCommandBuffers[_currentFrame];
 
-        VkPresentInfoKHR presentInfo{};
-        presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-        presentInfo.waitSemaphoreCount = 1;
-        presentInfo.pWaitSemaphores = signalSemaphores;
+        // VkSemaphore signalSemaphores[] = { _renderFinishedSemaphores[_currentFrame] };
+        // submitInfo.signalSemaphoreCount = 1;
+        // submitInfo.pSignalSemaphores = signalSemaphores;
 
-        std::array<VkSwapchainKHR, 1> swapChains = std::array<VkSwapchainKHR, 1>();
-        swapChains[0] = _swapchain.getVkSwapchain();
+        // if (vkQueueSubmit(_device.getVkGraphicsQueue(), 1, &submitInfo, _inFlightFences[_currentFrame]) != VK_SUCCESS) {
+        //     throw std::runtime_error("failed to submit draw command buffer!");
+        // }
 
-        presentInfo.swapchainCount = swapChains.size();
-        presentInfo.pSwapchains = swapChains.data();
-        presentInfo.pImageIndices = &imageIndex;
-        presentInfo.pResults = nullptr; // Optional
+        // VkPresentInfoKHR presentInfo{};
+        // presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+        // presentInfo.waitSemaphoreCount = 1;
+        // presentInfo.pWaitSemaphores = signalSemaphores;
 
-        result = vkQueuePresentKHR(_device.getVkPresentQueue(), &presentInfo);
+        // std::array<VkSwapchainKHR, 1> swapChains = std::array<VkSwapchainKHR, 1>();
+        // swapChains[0] = _swapchain.getVkSwapchain();
 
-        if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || _swapchain.isFramebufferResized()) {
-            recreateSwapChain();
-            // _swapchain.framebufferResized = false;
-        }
-        else if (result != VK_SUCCESS) {
-            throw std::runtime_error("failed to present swap chain image!");
-        }
+        // presentInfo.swapchainCount = swapChains.size();
+        // presentInfo.pSwapchains = swapChains.data();
+        // presentInfo.pImageIndices = &imageIndex;
+        // presentInfo.pResults = nullptr; // Optional
 
-        _currentFrame = (_currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+        // result = vkQueuePresentKHR(_device.getVkPresentQueue(), &presentInfo);
+
+        // if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || _swapchain.isFramebufferResized()) {
+        //     recreateSwapChain();
+        //     // _swapchain.framebufferResized = false;
+        // }
+        // else if (result != VK_SUCCESS) {
+        //     throw std::runtime_error("failed to present swap chain image!");
+        // }
+
+        // _currentFrame = (_currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
     }
 
     // *********************************************
@@ -171,8 +188,11 @@ namespace nwt
 
             for (const auto& layerProperties : availableLayers)
             {
-                if (std::strcmp(layerName, layerProperties.layerName))
-                {
+                if (layerName[0] != layerProperties.layerName[0]) {
+                    continue;
+                }
+
+                if (std::strcmp(layerName, layerProperties.layerName)) {
                     layerFound = true;
                     break;
                 }
@@ -189,42 +209,36 @@ namespace nwt
     {
         LOG_INFO("Extensions:");
 
-        for (const auto& extension : extensions)
+        for (const auto& extension : extensions) {
             LOG_INFO("\t" << extension.extensionName);
+        }
 
         LOG_INFO("\n");
 
         LOG_INFO("Required extensions:");
 
-        uint16_t foundExtensionsCount = 0;
-
         bool success = true;
 
-        for (const auto& requiredExtension : requiredExtensions)
-        {
+        for (const auto& requiredExtension : requiredExtensions) {
             bool found = false;
-            for (const auto& extension : extensions)
-            {
-                if (std::strcmp(requiredExtension, extension.extensionName))
-                {
+            for (const auto& extension : extensions) {
+                if (std::strcmp(requiredExtension, extension.extensionName)) {
                     found = true;
-                    foundExtensionsCount++;
                     break;
                 }
             }
 
-            if (!found)
+            if (!found) {
                 success = false;
+            }
 
             LOG_INFO("\t" << "Required extension" << RED_COLOR << (found ? " " : " NOT ") << WHITE_COLOR << "found: " << requiredExtension);
         }
 
-        if (foundExtensionsCount == requiredExtensions.size())
-        {
+        if (success) {
             LOG_INFO("\t" << GREEN_COLOR << "ALL " << WHITE_COLOR << "required extensions found");
         }
-        else
-        {
+        else {
             LOG_INFO("\t" << RED_COLOR << "NOT ALL " << WHITE_COLOR << "required extensions found");
         }
 
@@ -324,7 +338,7 @@ namespace nwt
     }
 
     void VulkanContext::createLogicalDevice() {
-        _device = VulkanDevice(this, &_physicalDevices[_selectedPhysicalDeviceIndex]);
+        _device = VulkanDevice::create(this, &_physicalDevices[_selectedPhysicalDeviceIndex]);
     }
 
     VkSurfaceFormatKHR VulkanContext::chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) {
@@ -386,7 +400,7 @@ namespace nwt
         viewInfo.subresourceRange.layerCount = 1;
 
         VkImageView imageView;
-        if (vkCreateImageView(_device.getVkDevice(), &viewInfo, nullptr, &imageView) != VK_SUCCESS) {
+        if (vkCreateImageView(_device->getVkDevice(), &viewInfo, nullptr, &imageView) != VK_SUCCESS) {
             throw std::runtime_error("failed to create texture image view!");
         }
 

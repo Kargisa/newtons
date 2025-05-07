@@ -32,14 +32,10 @@ namespace nwt
             : _context(nullptr), _vkPhysicalDevice(nullptr) {
         }
 
-        // VulkanPhysicalDevice();
-
-        ~VulkanPhysicalDevice();
-
         VkPhysicalDevice getVkPhysicalDevice() const;
 
         uint32_t getRating() const;
-        static const std::vector<const char*> getDeviceExtensions();
+        static const std::vector<const char*>& getDeviceExtensions();
 
         VulkanSwapchainSupportDetails querySwapchainSupportDetails() const;
         bool hasRequiredExtensionSupport(const std::vector<const char*>& deviceExtensions) const;

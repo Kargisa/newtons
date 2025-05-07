@@ -3,12 +3,19 @@
 
 namespace nwt
 {
+    // VulkanDevice::~VulkanDevice() {
+    //     vkDestroyDevice(_device, nullptr);
+    // }
 
-    void VulkanDevice::create() {
-        // VulkanQueueFamilyIndices indices = findQueueFamilies(physicalDevice);
+    VulkanDevice::~VulkanDevice() {
+        destroy();
+    }
 
-        std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+    VulkanDevice* VulkanDevice::create(VulkanContext* context, VulkanPhysicalDevice* physicalDevice) {
+        return new VulkanDevice(context, physicalDevice);
+    }
 
+    void VulkanDevice::init() {
         std::vector<VkQueueFamilyProperties> queueFamilyProps = _physicalDevice->getAvailableQueueFamilyProperties();
 
         std::vector<VulkanQueueInfo> queueInfos;
@@ -26,16 +33,21 @@ namespace nwt
         }
 
 
-        float queuePriority = VK_QUEUE_GLOBAL_PRIORITY_MEDIUM_EXT;
+        std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+
+        std::vector<std::vector<float>> queuePriorities;
         for (auto&& queueFamily : uniqueQueueFamilies) {
-            VkDeviceQueueCreateInfo queueCreateInfo{};
+            queuePriorities.emplace_back(queueFamily.second, 1.0f);
+
+            VkDeviceQueueCreateInfo queueCreateInfo = {};
             queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
             queueCreateInfo.queueFamilyIndex = queueFamily.first;
             queueCreateInfo.queueCount = queueFamily.second;
-            queueCreateInfo.pQueuePriorities = &queuePriority;
+            queueCreateInfo.pQueuePriorities = queuePriorities.back().data();
 
             queueCreateInfos.push_back(queueCreateInfo);
         }
+
 
         // VkDeviceQueueCreateInfo queueCreateInfo = {};
         // queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
@@ -48,7 +60,6 @@ namespace nwt
         VkPhysicalDeviceFeatures deviceFeatures = {};
         deviceFeatures.samplerAnisotropy = VK_TRUE;
 
-
         VkDeviceCreateInfo createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
         createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
@@ -58,21 +69,30 @@ namespace nwt
         createInfo.enabledExtensionCount = static_cast<uint32_t>(VulkanPhysicalDevice::getDeviceExtensions().size());
         createInfo.ppEnabledExtensionNames = VulkanPhysicalDevice::getDeviceExtensions().data();
 
-        // if constexpr (_enableValidationLayers) {
-        //     createInfo.enabledLayerCount = static_cast<uint32_t>(_validationLayers.size());
-        //     createInfo.ppEnabledLayerNames = _validationLayers.data();
-        // }
-        // else {
-        //     createInfo.enabledLayerCount = 0;
-        // }
+        if constexpr (VulkanContext::validationLayersEnabled()) {
+            createInfo.enabledLayerCount = static_cast<uint32_t>(_context->validationLayers().size());
+            createInfo.ppEnabledLayerNames = _context->validationLayers().data();
+        }
+        else {
+            createInfo.enabledLayerCount = 0;
+        }
 
         if (vkCreateDevice(_physicalDevice->getVkPhysicalDevice(), &createInfo, nullptr, &_device) != VK_SUCCESS) {
             throw std::runtime_error("failed to create logical device!");
         }
 
+        _queues.resize(4, nullptr);
         vkGetDeviceQueue(_device, queueInfos[0].family, queueInfos[0].index, &_queues[0]);
         vkGetDeviceQueue(_device, queueInfos[1].family, queueInfos[1].index, &_queues[1]);
     }
+
+    void VulkanDevice::destroy() {
+        vkDestroyDevice(_device, nullptr);
+        _device = nullptr;
+        _context = nullptr;
+        _physicalDevice = nullptr;
+    }
+
 
     VulkanQueueInfo VulkanDevice::findPresentQueueInfo(const std::vector<VkQueueFamilyProperties>& availableQueueFamilyProps, const std::vector<VulkanQueueInfo>& usedQueues) {
         VulkanQueueInfo queueInfo(-1, 0);

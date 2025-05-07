@@ -31,16 +31,22 @@ namespace nwt
 
     class NWT_API VulkanContext : public GraphicsContext
     {
-
 #ifdef DEBUG
-        const std::vector<const char*> _validationLayers = {
-            "VK_LAYER_KHRONOS_validation" };
+        const std::vector<const char*> _validationLayers = { "VK_LAYER_KHRONOS_validation" };
         static constexpr bool _enableValidationLayers = true;
+
 #else
         const std::vector<const char*> _validationLayers(0);
         static constexpr bool _enableValidationLayers = false;
 #endif
 
+    public:
+        const std::vector<const char*>& validationLayers() const;
+        static constexpr bool validationLayersEnabled() {
+            return _enableValidationLayers;
+        }
+
+    private:
         static constexpr int MAX_FRAMES_IN_FLIGHT = 3;
         int _currentFrame;
 
@@ -55,7 +61,7 @@ namespace nwt
         int _selectedPhysicalDeviceIndex = -1;
         FixedVector<VulkanPhysicalDevice> _physicalDevices;
 
-        VulkanDevice _device;
+        VulkanDevice* _device;
 
         VulkanSwapchain _swapchain;
         VulkanRenderPass _renderPass;
@@ -69,10 +75,9 @@ namespace nwt
 
         VulkanDepthBuffer _depth;
 
-    protected:
-        VulkanContext() = default;
 
     public:
+        VulkanContext() = default;
         virtual ~VulkanContext();
 
         virtual void init() override;
@@ -80,9 +85,10 @@ namespace nwt
 
         virtual void drawFrame() override;
 
-        const VulkanDevice& getDevice() const;
+        const VulkanDevice* getDevice() const;
         VulkanPhysicalDevice getPhysicalDevice() const;
         VkSurfaceKHR getVkSurface() const;
+        VkInstance vkInstance() const;
 
         VulkanDepthBuffer* getDepth();
 

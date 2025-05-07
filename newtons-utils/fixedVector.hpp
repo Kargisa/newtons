@@ -79,20 +79,17 @@ namespace nwt
         FixedVector(FixedVector<T>&& other) noexcept;
         virtual ~FixedVector();
 
-        FixedVector<T>& operator=(const FixedVector& other);
 
         size_t size() const;
+        T* data() const;
 
+        FixedVector<T>& operator=(const FixedVector& other);
         constexpr T& operator[](size_t n);
         constexpr const T& operator[](size_t n) const;
 
-        Iterator begin() {
-            return Iterator(_data);
-        }
 
-        Iterator end() {
-            return Iterator(_data + _size);
-        }
+        Iterator begin() const;
+        Iterator end() const;
 
     };
 
@@ -118,6 +115,16 @@ namespace nwt
     }
 
     template<typename T>
+    inline T* FixedVector<T>::data() const {
+        return _data;
+    }
+
+    template<typename T>
+    inline size_t FixedVector<T>::size() const {
+        return _size;
+    }
+
+    template<typename T>
     inline FixedVector<T>& FixedVector<T>::operator=(const FixedVector<T>& other) {
         if (this == &other) {
             return *this;
@@ -133,10 +140,6 @@ namespace nwt
     }
 
 
-    template<typename T>
-    inline size_t FixedVector<T>::size() const {
-        return _size;
-    }
 
     template<typename T>
     inline constexpr T& FixedVector<T>::operator[](size_t n) {
@@ -146,6 +149,16 @@ namespace nwt
     template<typename T>
     inline constexpr const T& FixedVector<T>::operator[](size_t n) const {
         return _data[n];
+    }
+
+    template<typename T>
+    inline FixedVector<T>::Iterator FixedVector<T>::begin() const {
+        return Iterator(_data);
+    }
+
+    template<typename T>
+    inline FixedVector<T>::Iterator FixedVector<T>::end() const {
+        return Iterator(_data + _size);
     }
 
 } // namespace nwt

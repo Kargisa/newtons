@@ -54,7 +54,8 @@ namespace nwt {
     }
 
     void Application::initVulkan() {
-
+        _graphicsContext = GraphicsContext::create(GraphicsAPI::VULKAN_API);
+        _graphicsContext->init();
     }
 
     void Application::mainLoop()
