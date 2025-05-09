@@ -48,9 +48,15 @@ namespace nwt
         pickPhysicalDevice();
         createLogicalDevice();
 
+
         auto queueProps = getPhysicalDevice().getAvailableQueueFamilyProperties();
         int i = 0;
+        uint32_t filter = (VK_QUEUE_COMPUTE_BIT | VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_OPTICAL_FLOW_BIT_NV | VK_QUEUE_VIDEO_DECODE_BIT_KHR | VK_QUEUE_VIDEO_ENCODE_BIT_KHR);
         for (auto&& prop : queueProps) {
+            if (filter & prop.queueFlags) {
+                continue;
+            }
+
             std::bitset<32> set(prop.queueFlags);
             LOG_INFO(i << ": " << prop.queueCount << ", flags: " << set);
             i++;
@@ -339,6 +345,8 @@ namespace nwt
 
     void VulkanContext::createLogicalDevice() {
         _device = VulkanDevice::create(this, &_physicalDevices[_selectedPhysicalDeviceIndex]);
+        _device->initialize();
+
     }
 
     VkSurfaceFormatKHR VulkanContext::chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) {

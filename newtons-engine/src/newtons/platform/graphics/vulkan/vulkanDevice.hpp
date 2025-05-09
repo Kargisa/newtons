@@ -49,11 +49,9 @@ namespace nwt
         ~VulkanDevice();
 
         static VulkanDevice* create(VulkanContext* context, VulkanPhysicalDevice* physicalDevice);
-        void init();
+        void initialize();
         void destroy();
 
-        VulkanQueueInfo findPresentQueueInfo(const std::vector<VkQueueFamilyProperties>& availableQueueFamilyProps, const std::vector<VulkanQueueInfo>& usedQueues);
-        VulkanQueueInfo findGraphicsQueueInfo(const std::vector<VkQueueFamilyProperties>& availableQueueFamilyProps, const std::vector<VulkanQueueInfo>& usedQueues);
 
         VkDevice getVkDevice() const;
 
@@ -61,6 +59,11 @@ namespace nwt
         VkQueue getVkGraphicsQueue() const;
         VkQueue getVkComputeQueue() const;
         VkQueue getVkTransfereQueue() const;
+
+    private:
+        VulkanQueueInfo findPresentQueueInfo(const std::vector<VkQueueFamilyProperties>& availableQueueFamilyProps, const std::vector<VulkanQueueInfo>& usedQueues);
+        VulkanQueueInfo findGraphicsQueueInfo(const std::vector<VkQueueFamilyProperties>& availableQueueFamilyProps, const std::vector<VulkanQueueInfo>& usedQueues);
+        VulkanQueueInfo findTransferQueueInfo(const std::vector<VkQueueFamilyProperties>& availableQueueFamilyProps, const std::vector<VulkanQueueInfo>& usedQueues);
     };
 
 } // namespace nwt

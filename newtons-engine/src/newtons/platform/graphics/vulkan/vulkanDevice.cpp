@@ -1,5 +1,7 @@
 #include "vulkanDevice.hpp"
 #include "vulkanContext.hpp"
+#include <bitset>
+#include <newtons/logging/log.hpp>
 
 namespace nwt
 {
@@ -12,15 +14,17 @@ namespace nwt
     }
 
     VulkanDevice* VulkanDevice::create(VulkanContext* context, VulkanPhysicalDevice* physicalDevice) {
-        return new VulkanDevice(context, physicalDevice);
+        VulkanDevice* device = new VulkanDevice(context, physicalDevice);
+        return device;
     }
 
-    void VulkanDevice::init() {
+    void VulkanDevice::initialize() {
         std::vector<VkQueueFamilyProperties> queueFamilyProps = _physicalDevice->getAvailableQueueFamilyProperties();
 
         std::vector<VulkanQueueInfo> queueInfos;
         queueInfos.emplace_back(findPresentQueueInfo(queueFamilyProps, queueInfos));
         queueInfos.emplace_back(findGraphicsQueueInfo(queueFamilyProps, queueInfos));
+        queueInfos.emplace_back(findTransferQueueInfo(queueFamilyProps, queueInfos));
 
 
         std::unordered_map<uint32_t, uint32_t> uniqueQueueFamilies;
@@ -84,6 +88,7 @@ namespace nwt
         _queues.resize(4, nullptr);
         vkGetDeviceQueue(_device, queueInfos[0].family, queueInfos[0].index, &_queues[0]);
         vkGetDeviceQueue(_device, queueInfos[1].family, queueInfos[1].index, &_queues[1]);
+        vkGetDeviceQueue(_device, queueInfos[2].family, queueInfos[2].index, &_queues[2]);
     }
 
     void VulkanDevice::destroy() {
@@ -169,6 +174,83 @@ namespace nwt
 
             // checks if queue family is able present to the surface
             if (!(familyProp.queueFlags & VK_QUEUE_GRAPHICS_BIT)) {
+                familyIndex++;
+                continue;
+            }
+
+            // checks id the current queue family is used by any of the "usedQueues"
+            // if not, select current queue family at index 0
+            bool familyUsed = false;
+            for (auto&& usedQueue : usedQueues) {
+                if (usedQueue.family == familyIndex) {
+                    familyUsed = true;
+                    break;
+                }
+            }
+
+            if (!familyUsed) {
+                queueInfo.family = familyIndex;
+                return queueInfo;
+            }
+
+            // puts all queue indices of "usedQueues" that have the save queue family as the current queue family in an "unordered_set"
+            std::unordered_set<uint32_t> usedQueueIndices;
+            for (auto&& usedQueue : usedQueues) {
+                if (usedQueue.family == familyIndex) {
+                    usedQueueIndices.emplace(usedQueue.index);
+                }
+            }
+
+            // checks for availavle queue indices in the set
+            // if an index is free, select current queue family and free queue index
+            for (uint32_t i = 0; i < familyProp.queueCount; i++) {
+                if (!usedQueueIndices.contains(i)) {
+                    queueInfo.family = familyIndex;
+                    queueInfo.index = i;
+                    return queueInfo;
+                }
+            }
+
+            // select current queue family as fallback if none was selected
+            if (savedFamily == -1) {
+                savedFamily = familyIndex;
+            }
+            familyIndex++;
+        }
+
+        // fallback if no unique queue family was found
+        if (queueInfo.family == -1) {
+            queueInfo.family = savedFamily;
+        }
+
+        return queueInfo;
+    }
+
+    VulkanQueueInfo VulkanDevice::findTransferQueueInfo(const std::vector<VkQueueFamilyProperties>& availableQueueFamilyProps, const std::vector<VulkanQueueInfo>& usedQueues) {
+        VulkanQueueInfo queueInfo(-1, 0);
+
+        uint32_t savedFamily = -1;
+        uint32_t familyIndex = 0;
+
+        const uint32_t filter = (VK_QUEUE_COMPUTE_BIT | VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_OPTICAL_FLOW_BIT_NV | VK_QUEUE_VIDEO_DECODE_BIT_KHR | VK_QUEUE_VIDEO_ENCODE_BIT_KHR);
+
+        for (auto&& familyProp : availableQueueFamilyProps) {
+            if (!(familyProp.queueFlags & filter)) {
+                queueInfo.family = familyIndex;
+                std::bitset<32> set(familyProp.queueFlags);
+                LOG_INFO(familyProp.queueCount << ", flags: " << set);
+                return queueInfo;
+            }
+            familyIndex++;
+        }
+
+
+        familyIndex = 0;
+        for (auto&& familyProp : availableQueueFamilyProps) {
+            VkBool32 presentSupport = false;
+
+            // checks if queue family is able present to the surface
+            if ((familyProp.queueFlags & (VK_QUEUE_TRANSFER_BIT | VK_QUEUE_COMPUTE_BIT | VK_QUEUE_GRAPHICS_BIT))) {
                 familyIndex++;
                 continue;
             }
