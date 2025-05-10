@@ -16,49 +16,46 @@ namespace nwt
         };
 
 
+    private:
         VulkanContext* _context;
-        bool _framebufferResized = false;
-
         VkSwapchainKHR _vkSwapchain;
         VkExtent2D _extent;
         VkFormat _imageFormat;
         std::vector<VkImage> _images;
         std::vector<VkImageView> _imageViews;
 
+        bool _framebufferResized;
+
         // TODO: create framebuffers etc
     public:
-        VulkanSwapchain() {}
-        VulkanSwapchain(VulkanContext* context)
-            : _context(context) {
+        VulkanSwapchain()
+            : _context(nullptr), _vkSwapchain(nullptr), _framebufferResized(false) {
         }
-        VulkanSwapchain(const VulkanSwapchain& other);
-        VulkanSwapchain(VulkanSwapchain&& other) noexcept;
 
+        VulkanSwapchain(VulkanContext* context)
+            : _context(context), _vkSwapchain(nullptr), _framebufferResized(false) {
+        }
+        // ~VulkanSwapchain();
 
-        virtual ~VulkanSwapchain();
+        VulkanSwapchain(const VulkanSwapchain& other) = delete;
 
+        VulkanSwapchain& operator=(const VulkanSwapchain& other);
 
-        VkSwapchainKHR getVkSwapchain() const;
-        VkExtent2D getExtent() const;
-        VkFormat getImageFormat() const;
-        const std::vector<VkImage>& getImages() const;
-        const std::vector<VkImageView>& getImageViews() const;
+        VkSwapchainKHR vkSwapchain() const;
+        const VkExtent2D& vkExtent() const;
+        const VkFormat& imageFormat() const;
+        const std::vector<VkImage>& images() const;
+        const std::vector<VkImageView>& imageViews() const;
         bool isFramebufferResized() const;
 
-        VkResult create();
+        void initialize();
         SupportDetails querySupportDetails();
-        static SupportDetails querySupportDetails(VkPhysicalDevice device, VkSurfaceKHR surface);
-        // TODO:
+
         VkSurfaceFormatKHR chooseSurfaceFormat(std::vector<VkSurfaceFormatKHR> formats);
         VkPresentModeKHR choosePresentMode(std::vector<VkPresentModeKHR> presentModes);
         VkExtent2D chooseExtent(VkSurfaceCapabilitiesKHR capabilities);
 
-        void createImageViews();
-        // END TODO
         void destroy();
-
-    private:
-        VkResult createFramebuffers();
     };
 
 } // namespace nwt

@@ -106,14 +106,14 @@ namespace nwt {
 		VkViewport viewport{};
 		viewport.x = 0.0f;
 		viewport.y = 0.0f;
-		viewport.width = (float)swapChain.getExtent().width;
-		viewport.height = (float)swapChain.getExtent().height;
+		viewport.width = (float)swapChain.vkExtent().width;
+		viewport.height = (float)swapChain.vkExtent().height;
 		viewport.minDepth = 0.0f;
 		viewport.maxDepth = 1.0f;
 
 		VkRect2D scissor{};
 		scissor.offset = { 0, 0 };
-		scissor.extent = swapChain.getExtent();
+		scissor.extent = swapChain.vkExtent();
 
 		std::vector<VkDynamicState> dynamicStates = {
 			VK_DYNAMIC_STATE_VIEWPORT,

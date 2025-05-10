@@ -9,11 +9,11 @@
 
 #include <functional>
 
-namespace nwt{
+namespace nwt {
 
     typedef std::function<void(const Event&)> EventFunc;
 
-    struct WindowData{
+    struct WindowData {
         const char* name;
         int width;
         int height;
@@ -38,7 +38,7 @@ namespace nwt{
         virtual int getHeight() const;
 
         virtual void* getNativeWindow() = 0;
-        virtual void getFramebufferSize(int* width, int* height) = 0;
+        virtual void framebufferSize(int* width, int* height) = 0;
 
         virtual void destroy() = 0;
 

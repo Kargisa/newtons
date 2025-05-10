@@ -31,7 +31,7 @@ namespace nwt {
         cleanup();
     }
 
-    Window* Application::getWindow() {
+    Window* Application::window() {
         return _window;
     }
 
@@ -67,7 +67,8 @@ namespace nwt {
 
     void Application::cleanup()
     {
-        _window->destroy();
+        delete _window;
+        delete _graphicsContext;
     }
 
 } // namespace nwt

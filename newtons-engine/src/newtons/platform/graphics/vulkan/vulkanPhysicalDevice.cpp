@@ -6,7 +6,7 @@ namespace nwt
 
     const std::vector<const char*> VulkanPhysicalDevice::_deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
-    VkPhysicalDevice VulkanPhysicalDevice::getVkPhysicalDevice() const {
+    VkPhysicalDevice VulkanPhysicalDevice::vkPhysicalDevice() const {
         return _vkPhysicalDevice;
     }
 
@@ -46,20 +46,20 @@ namespace nwt
     VulkanSwapchainSupportDetails VulkanPhysicalDevice::querySwapchainSupportDetails() const {
         VulkanSwapchainSupportDetails details = {};
 
-        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(_vkPhysicalDevice, _context->getVkSurface(), &details.capabilities);
+        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(_vkPhysicalDevice, _context->vkSurface(), &details.capabilities);
 
         uint32_t formatCount = 0;
-        vkGetPhysicalDeviceSurfaceFormatsKHR(_vkPhysicalDevice, _context->getVkSurface(), &formatCount, nullptr);
+        vkGetPhysicalDeviceSurfaceFormatsKHR(_vkPhysicalDevice, _context->vkSurface(), &formatCount, nullptr);
         if (formatCount != 0) {
             details.formats.resize(formatCount);
-            vkGetPhysicalDeviceSurfaceFormatsKHR(_vkPhysicalDevice, _context->getVkSurface(), &formatCount, details.formats.data());
+            vkGetPhysicalDeviceSurfaceFormatsKHR(_vkPhysicalDevice, _context->vkSurface(), &formatCount, details.formats.data());
         }
 
         uint32_t presentModeCount = 0;
-        vkGetPhysicalDeviceSurfacePresentModesKHR(_vkPhysicalDevice, _context->getVkSurface(), &presentModeCount, nullptr);
+        vkGetPhysicalDeviceSurfacePresentModesKHR(_vkPhysicalDevice, _context->vkSurface(), &presentModeCount, nullptr);
         if (presentModeCount != 0) {
             details.presentModes.resize(presentModeCount);
-            vkGetPhysicalDeviceSurfacePresentModesKHR(_vkPhysicalDevice, _context->getVkSurface(), &presentModeCount, details.presentModes.data());
+            vkGetPhysicalDeviceSurfacePresentModesKHR(_vkPhysicalDevice, _context->vkSurface(), &presentModeCount, details.presentModes.data());
         }
 
         return details;

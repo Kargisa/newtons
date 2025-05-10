@@ -18,21 +18,23 @@ namespace nwt
 
     VulkanContext::~VulkanContext() {
 
-        // cleanupSwapchain();
+        LOG_INFO("-------- Cleaning Up --------\n");
 
-        vkDestroyDescriptorSetLayout(_device->getVkDevice(), _descriptorSetLayout, nullptr);
+        _swapchain.destroy();
 
-        for (size_t i = 0; i < _graphicsPipelines.size(); i++) {
-            _graphicsPipelines[i].cleanup(_device->getVkDevice());
-        }
+        // vkDestroyDescriptorSetLayout(_device.vkDevice(), _descriptorSetLayout, nullptr);
+
+        // for (size_t i = 0; i < _graphicsPipelines.size(); i++) {
+        //     _graphicsPipelines[i].cleanup(_device.vkDevice());
+        // }
 
 
-        _renderPass.destroy();
+        // _renderPass.destroy();
         // vkDestroyRenderPass(_device, _renderPass, nullptr);
 
-        vkDestroyCommandPool(_device->getVkDevice(), _graphicsCommandPool, nullptr);
+        // vkDestroyCommandPool(_device.vkDevice(), _graphicsCommandPool, nullptr);
 
-        delete _device;
+        _device.destroy();
 
         for (size_t i = 0; i < _surfaces.size(); i++) {
             vkDestroySurfaceKHR(_instance, _surfaces[i], nullptr);
@@ -47,25 +49,8 @@ namespace nwt
         findPhysicalDevices();
         pickPhysicalDevice();
         createLogicalDevice();
+        createSwapchain();
 
-
-        auto queueProps = getPhysicalDevice().getAvailableQueueFamilyProperties();
-        int i = 0;
-        uint32_t filter = (VK_QUEUE_COMPUTE_BIT | VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_OPTICAL_FLOW_BIT_NV | VK_QUEUE_VIDEO_DECODE_BIT_KHR | VK_QUEUE_VIDEO_ENCODE_BIT_KHR);
-        for (auto&& prop : queueProps) {
-            if (filter & prop.queueFlags) {
-                continue;
-            }
-
-            std::bitset<32> set(prop.queueFlags);
-            LOG_INFO(i << ": " << prop.queueCount << ", flags: " << set);
-            i++;
-        }
-
-
-
-        // createSwapchain();
-        // createSwapchainImageViews();
         // createRenderPass();
         // createSyncObjects();
         // createDescriptorSetLayout();
@@ -84,15 +69,15 @@ namespace nwt
         return this;
     }
 
-    const VulkanDevice* VulkanContext::getDevice() const {
+    const VulkanDevice& VulkanContext::device() const {
         return _device;
     }
 
-    VulkanPhysicalDevice VulkanContext::getPhysicalDevice() const {
+    const VulkanPhysicalDevice& VulkanContext::physicalDevice() const {
         return _physicalDevices[_selectedPhysicalDeviceIndex];
     }
 
-    VkSurfaceKHR VulkanContext::getVkSurface() const {
+    VkSurfaceKHR VulkanContext::vkSurface() const {
         return _surfaces[0];
     }
 
@@ -101,7 +86,8 @@ namespace nwt
     }
 
     VulkanDepthBuffer* VulkanContext::getDepth() {
-        return &_depth;
+        throw std::runtime_error("Depth Not Implemented");
+        // return &_depth;
     }
 
     void VulkanContext::drawFrame() {
@@ -146,7 +132,7 @@ namespace nwt
         // submitInfo.signalSemaphoreCount = 1;
         // submitInfo.pSignalSemaphores = signalSemaphores;
 
-        // if (vkQueueSubmit(_device.getVkGraphicsQueue(), 1, &submitInfo, _inFlightFences[_currentFrame]) != VK_SUCCESS) {
+        // if (vkQueueSubmit(_device.vkGraphicsQueue(), 1, &submitInfo, _inFlightFences[_currentFrame]) != VK_SUCCESS) {
         //     throw std::runtime_error("failed to submit draw command buffer!");
         // }
 
@@ -163,7 +149,7 @@ namespace nwt
         // presentInfo.pImageIndices = &imageIndex;
         // presentInfo.pResults = nullptr; // Optional
 
-        // result = vkQueuePresentKHR(_device.getVkPresentQueue(), &presentInfo);
+        // result = vkQueuePresentKHR(_device.vkPresentQueue(), &presentInfo);
 
         // if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || _swapchain.isFramebufferResized()) {
         //     recreateSwapChain();
@@ -248,6 +234,8 @@ namespace nwt
             LOG_INFO("\t" << RED_COLOR << "NOT ALL " << WHITE_COLOR << "required extensions found");
         }
 
+        LOG_INFO("\n");
+
         return success;
     }
 
@@ -287,7 +275,7 @@ namespace nwt
         }
 
         uint32_t windowExtensionsCount = 0;
-        const char** windowExtensions = Application::getWindow()->getVulkanExtensions(&windowExtensionsCount);
+        const char** windowExtensions = Application::window()->getVulkanExtensions(&windowExtensionsCount);
 
         std::vector<const char*> requiredExtensions(windowExtensionsCount);
 
@@ -319,7 +307,7 @@ namespace nwt
 
     void VulkanContext::createSurface() {
         _surfaces.resize(1, nullptr);
-        Application::getWindow()->createVulkanSurface(_instance, nullptr, &_surfaces[0]);
+        Application::window()->createVulkanSurface(_instance, nullptr, &_surfaces[0]);
     }
 
     void VulkanContext::pickPhysicalDevice() {
@@ -337,36 +325,20 @@ namespace nwt
             index++;
         }
 
-        if (candidates.rbegin()->first > 0)
+        if (candidates.rbegin()->first > 0) {
             _selectedPhysicalDeviceIndex = candidates.rbegin()->second;
+            VkPhysicalDeviceProperties props;
+            vkGetPhysicalDeviceProperties(_physicalDevices[_selectedPhysicalDeviceIndex].vkPhysicalDevice(), &props);
+            LOG_INFO("Selected Physical Device: " << props.deviceName << "\n");
+        }
         else
             throw std::runtime_error("failed to find a suitable GPU!");
     }
 
     void VulkanContext::createLogicalDevice() {
-        _device = VulkanDevice::create(this, &_physicalDevices[_selectedPhysicalDeviceIndex]);
-        _device->initialize();
-
-    }
-
-    VkSurfaceFormatKHR VulkanContext::chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) {
-        for (auto& availableFormat : availableFormats) {
-            if (availableFormat.format == VK_FORMAT_R8G8B8_SRGB && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
-                return availableFormat;
-        }
-
-        return availableFormats[0];
-    }
-
-    VkPresentModeKHR VulkanContext::chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes) {
-        for (const auto& availablePresentMode : availablePresentModes) {
-            if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
-                return availablePresentMode;
-            }
-        }
-
-        LOG_INFO("Present mode is FIFO");
-        return VK_PRESENT_MODE_FIFO_KHR;
+        _device = VulkanDevice(this, &_physicalDevices[_selectedPhysicalDeviceIndex]);
+        _device.initialize();
+        LOG_INFO("Logical Device Created!\n");
     }
 
     VkExtent2D VulkanContext::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities) {
@@ -376,7 +348,7 @@ namespace nwt
 
         int width = 0, height = 0;
 
-        Application::getWindow()->getFramebufferSize(&width, &height);
+        Application::window()->framebufferSize(&width, &height);
 
         VkExtent2D extent(
             static_cast<uint32_t>(width),
@@ -392,7 +364,10 @@ namespace nwt
     }
 
     void VulkanContext::createSwapchain() {
+        _swapchain = VulkanSwapchain(this);
+        _swapchain.initialize();
 
+        LOG_INFO("Swapchain Successfully Created!\n");
     }
 
     VkImageView VulkanContext::createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags) {
@@ -408,7 +383,7 @@ namespace nwt
         viewInfo.subresourceRange.layerCount = 1;
 
         VkImageView imageView;
-        if (vkCreateImageView(_device->getVkDevice(), &viewInfo, nullptr, &imageView) != VK_SUCCESS) {
+        if (vkCreateImageView(_device.vkDevice(), &viewInfo, nullptr, &imageView) != VK_SUCCESS) {
             throw std::runtime_error("failed to create texture image view!");
         }
 

@@ -4,8 +4,8 @@
 #include "newtons/window/window.hpp"
 #include <GLFW/glfw3.h>
 
-namespace nwt{
-    class WindowsWindow : public Window{
+namespace nwt {
+    class WindowsWindow : public Window {
         GLFWwindow* _window;
 
         WindowsWindow(int width, int height, const char* name);
@@ -16,7 +16,7 @@ namespace nwt{
         virtual void init() override;
         virtual void createCallbacks() override;
         virtual void* getNativeWindow() override;
-        virtual void getFramebufferSize(int* width, int* height) override;
+        virtual void framebufferSize(int* width, int* height) override;
 
         virtual void destroy() override;
 

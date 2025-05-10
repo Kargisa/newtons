@@ -6,12 +6,8 @@
 namespace nwt
 {
     // VulkanDevice::~VulkanDevice() {
-    //     vkDestroyDevice(_device, nullptr);
+    //     destroy();
     // }
-
-    VulkanDevice::~VulkanDevice() {
-        destroy();
-    }
 
     VulkanDevice* VulkanDevice::create(VulkanContext* context, VulkanPhysicalDevice* physicalDevice) {
         VulkanDevice* device = new VulkanDevice(context, physicalDevice);
@@ -21,19 +17,32 @@ namespace nwt
     void VulkanDevice::initialize() {
         std::vector<VkQueueFamilyProperties> queueFamilyProps = _physicalDevice->getAvailableQueueFamilyProperties();
 
-        std::vector<VulkanQueueInfo> queueInfos;
-        queueInfos.emplace_back(findPresentQueueInfo(queueFamilyProps, queueInfos));
-        queueInfos.emplace_back(findGraphicsQueueInfo(queueFamilyProps, queueInfos));
-        queueInfos.emplace_back(findTransferQueueInfo(queueFamilyProps, queueInfos));
+        _queueInfos.reserve(4);
+        _queueInfos.emplace_back(findPresentQueueInfo(queueFamilyProps));
+        _queueInfos.emplace_back(findGraphicsQueueInfo(queueFamilyProps));
+        _queueInfos.emplace_back(findTransferQueueInfo(queueFamilyProps));
 
 
         std::unordered_map<uint32_t, uint32_t> uniqueQueueFamilies;
-        for (auto&& queueInfo : queueInfos) {
+        std::unordered_map<uint32_t, std::vector<uint32_t>> usedQueuesInFamily;
+        for (auto&& queueInfo : _queueInfos) {
             if (uniqueQueueFamilies.try_emplace(queueInfo.family).second) {
                 uniqueQueueFamilies[queueInfo.family] = 1;
+                usedQueuesInFamily[queueInfo.family].emplace_back(queueInfo.index);
                 continue;
             }
-            uniqueQueueFamilies[queueInfo.family]++;
+
+            bool queueUsed = false;
+            for (auto&& usedQueue : usedQueuesInFamily[queueInfo.family]) {
+                if (usedQueue == queueInfo.index) {
+                    queueUsed = true;
+                    break;
+                }
+            }
+
+            if (!queueUsed) {
+                uniqueQueueFamilies[queueInfo.family]++;
+            }
         }
 
 
@@ -51,15 +60,6 @@ namespace nwt
 
             queueCreateInfos.push_back(queueCreateInfo);
         }
-
-
-        // VkDeviceQueueCreateInfo queueCreateInfo = {};
-        // queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-        // queueCreateInfo.queueFamilyIndex = indices.graphicsFamily.value();
-        // queueCreateInfo.queueCount = 1;
-
-        // float queuePriority = 1.0f;
-        // queueCreateInfo.pQueuePriorities = &queuePriority;
 
         VkPhysicalDeviceFeatures deviceFeatures = {};
         deviceFeatures.samplerAnisotropy = VK_TRUE;
@@ -81,25 +81,18 @@ namespace nwt
             createInfo.enabledLayerCount = 0;
         }
 
-        if (vkCreateDevice(_physicalDevice->getVkPhysicalDevice(), &createInfo, nullptr, &_device) != VK_SUCCESS) {
+
+        if (vkCreateDevice(_physicalDevice->vkPhysicalDevice(), &createInfo, nullptr, &_device) != VK_SUCCESS) {
             throw std::runtime_error("failed to create logical device!");
         }
 
         _queues.resize(4, nullptr);
-        vkGetDeviceQueue(_device, queueInfos[0].family, queueInfos[0].index, &_queues[0]);
-        vkGetDeviceQueue(_device, queueInfos[1].family, queueInfos[1].index, &_queues[1]);
-        vkGetDeviceQueue(_device, queueInfos[2].family, queueInfos[2].index, &_queues[2]);
+        vkGetDeviceQueue(_device, _queueInfos[0].family, _queueInfos[0].index, &_queues[0]);
+        vkGetDeviceQueue(_device, _queueInfos[1].family, _queueInfos[1].index, &_queues[1]);
+        vkGetDeviceQueue(_device, _queueInfos[2].family, _queueInfos[2].index, &_queues[2]);
     }
 
-    void VulkanDevice::destroy() {
-        vkDestroyDevice(_device, nullptr);
-        _device = nullptr;
-        _context = nullptr;
-        _physicalDevice = nullptr;
-    }
-
-
-    VulkanQueueInfo VulkanDevice::findPresentQueueInfo(const std::vector<VkQueueFamilyProperties>& availableQueueFamilyProps, const std::vector<VulkanQueueInfo>& usedQueues) {
+    VulkanQueueInfo VulkanDevice::findPresentQueueInfo(const std::vector<VkQueueFamilyProperties>& availableQueueFamilyProps) {
         VulkanQueueInfo queueInfo(-1, 0);
 
         uint32_t savedFamily = -1;
@@ -107,7 +100,7 @@ namespace nwt
         for (auto&& familyProp : availableQueueFamilyProps)
         {
             VkBool32 presentSupport = false;
-            vkGetPhysicalDeviceSurfaceSupportKHR(_physicalDevice->getVkPhysicalDevice(), familyIndex, _context->getVkSurface(), &presentSupport);
+            vkGetPhysicalDeviceSurfaceSupportKHR(_physicalDevice->vkPhysicalDevice(), familyIndex, _context->vkSurface(), &presentSupport);
 
             // checks if queue family is able present to the surface
             if (!presentSupport || (familyProp.queueFlags == VK_QUEUE_TRANSFER_BIT) || (familyProp.queueFlags == VK_QUEUE_COMPUTE_BIT)) {
@@ -118,7 +111,7 @@ namespace nwt
             // checks id the current queue family is used by any of the "usedQueues"
             // if not, select current queue family at index 0
             bool familyUsed = false;
-            for (auto&& usedQueue : usedQueues) {
+            for (auto&& usedQueue : _queueInfos) {
                 if (usedQueue.family == familyIndex) {
                     familyUsed = true;
                     break;
@@ -132,7 +125,7 @@ namespace nwt
 
             // puts all queue indices of "usedQueues" that have the save queue family as the current queue family in an "unordered_set"
             std::unordered_set<uint32_t> usedQueueIndices;
-            for (auto&& usedQueue : usedQueues) {
+            for (auto&& usedQueue : _queueInfos) {
                 if (usedQueue.family == familyIndex) {
                     usedQueueIndices.emplace(usedQueue.index);
                 }
@@ -152,6 +145,7 @@ namespace nwt
             if (savedFamily == -1) {
                 savedFamily = familyIndex;
             }
+
             familyIndex++;
         }
 
@@ -163,7 +157,7 @@ namespace nwt
         return queueInfo;
     }
 
-    VulkanQueueInfo VulkanDevice::findGraphicsQueueInfo(const std::vector<VkQueueFamilyProperties>& availableQueueFamilyProps, const std::vector<VulkanQueueInfo>& usedQueues) {
+    VulkanQueueInfo VulkanDevice::findGraphicsQueueInfo(const std::vector<VkQueueFamilyProperties>& availableQueueFamilyProps) {
         VulkanQueueInfo queueInfo(-1, 0);
 
         uint32_t savedFamily = -1;
@@ -181,7 +175,7 @@ namespace nwt
             // checks id the current queue family is used by any of the "usedQueues"
             // if not, select current queue family at index 0
             bool familyUsed = false;
-            for (auto&& usedQueue : usedQueues) {
+            for (auto&& usedQueue : _queueInfos) {
                 if (usedQueue.family == familyIndex) {
                     familyUsed = true;
                     break;
@@ -195,7 +189,7 @@ namespace nwt
 
             // puts all queue indices of "usedQueues" that have the save queue family as the current queue family in an "unordered_set"
             std::unordered_set<uint32_t> usedQueueIndices;
-            for (auto&& usedQueue : usedQueues) {
+            for (auto&& usedQueue : _queueInfos) {
                 if (usedQueue.family == familyIndex) {
                     usedQueueIndices.emplace(usedQueue.index);
                 }
@@ -226,7 +220,7 @@ namespace nwt
         return queueInfo;
     }
 
-    VulkanQueueInfo VulkanDevice::findTransferQueueInfo(const std::vector<VkQueueFamilyProperties>& availableQueueFamilyProps, const std::vector<VulkanQueueInfo>& usedQueues) {
+    VulkanQueueInfo VulkanDevice::findTransferQueueInfo(const std::vector<VkQueueFamilyProperties>& availableQueueFamilyProps) {
         VulkanQueueInfo queueInfo(-1, 0);
 
         uint32_t savedFamily = -1;
@@ -235,10 +229,8 @@ namespace nwt
         const uint32_t filter = (VK_QUEUE_COMPUTE_BIT | VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_OPTICAL_FLOW_BIT_NV | VK_QUEUE_VIDEO_DECODE_BIT_KHR | VK_QUEUE_VIDEO_ENCODE_BIT_KHR);
 
         for (auto&& familyProp : availableQueueFamilyProps) {
-            if (!(familyProp.queueFlags & filter)) {
+            if (!(familyProp.queueFlags & filter) && (familyProp.queueFlags & VK_QUEUE_TRANSFER_BIT)) {
                 queueInfo.family = familyIndex;
-                std::bitset<32> set(familyProp.queueFlags);
-                LOG_INFO(familyProp.queueCount << ", flags: " << set);
                 return queueInfo;
             }
             familyIndex++;
@@ -250,7 +242,7 @@ namespace nwt
             VkBool32 presentSupport = false;
 
             // checks if queue family is able present to the surface
-            if ((familyProp.queueFlags & (VK_QUEUE_TRANSFER_BIT | VK_QUEUE_COMPUTE_BIT | VK_QUEUE_GRAPHICS_BIT))) {
+            if (!(familyProp.queueFlags & (VK_QUEUE_TRANSFER_BIT | VK_QUEUE_COMPUTE_BIT | VK_QUEUE_GRAPHICS_BIT))) {
                 familyIndex++;
                 continue;
             }
@@ -258,7 +250,7 @@ namespace nwt
             // checks id the current queue family is used by any of the "usedQueues"
             // if not, select current queue family at index 0
             bool familyUsed = false;
-            for (auto&& usedQueue : usedQueues) {
+            for (auto&& usedQueue : _queueInfos) {
                 if (usedQueue.family == familyIndex) {
                     familyUsed = true;
                     break;
@@ -272,7 +264,7 @@ namespace nwt
 
             // puts all queue indices of "usedQueues" that have the save queue family as the current queue family in an "unordered_set"
             std::unordered_set<uint32_t> usedQueueIndices;
-            for (auto&& usedQueue : usedQueues) {
+            for (auto&& usedQueue : _queueInfos) {
                 if (usedQueue.family == familyIndex) {
                     usedQueueIndices.emplace(usedQueue.index);
                 }
@@ -303,8 +295,54 @@ namespace nwt
         return queueInfo;
     }
 
-    VkDevice VulkanDevice::getVkDevice() const {
+    VkDevice VulkanDevice::vkDevice() const {
         return _device;
     }
+
+    VkQueue VulkanDevice::vkPresentQueue() const {
+        return _queues[0];
+    }
+
+    VkQueue VulkanDevice::vkGraphicsQueue() const {
+        return _queues[1];
+    }
+
+    VkQueue VulkanDevice::vkTransferQueue() const {
+        return _queues[2];
+    }
+
+    VkQueue VulkanDevice::vkComputeQueue() const {
+        return _queues[3];
+    }
+
+    const VulkanQueueInfo& VulkanDevice::presentQueueInfo() const {
+        return _queueInfos[0];
+    }
+
+    const VulkanQueueInfo& VulkanDevice::graphicsQueueInfo() const {
+        return _queueInfos[1];
+    }
+
+    const VulkanQueueInfo& VulkanDevice::transferQueueInfo() const {
+        return _queueInfos[2];
+    }
+
+    const VulkanQueueInfo& VulkanDevice::computeQueueInfo() const {
+        return _queueInfos[3];
+    }
+
+    void VulkanDevice::destroy() {
+        if (_device == nullptr) {
+            return;
+        }
+
+        vkDestroyDevice(_device, nullptr);
+        _device = nullptr;
+        _context = nullptr;
+        _physicalDevice = nullptr;
+
+        LOG_INFO("Logical Device Destroyed!\n");
+    }
+
 
 } // namespace nwt

@@ -19,8 +19,7 @@ namespace nwt
         std::optional<uint32_t> graphicsFamily;
         std::optional<uint32_t> presentFamily;
 
-        inline bool isComplete() const
-        {
+        inline bool isComplete() const {
             return graphicsFamily.has_value() && presentFamily.has_value();
         }
     };
@@ -34,7 +33,6 @@ namespace nwt
 #ifdef DEBUG
         const std::vector<const char*> _validationLayers = { "VK_LAYER_KHRONOS_validation" };
         static constexpr bool _enableValidationLayers = true;
-
 #else
         const std::vector<const char*> _validationLayers(0);
         static constexpr bool _enableValidationLayers = false;
@@ -60,20 +58,20 @@ namespace nwt
 
         int _selectedPhysicalDeviceIndex = -1;
         FixedVector<VulkanPhysicalDevice> _physicalDevices;
-
-        VulkanDevice* _device;
+        VulkanDevice _device;
 
         VulkanSwapchain _swapchain;
-        VulkanRenderPass _renderPass;
 
-        std::vector<VulkanGraphicsPipeline> _graphicsPipelines;
+        // VulkanRenderPass _renderPass;
 
-        VkDescriptorSetLayout _descriptorSetLayout;
+        // std::vector<VulkanGraphicsPipeline> _graphicsPipelines;
 
-        VkCommandPool _graphicsCommandPool;
-        std::vector<VkCommandBuffer> _graphicsCommandBuffers;
+        // VkDescriptorSetLayout _descriptorSetLayout;
 
-        VulkanDepthBuffer _depth;
+        // VkCommandPool _graphicsCommandPool;
+        // std::vector<VkCommandBuffer> _graphicsCommandBuffers;
+
+        // VulkanDepthBuffer _depth;
 
 
     public:
@@ -85,9 +83,9 @@ namespace nwt
 
         virtual void drawFrame() override;
 
-        const VulkanDevice* getDevice() const;
-        VulkanPhysicalDevice getPhysicalDevice() const;
-        VkSurfaceKHR getVkSurface() const;
+        const VulkanDevice& device() const;
+        const VulkanPhysicalDevice& physicalDevice() const;
+        VkSurfaceKHR vkSurface() const;
         VkInstance vkInstance() const;
 
         VulkanDepthBuffer* getDepth();
@@ -95,25 +93,15 @@ namespace nwt
     public:
         bool checkValidationLayersSupport();
         bool checkExtensionsSupport(const std::vector<const char*>& requiredExtensions, const std::vector<VkExtensionProperties>& extensions);
-        void findPhysicalDevices();
-        VulkanQueueFamilyIndices findQueueFamilies();
-        VulkanQueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
-        bool checkDeviceExtensionSupport(VkPhysicalDevice device);
         // VulkanSwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
-        int ratePhysicalDevice(VkPhysicalDevice device);
         VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
         VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
         VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
         VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
-        VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
-        VkFormat findDepthFormat();
-        bool hasStencilComponent(VkFormat format);
-        uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
-        void createImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
-        void recreateSwapChain();
 
         void createInstance();
         void createSurface();
+        void findPhysicalDevices();
         void pickPhysicalDevice();
         void createLogicalDevice();
         void createSwapchain();

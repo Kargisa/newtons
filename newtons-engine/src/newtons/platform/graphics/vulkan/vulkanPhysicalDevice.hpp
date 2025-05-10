@@ -32,7 +32,7 @@ namespace nwt
             : _context(nullptr), _vkPhysicalDevice(nullptr) {
         }
 
-        VkPhysicalDevice getVkPhysicalDevice() const;
+        VkPhysicalDevice vkPhysicalDevice() const;
 
         uint32_t getRating() const;
         static const std::vector<const char*>& getDeviceExtensions();

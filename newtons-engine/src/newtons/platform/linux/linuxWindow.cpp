@@ -29,33 +29,33 @@ namespace nwt
 
     void LinuxWindow::createCallbacks()
     {
-        glfwSetFramebufferSizeCallback(_window, [](GLFWwindow* window, int width, int height){
+        glfwSetFramebufferSizeCallback(_window, [](GLFWwindow* window, int width, int height) {
             WindowData data = *reinterpret_cast<WindowData*>(glfwGetWindowUserPointer(window));
             data.height = height;
             data.width = width;
 
             WindowResizedEvent event(data.width, data.height);
             data.eventCallback(event);
-        });
+            });
 
-        glfwSetWindowCloseCallback(_window, [](GLFWwindow* window){
+        glfwSetWindowCloseCallback(_window, [](GLFWwindow* window) {
             WindowData data = *reinterpret_cast<WindowData*>(glfwGetWindowUserPointer(window));
             data.eventCallback(WindowClosedEvent());
-        });
+            });
 
-        glfwSetKeyCallback(_window, [](GLFWwindow* window, int key, int scancode, int action, int mods){
+        glfwSetKeyCallback(_window, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
             WindowData data = *reinterpret_cast<WindowData*>(glfwGetWindowUserPointer(window));
-            
+
             switch (action)
             {
             case GLFW_PRESS:
             {
                 KeyPressedEvent event(key);
-                data.eventCallback(event);    
+                data.eventCallback(event);
                 break;
             }
             case GLFW_REPEAT:
-            {                
+            {
                 KeyPressedEvent event(key);
                 data.eventCallback(event);
                 break;
@@ -67,16 +67,16 @@ namespace nwt
                 break;
             }
             }
-        });
+            });
 
-        glfwSetCursorPosCallback(_window, [](GLFWwindow* window, double x, double y){
+        glfwSetCursorPosCallback(_window, [](GLFWwindow* window, double x, double y) {
             WindowData data = *reinterpret_cast<WindowData*>(glfwGetWindowUserPointer(window));
-            
+
             MouseMovedEvent event(static_cast<float>(x), static_cast<float>(y));
             data.eventCallback(event);
-        });
+            });
 
-        glfwSetMouseButtonCallback(_window, [](GLFWwindow* window, int button, int action, int mods){
+        glfwSetMouseButtonCallback(_window, [](GLFWwindow* window, int button, int action, int mods) {
             WindowData data = *reinterpret_cast<WindowData*>(glfwGetWindowUserPointer(window));
 
             switch (action)
@@ -94,14 +94,14 @@ namespace nwt
                 break;
             }
             }
-        });
+            });
 
-        glfwSetScrollCallback(_window, [](GLFWwindow* window, double xOffset, double yOffset){
+        glfwSetScrollCallback(_window, [](GLFWwindow* window, double xOffset, double yOffset) {
             WindowData data = *reinterpret_cast<WindowData*>(glfwGetWindowUserPointer(window));
 
             MouseScrolledEvent event(static_cast<float>(xOffset), static_cast<float>(yOffset));
             data.eventCallback(event);
-        });
+            });
     }
 
 
@@ -109,7 +109,7 @@ namespace nwt
         return _window;
     }
 
-    void LinuxWindow::getFramebufferSize(int* width, int* height) {
+    void LinuxWindow::framebufferSize(int* width, int* height) {
         glfwGetFramebufferSize(_window, width, height);
         while (*width == 0 || *height == 0) {
             glfwWaitEvents();

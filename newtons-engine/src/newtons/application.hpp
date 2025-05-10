@@ -20,7 +20,7 @@ namespace nwt {
     public:
         static void init();
         static void run();
-        static Window* getWindow();
+        static Window* window();
         static GraphicsContext* getGraphcisContext();
 
     private:
