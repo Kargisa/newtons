@@ -34,8 +34,8 @@ namespace nwt
 
         /*
         Reserved Queue Indices:
-        [0]: Present
-        [1]: Graphics
+        [0]: Graphics
+        [1]: Present
         [2]: Transfer
         [3]: Compute
         */
@@ -43,8 +43,8 @@ namespace nwt
 
         /*
         Reserved Queue Indices:
-        [0]: Present
-        [1]: Graphics
+        [0]: Graphics
+        [1]: Present
         [2]: Transfer
         [3]: Compute
         */

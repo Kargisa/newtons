@@ -19,14 +19,13 @@ namespace nwt
     private:
         VulkanContext* _context;
         VkSwapchainKHR _vkSwapchain;
-        VkExtent2D _extent;
         VkFormat _imageFormat;
+        VkExtent2D _extent;
         std::vector<VkImage> _images;
         std::vector<VkImageView> _imageViews;
 
         bool _framebufferResized;
 
-        // TODO: create framebuffers etc
     public:
         VulkanSwapchain()
             : _context(nullptr), _vkSwapchain(nullptr), _framebufferResized(false) {
@@ -42,10 +41,10 @@ namespace nwt
         VulkanSwapchain& operator=(const VulkanSwapchain& other);
 
         VkSwapchainKHR vkSwapchain() const;
+        VkFormat vkImageFormat() const;
         const VkExtent2D& vkExtent() const;
-        const VkFormat& imageFormat() const;
-        const std::vector<VkImage>& images() const;
-        const std::vector<VkImageView>& imageViews() const;
+        const std::vector<VkImage>& vkImages() const;
+        const std::vector<VkImageView>& vkImageViews() const;
         bool isFramebufferResized() const;
 
         void initialize();

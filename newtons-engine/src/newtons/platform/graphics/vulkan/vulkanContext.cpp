@@ -20,6 +20,8 @@ namespace nwt
 
         LOG_INFO("-------- Cleaning Up --------\n");
 
+        _renderPass.destroy();
+
         _swapchain.destroy();
 
         // vkDestroyDescriptorSetLayout(_device.vkDevice(), _descriptorSetLayout, nullptr);
@@ -50,8 +52,8 @@ namespace nwt
         pickPhysicalDevice();
         createLogicalDevice();
         createSwapchain();
+        createRenderPass();
 
-        // createRenderPass();
         // createSyncObjects();
         // createDescriptorSetLayout();
         // createDepthResources();
@@ -73,6 +75,10 @@ namespace nwt
         return _device;
     }
 
+    const VulkanSwapchain& VulkanContext::swapchain() const {
+        return _swapchain;
+    }
+
     const VulkanPhysicalDevice& VulkanContext::physicalDevice() const {
         return _physicalDevices[_selectedPhysicalDeviceIndex];
     }
@@ -85,11 +91,12 @@ namespace nwt
         return _instance;
     }
 
-    VulkanDepthBuffer* VulkanContext::getDepth() {
+    VulkanDepthBuffer* VulkanContext::getDepth() const {
         throw std::runtime_error("Depth Not Implemented");
-        // return &_depth;
     }
 
+
+    // TODO: Commandbuffers!!! + sync objects etc
     void VulkanContext::drawFrame() {
         // VkCommandBuffer commandBuffer = _graphicsCommandBuffers[_currentFrame];
 
@@ -370,6 +377,11 @@ namespace nwt
         LOG_INFO("Swapchain Successfully Created!\n");
     }
 
+    void VulkanContext::createRenderPass() {
+        _renderPass = VulkanRenderPass(this);
+        _renderPass.initialize();
+    }
+
     VkImageView VulkanContext::createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags) {
         VkImageViewCreateInfo viewInfo{};
         viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -390,7 +402,32 @@ namespace nwt
         return imageView;
     }
 
+    void VulkanContext::createGraphicsCommandPool() {
+        const VulkanQueueInfo& graphicsInfo = _device.graphicsQueueInfo();
 
+        VkCommandPoolCreateInfo poolInfo{};
+        poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+        poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+        poolInfo.queueFamilyIndex = graphicsInfo.family;
+
+        if (vkCreateCommandPool(_device.vkDevice(), &poolInfo, nullptr, &_graphicsCommandPool) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create command pool!");
+        }
+    }
+
+    void VulkanContext::createCommandBuffers() {
+        _graphicsCommandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+
+        VkCommandBufferAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        allocInfo.commandPool = _graphicsCommandPool;
+        allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        allocInfo.commandBufferCount = static_cast<uint32_t>(_graphicsCommandBuffers.size());
+
+        if (vkAllocateCommandBuffers(_device.vkDevice(), &allocInfo, _graphicsCommandBuffers.data()) != VK_SUCCESS) {
+            throw std::runtime_error("failed to allocate command buffers!");
+        }
+    }
 
     // VkFormat VulkanContext::findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features) {
     //     for (VkFormat format : candidates) {
@@ -551,33 +588,6 @@ namespace nwt
     //     VkFormat depthFormat = findDepthFormat();
     //     createImage(_swapchain.getExtent().width, _swapchain.getExtent().height, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, _depth.image, _depth.memory);
     //     _depth.imageView = createImageView(_depth.image, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
-    // }
-
-    // void VulkanContext::createGraphicsCommandPool() {
-    //     VulkanQueueFamilyIndices queueFamilyIndices = findQueueFamilies(_physicalDevice);
-
-    //     VkCommandPoolCreateInfo poolInfo{};
-    //     poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-    //     poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-    //     poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
-
-    //     if (vkCreateCommandPool(_device, &poolInfo, nullptr, &_graphicsCommandPool) != VK_SUCCESS) {
-    //         throw std::runtime_error("failed to create command pool!");
-    //     }
-    // }
-
-    // void VulkanContext::createCommandBuffers() {
-    //     _graphicsCommandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
-
-    //     VkCommandBufferAllocateInfo allocInfo{};
-    //     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-    //     allocInfo.commandPool = _graphicsCommandPool;
-    //     allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    //     allocInfo.commandBufferCount = static_cast<uint32_t>(_graphicsCommandBuffers.size());
-
-    //     if (vkAllocateCommandBuffers(_device, &allocInfo, _graphicsCommandBuffers.data()) != VK_SUCCESS) {
-    //         throw std::runtime_error("failed to allocate command buffers!");
-    //     }
     // }
 
     // void VulkanContext::createFramebuffers() {

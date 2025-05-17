@@ -15,8 +15,6 @@ namespace nwt
             return *this;
         }
 
-        // destroy();
-
         _context = other._context;
         _vkSwapchain = other._vkSwapchain;
         _extent = other._extent;
@@ -32,19 +30,19 @@ namespace nwt
         return _vkSwapchain;
     }
 
+    VkFormat VulkanSwapchain::vkImageFormat() const {
+        return _imageFormat;
+    }
+
     const VkExtent2D& VulkanSwapchain::vkExtent() const {
         return _extent;
     }
 
-    const VkFormat& VulkanSwapchain::imageFormat() const {
-        return _imageFormat;
-    }
-
-    const std::vector<VkImage>& VulkanSwapchain::images() const {
+    const std::vector<VkImage>& VulkanSwapchain::vkImages() const {
         return _images;
     }
 
-    const std::vector<VkImageView>& VulkanSwapchain::imageViews() const {
+    const std::vector<VkImageView>& VulkanSwapchain::vkImageViews() const {
         return _imageViews;
     }
 
@@ -167,7 +165,7 @@ namespace nwt
     }
 
     VkExtent2D VulkanSwapchain::chooseExtent(VkSurfaceCapabilitiesKHR capabilities) {
-        if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) {
+        if (capabilities.currentExtent.width != 0xFFFFFFFF) {
             return capabilities.currentExtent;
         }
 
@@ -175,16 +173,13 @@ namespace nwt
         int height;
         Application::window()->framebufferSize(&width, &height);
 
-        VkExtent2D extent(
-            static_cast<uint32_t>(width),
-            static_cast<uint32_t>(height)
-        );
-
         VkExtent2D minExtent = capabilities.minImageExtent;
         VkExtent2D maxExtent = capabilities.maxImageExtent;
 
-        extent.width = std::clamp(extent.width, minExtent.width, maxExtent.width);
-        extent.height = std::clamp(extent.height, minExtent.height, maxExtent.height);
+        VkExtent2D extent(
+            std::clamp(static_cast<uint32_t>(width), minExtent.width, maxExtent.width),
+            std::clamp(static_cast<uint32_t>(height), minExtent.height, maxExtent.height)
+        );
 
         return extent;
     }

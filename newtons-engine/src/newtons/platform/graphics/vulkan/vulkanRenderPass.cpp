@@ -1,33 +1,30 @@
 #include "vulkanRenderPass.hpp"
+#include "vulkanContext.hpp"
 namespace nwt
 {
-    VulkanRenderPass::~VulkanRenderPass() {
-        destroy();
-    }
-
-    VkRenderPass VulkanRenderPass::getVkRenderPass() const {
+    VkRenderPass VulkanRenderPass::vkRenderPass() const {
         return _vkRenderPass;
     }
 
-    const VkClearColorValue& VulkanRenderPass::getClearColor() const {
-        return _clearColor;
+    const VkClearColorValue& VulkanRenderPass::vkClearColor() const {
+        return _vkClearColor;
     }
 
-    const VkClearDepthStencilValue& VulkanRenderPass::getClearDepthStencil() const {
-        return _clearDepthStencil;
+    const VkClearDepthStencilValue& VulkanRenderPass::vkClearDepthStencil() const {
+        return _vkClearDepthStencil;
     }
 
-    const VkRect2D& VulkanRenderPass::getRenderArea() const {
-        return _renderArea;
+    const VkRect2D& VulkanRenderPass::vkRenderArea() const {
+        return _vkRenderArea;
     }
 
-    const std::vector<VkFramebuffer>& VulkanRenderPass::getFramebuffers() const {
-        return _framebuffers;
+    const std::vector<VkFramebuffer>& VulkanRenderPass::vkFramebuffers() const {
+        return _vkFramebuffers;
     }
 
-    VkResult VulkanRenderPass::create(VkFormat presentFormat, VkFormat depthFormat) {
+    void VulkanRenderPass::initialize() {
         VkAttachmentDescription colorAttachment{};
-        colorAttachment.format = presentFormat;
+        colorAttachment.format = _context->swapchain().vkImageFormat();
         colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
         colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -36,29 +33,29 @@ namespace nwt
         colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
-        VkAttachmentDescription depthAttachment{};
-        depthAttachment.format = depthFormat;
-        depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
-        depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        // VkAttachmentDescription depthAttachment{};
+        // depthAttachment.format = depthFormat;
+        // depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+        // depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        // depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        // depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        // depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        // depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        // depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
         VkAttachmentReference colorAttachmentRef{};
         colorAttachmentRef.attachment = 0;
         colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-        VkAttachmentReference depthAttachmentRef{};
-        depthAttachmentRef.attachment = 1;
-        depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        // VkAttachmentReference depthAttachmentRef{};
+        // depthAttachmentRef.attachment = 1;
+        // depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
         VkSubpassDescription subpass{};
         subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
         subpass.colorAttachmentCount = 1;
         subpass.pColorAttachments = &colorAttachmentRef;
-        subpass.pDepthStencilAttachment = &depthAttachmentRef;
+        // subpass.pDepthStencilAttachment = &depthAttachmentRef;
 
         VkSubpassDependency dependency{};
         dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
@@ -68,7 +65,8 @@ namespace nwt
         dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
         dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 
-        std::array<VkAttachmentDescription, 2> attachments = { colorAttachment, depthAttachment };
+        // std::array<VkAttachmentDescription, 2> attachments = { colorAttachment, depthAttachment };
+        std::array<VkAttachmentDescription, 1> attachments = { colorAttachment };
         VkRenderPassCreateInfo renderPassInfo{};
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
         renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
@@ -78,21 +76,34 @@ namespace nwt
         renderPassInfo.dependencyCount = 1;
         renderPassInfo.pDependencies = &dependency;
 
+        if (vkCreateRenderPass(_context->device().vkDevice(), &renderPassInfo, nullptr, &_vkRenderPass) != VK_SUCCESS) {
+            throw std::runtime_error("Unable To Create Renderpass!");
+        }
 
-        return vkCreateRenderPass(_device, &renderPassInfo, nullptr, &_vkRenderPass);
+        LOG_INFO("Render Pass Successfully Created!");
     }
 
-    void VulkanRenderPass::begin(VkCommandBuffer commandBuffer, VkFramebuffer framebuffer) {
+    void VulkanRenderPass::begin(VkCommandBuffer commandBuffer, uint32_t imageIndex) {
+        VkCommandBufferBeginInfo beginInfo{};
+        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        beginInfo.flags = 0; // Optional
+        beginInfo.pInheritanceInfo = nullptr; // Optional
+
+        if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
+            throw std::runtime_error("failed to begin recording command buffer!");
+        }
+
         VkRenderPassBeginInfo renderPassInfo{};
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
         renderPassInfo.renderPass = _vkRenderPass;
-        renderPassInfo.framebuffer = framebuffer;
+        renderPassInfo.framebuffer = _vkFramebuffers[imageIndex];
 
-        renderPassInfo.renderArea = _renderArea;
+        renderPassInfo.renderArea.offset = { 0, 0 };
+        renderPassInfo.renderArea.extent = _context->swapchain().vkExtent();
 
-        std::array<VkClearValue, 2> clearValues{};
-        clearValues[0].color = _clearColor;
-        clearValues[1].depthStencil = _clearDepthStencil;
+        std::array<VkClearValue, 1> clearValues{};
+        clearValues[0].color = _vkClearColor;
+        // clearValues[1].depthStencil = { 1.0f, 0 };
 
         renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
         renderPassInfo.pClearValues = clearValues.data();
@@ -105,7 +116,23 @@ namespace nwt
     }
 
     void VulkanRenderPass::destroy() {
-        vkDestroyRenderPass(_device, _vkRenderPass, nullptr);
+        if (_vkRenderPass == nullptr) {
+            return;
+        }
+
+        VkDevice device = _context->device().vkDevice();
+
+        vkDestroyRenderPass(device, _vkRenderPass, nullptr);
+        for (auto&& framebuffer : _vkFramebuffers) {
+            vkDestroyFramebuffer(device, framebuffer, nullptr);
+        }
+
+        _vkRenderPass = nullptr;
+        _context = nullptr;
+        _vkFramebuffers.clear();
+
+        LOG_INFO("Render Pass Destroyed!");
+
     }
 } // namespace nwt
 

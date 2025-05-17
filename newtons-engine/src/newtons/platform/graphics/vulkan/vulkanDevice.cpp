@@ -17,11 +17,34 @@ namespace nwt
     void VulkanDevice::initialize() {
         std::vector<VkQueueFamilyProperties> queueFamilyProps = _physicalDevice->getAvailableQueueFamilyProperties();
 
+        int iii = 0;
+
+        LOG_INFO("Graphics Bits: " << std::bitset<32>(VK_QUEUE_GRAPHICS_BIT));
+        LOG_INFO("Transfer Bits: " << std::bitset<32>(VK_QUEUE_TRANSFER_BIT));
+        LOG_INFO("Compute Bits:  " << std::bitset<32>(VK_QUEUE_COMPUTE_BIT));
+        LOG_INFO("----------------");
+
+        for (auto&& prop : queueFamilyProps) {
+            std::bitset<32> set(prop.queueFlags);
+            LOG_INFO(iii << ") " << set << ", queue count: " << prop.queueCount);
+            iii++;
+        }
+
+        LOG_INFO("----------------");
+
+
         _queueInfos.reserve(4);
-        _queueInfos.emplace_back(findPresentQueueInfo(queueFamilyProps));
         _queueInfos.emplace_back(findGraphicsQueueInfo(queueFamilyProps));
+        _queueInfos.emplace_back(findPresentQueueInfo(queueFamilyProps));
         _queueInfos.emplace_back(findTransferQueueInfo(queueFamilyProps));
 
+#ifdef DEBUG
+        int qi = 0;
+        for (auto&& queueInfo : _queueInfos) {
+            LOG_INFO(qi << ") family: " << queueInfo.family << ", index: " << queueInfo.index);
+            qi++;
+        }
+#endif
 
         std::unordered_map<uint32_t, uint32_t> uniqueQueueFamilies;
         std::unordered_map<uint32_t, std::vector<uint32_t>> usedQueuesInFamily;

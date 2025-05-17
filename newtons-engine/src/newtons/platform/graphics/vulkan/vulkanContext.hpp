@@ -62,14 +62,18 @@ namespace nwt
 
         VulkanSwapchain _swapchain;
 
-        // VulkanRenderPass _renderPass;
+        VulkanRenderPass _renderPass;
+
+    public:
+        // TODO: Refactor
+
+        VkCommandPool _graphicsCommandPool;
+        std::vector<VkCommandBuffer> _graphicsCommandBuffers;
 
         // std::vector<VulkanGraphicsPipeline> _graphicsPipelines;
 
         // VkDescriptorSetLayout _descriptorSetLayout;
 
-        // VkCommandPool _graphicsCommandPool;
-        // std::vector<VkCommandBuffer> _graphicsCommandBuffers;
 
         // VulkanDepthBuffer _depth;
 
@@ -83,12 +87,13 @@ namespace nwt
 
         virtual void drawFrame() override;
 
-        const VulkanDevice& device() const;
-        const VulkanPhysicalDevice& physicalDevice() const;
-        VkSurfaceKHR vkSurface() const;
         VkInstance vkInstance() const;
+        VkSurfaceKHR vkSurface() const;
+        const VulkanPhysicalDevice& physicalDevice() const;
+        const VulkanDevice& device() const;
+        const VulkanSwapchain& swapchain() const;
 
-        VulkanDepthBuffer* getDepth();
+        VulkanDepthBuffer* getDepth() const;
 
     public:
         bool checkValidationLayersSupport();
@@ -106,6 +111,8 @@ namespace nwt
         void createLogicalDevice();
         void createSwapchain();
         void createRenderPass();
+
+
         void createSyncObjects();
         void createDescriptorSetLayout();
         void createDepthResources();

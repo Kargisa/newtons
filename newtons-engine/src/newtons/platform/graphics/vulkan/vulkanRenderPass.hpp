@@ -1,37 +1,43 @@
 #pragma once
 
+#include "newtons/pch.hpp"
 #include <vulkan/vulkan.h>
 
 namespace nwt
 {
+    struct VulkanContext;
+
     class VulkanRenderPass {
-        VkDevice _device;
+
+        VulkanContext* _context;
         VkRenderPass _vkRenderPass;
-        VkClearColorValue _clearColor;
-        VkClearDepthStencilValue _clearDepthStencil;
-        VkRect2D _renderArea;
-        std::vector<VkFramebuffer> _framebuffers;
+        VkClearColorValue _vkClearColor;
+        VkClearDepthStencilValue _vkClearDepthStencil;
+        VkRect2D _vkRenderArea;
+
+        std::vector<VkFramebuffer> _vkFramebuffers;
 
     public:
-        VulkanRenderPass() = default;
-        VulkanRenderPass(VkDevice device, VkClearColorValue clearColor, VkClearDepthStencilValue clearDepthStencil, VkRect2D renderArea)
-            : _device(device), _clearColor(clearColor), _clearDepthStencil(clearDepthStencil), _renderArea(renderArea) {
+        VulkanRenderPass()
+            : _context(nullptr), _vkRenderPass(nullptr) {
+        }
+        VulkanRenderPass(VulkanContext* context)
+            : _context(context), _vkRenderPass(nullptr) {
         }
 
-        virtual ~VulkanRenderPass();
 
-        VkRenderPass getVkRenderPass() const;
-        const VkClearColorValue& getClearColor() const;
-        const VkClearDepthStencilValue& getClearDepthStencil() const;
-        const VkRect2D& getRenderArea() const;
-        const std::vector<VkFramebuffer>& getFramebuffers() const;
-
+        VkRenderPass vkRenderPass() const;
+        const VkClearColorValue& vkClearColor() const;
+        const VkClearDepthStencilValue& vkClearDepthStencil() const;
+        const VkRect2D& vkRenderArea() const;
+        const std::vector<VkFramebuffer>& vkFramebuffers() const;
 
 
-        VkResult create(VkFormat presentFormat, VkFormat depthFormat);
-        void begin(VkCommandBuffer commandBuffer, VkFramebuffer framebuffer);
-        void end(VkCommandBuffer commandBuffer);
 
+        void initialize();
         void destroy();
+
+        void begin(VkCommandBuffer commandBuffer, uint32_t imageIndex);
+        void end(VkCommandBuffer commandBuffer);
     };
 } // namespace nwt
