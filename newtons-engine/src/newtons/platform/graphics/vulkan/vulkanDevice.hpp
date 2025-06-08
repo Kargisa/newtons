@@ -9,20 +9,6 @@ namespace nwt
 {
     struct VulkanContext;
 
-    struct VulkanQueueInfo
-    {
-        uint32_t family;
-        uint32_t index;
-
-        VulkanQueueInfo()
-            : family(-1), index(-1) {
-        }
-
-        VulkanQueueInfo(uint32_t family, uint32_t index)
-            : family(family), index(index) {
-        }
-    };
-
     class VulkanDevice
     {
 
@@ -32,30 +18,12 @@ namespace nwt
         VulkanPhysicalDevice* _physicalDevice;
         VkDevice _device;
 
-        /*
-        Reserved Queue Indices:
-        [0]: Graphics
-        [1]: Present
-        [2]: Transfer
-        [3]: Compute
-        */
-        std::vector<VulkanQueueInfo> _queueInfos;
-
-        /*
-        Reserved Queue Indices:
-        [0]: Graphics
-        [1]: Present
-        [2]: Transfer
-        [3]: Compute
-        */
-        std::vector<VkQueue> _queues;
-
     public:
         VulkanDevice(VulkanContext* context, VulkanPhysicalDevice* physicalDevice)
-            : _context(context), _physicalDevice(physicalDevice), _device(nullptr) {
+            : _context(context), _physicalDevice(physicalDevice), _device(VK_NULL_HANDLE) {
         }
         VulkanDevice()
-            : _context(nullptr), _physicalDevice(nullptr), _device(nullptr) {
+            : _context(nullptr), _physicalDevice(nullptr), _device(VK_NULL_HANDLE) {
         }
         // ~VulkanDevice();
 
@@ -67,21 +35,8 @@ namespace nwt
 
 
         VkDevice vkDevice() const;
-
-        VkQueue vkPresentQueue() const;
-        VkQueue vkGraphicsQueue() const;
-        VkQueue vkTransferQueue() const;
-        VkQueue vkComputeQueue() const;
-
-        const VulkanQueueInfo& presentQueueInfo() const;
-        const VulkanQueueInfo& graphicsQueueInfo() const;
-        const VulkanQueueInfo& transferQueueInfo() const;
-        const VulkanQueueInfo& computeQueueInfo() const;
-
+        operator VkDevice() const;
     private:
-        VulkanQueueInfo findPresentQueueInfo(const std::vector<VkQueueFamilyProperties>& availableQueueFamilyProps);
-        VulkanQueueInfo findGraphicsQueueInfo(const std::vector<VkQueueFamilyProperties>& availableQueueFamilyProps);
-        VulkanQueueInfo findTransferQueueInfo(const std::vector<VkQueueFamilyProperties>& availableQueueFamilyProps);
     };
 
 } // namespace nwt

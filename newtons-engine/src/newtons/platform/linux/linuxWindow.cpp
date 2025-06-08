@@ -2,13 +2,8 @@
 
 namespace nwt
 {
-    LinuxWindow::LinuxWindow(int width, int height, const char* name) {
-        _data.width = width;
-        _data.height = height;
+    LinuxWindow::LinuxWindow(const char* name) {
         _data.name = name;
-
-        init();
-        createCallbacks();
     }
 
     LinuxWindow::~LinuxWindow()
@@ -16,25 +11,25 @@ namespace nwt
         glfwDestroyWindow(_window);
     }
 
-    void LinuxWindow::init()
+    void LinuxWindow::initialize(int width, int height)
     {
         glfwInit();
 
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
         glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
-        _window = glfwCreateWindow(_data.width, _data.height, _data.name, nullptr, nullptr);
+        _window = glfwCreateWindow(width, height, _data.name, nullptr, nullptr);
         glfwSetWindowUserPointer(_window, &_data);
+
+        createCallbacks();
     }
 
     void LinuxWindow::createCallbacks()
     {
         glfwSetFramebufferSizeCallback(_window, [](GLFWwindow* window, int width, int height) {
             WindowData data = *reinterpret_cast<WindowData*>(glfwGetWindowUserPointer(window));
-            data.height = height;
-            data.width = width;
 
-            WindowResizedEvent event(data.width, data.height);
+            WindowResizedEvent event(width, height);
             data.eventCallback(event);
             });
 
@@ -104,8 +99,11 @@ namespace nwt
             });
     }
 
+    void LinuxWindow::setEventCallback(EventFunc func) {
+        _data.eventCallback = func;
+    }
 
-    void* LinuxWindow::getNativeWindow() {
+    void* LinuxWindow::nativeWindow() {
         return _window;
     }
 
@@ -134,9 +132,9 @@ namespace nwt
         return glfwGetRequiredInstanceExtensions(count);
     }
 
-    LinuxWindow* LinuxWindow::create(int width, int height, const char* name = "NEWTONS")
+    LinuxWindow* LinuxWindow::create(const char* name = "NEWTONS")
     {
-        return new LinuxWindow(width, height, name);
+        return new LinuxWindow(name);
     }
 
 } // namespace nwt

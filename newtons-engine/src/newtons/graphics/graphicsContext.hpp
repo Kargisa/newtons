@@ -5,7 +5,7 @@
 
 namespace nwt {
     enum class GraphicsAPI {
-        VULKAN_API,
+        VULKAN,
     };
 
 
@@ -16,7 +16,7 @@ namespace nwt {
     public:
         inline virtual ~GraphicsContext() {}
 
-        virtual void init() = 0;
+        virtual void initialze() = 0;
         virtual void* getNativeContext() = 0;
 
         virtual void drawFrame() = 0;

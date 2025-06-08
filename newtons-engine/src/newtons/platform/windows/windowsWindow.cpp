@@ -4,13 +4,8 @@
 
 namespace nwt
 {
-    WindowsWindow::WindowsWindow(int width, int height, const char* name) {
-        _data.width = width;
-        _data.height = height;
+    WindowsWindow::WindowsWindow(const char* name) {
         _data.name = name;
-
-        init();
-        createCallbacks();
     }
 
     WindowsWindow::~WindowsWindow()
@@ -18,25 +13,24 @@ namespace nwt
         glfwDestroyWindow(_window);
     }
 
-    void WindowsWindow::init()
+    void WindowsWindow::initialize(int width, int height)
     {
         glfwInit();
 
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
         glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
-        _window = glfwCreateWindow(_data.width, _data.height, _data.name, nullptr, nullptr);
+        _window = glfwCreateWindow(width, height, _data.name, nullptr, nullptr);
         glfwSetWindowUserPointer(_window, &_data);
+        createCallbacks();
     }
 
     void WindowsWindow::createCallbacks()
     {
         glfwSetFramebufferSizeCallback(_window, [](GLFWwindow* window, int width, int height) {
             WindowData data = *reinterpret_cast<WindowData*>(glfwGetWindowUserPointer(window));
-            data.height = height;
-            data.width = width;
 
-            WindowResizedEvent event(data.width, data.height);
+            WindowResizedEvent event(width, height);
             data.eventCallback(event);
             });
 
@@ -106,8 +100,11 @@ namespace nwt
             });
     }
 
-    void* WindowsWindow::getNativeWindow()
-    {
+    void WindowsWindow::setEventCallback(EventFunc func) {
+        _data.eventCallback = func;
+    }
+
+    void* WindowsWindow::nativeWindow() {
         return _window;
     }
 
@@ -136,9 +133,9 @@ namespace nwt
     }
 
 
-    WindowsWindow* WindowsWindow::create(int width, int height, const char* name = "NEWTONS")
+    WindowsWindow* WindowsWindow::create(const char* name = "NEWTONS")
     {
-        return new WindowsWindow(width, height, name);
+        return new WindowsWindow(name);
     }
 
 } // namespace nwt

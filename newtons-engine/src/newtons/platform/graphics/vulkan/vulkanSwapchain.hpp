@@ -1,6 +1,8 @@
 #pragma once
 
 #include <vulkan/vulkan.h>
+#include "fixedVector.hpp"
+#include "vulkanFramebuffer.hpp"
 
 namespace nwt
 {
@@ -18,21 +20,19 @@ namespace nwt
 
     private:
         VulkanContext* _context;
-        VkSwapchainKHR _vkSwapchain;
+        VkSwapchainKHR _swapchain;
         VkFormat _imageFormat;
         VkExtent2D _extent;
-        std::vector<VkImage> _images;
-        std::vector<VkImageView> _imageViews;
-
-        bool _framebufferResized;
+        FixedVector<VkImage> _images;
+        FixedVector<VkImageView> _imageViews;
 
     public:
         VulkanSwapchain()
-            : _context(nullptr), _vkSwapchain(nullptr), _framebufferResized(false) {
+            : _context(nullptr), _swapchain(VK_NULL_HANDLE) {
         }
 
         VulkanSwapchain(VulkanContext* context)
-            : _context(context), _vkSwapchain(nullptr), _framebufferResized(false) {
+            : _context(context), _swapchain(VK_NULL_HANDLE) {
         }
         // ~VulkanSwapchain();
 
@@ -41,20 +41,23 @@ namespace nwt
         VulkanSwapchain& operator=(const VulkanSwapchain& other);
 
         VkSwapchainKHR vkSwapchain() const;
+        operator VkSwapchainKHR() const;
+
         VkFormat vkImageFormat() const;
         const VkExtent2D& vkExtent() const;
-        const std::vector<VkImage>& vkImages() const;
-        const std::vector<VkImageView>& vkImageViews() const;
-        bool isFramebufferResized() const;
+        const FixedVector<VkImage>& vkImages() const;
+        const FixedVector<VkImageView>& vkImageViews() const;
+
 
         void initialize();
+        void destroy();
+
         SupportDetails querySupportDetails();
 
         VkSurfaceFormatKHR chooseSurfaceFormat(std::vector<VkSurfaceFormatKHR> formats);
         VkPresentModeKHR choosePresentMode(std::vector<VkPresentModeKHR> presentModes);
         VkExtent2D chooseExtent(VkSurfaceCapabilitiesKHR capabilities);
 
-        void destroy();
     };
 
 } // namespace nwt

@@ -6,28 +6,26 @@
 
 namespace nwt
 {
-    // VulkanSwapchain::~VulkanSwapchain() {
-    //     destroy();
-    // }
-
     VulkanSwapchain& VulkanSwapchain::operator=(const VulkanSwapchain& other) {
         if (this == &other) {
             return *this;
         }
 
         _context = other._context;
-        _vkSwapchain = other._vkSwapchain;
+        _swapchain = other._swapchain;
         _extent = other._extent;
         _imageFormat = other._imageFormat;
         _images = other._images;
         _imageViews = other._imageViews;
-        _framebufferResized = other._framebufferResized;
-
         return *this;
     }
 
     VkSwapchainKHR VulkanSwapchain::vkSwapchain() const {
-        return _vkSwapchain;
+        return _swapchain;
+    }
+
+    VulkanSwapchain::operator VkSwapchainKHR() const {
+        return _swapchain;
     }
 
     VkFormat VulkanSwapchain::vkImageFormat() const {
@@ -38,16 +36,12 @@ namespace nwt
         return _extent;
     }
 
-    const std::vector<VkImage>& VulkanSwapchain::vkImages() const {
+    const FixedVector<VkImage>& VulkanSwapchain::vkImages() const {
         return _images;
     }
 
-    const std::vector<VkImageView>& VulkanSwapchain::vkImageViews() const {
+    const FixedVector<VkImageView>& VulkanSwapchain::vkImageViews() const {
         return _imageViews;
-    }
-
-    bool VulkanSwapchain::isFramebufferResized() const {
-        return _framebufferResized;
     }
 
     void VulkanSwapchain::initialize() {
@@ -74,8 +68,8 @@ namespace nwt
         createInfo.imageArrayLayers = 1;
         createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-        VulkanQueueInfo presentQueueInfo = device.presentQueueInfo();
-        VulkanQueueInfo graphicsQueueInfo = device.graphicsQueueInfo();
+        VulkanQueueInfo graphicsQueueInfo = _context->graphicsQueue().info();
+        VulkanQueueInfo presentQueueInfo = _context->presentQueue().info();
 
         if (graphicsQueueInfo.family != presentQueueInfo.family) {
             createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
@@ -94,19 +88,19 @@ namespace nwt
         createInfo.oldSwapchain = VK_NULL_HANDLE;
 
 
-        if (vkCreateSwapchainKHR(device.vkDevice(), &createInfo, nullptr, &_vkSwapchain) != VK_SUCCESS) {
+        if (vkCreateSwapchainKHR(device.vkDevice(), &createInfo, nullptr, &_swapchain) != VK_SUCCESS) {
             throw std::runtime_error("failed to create swapchain");
         }
 
-        vkGetSwapchainImagesKHR(device.vkDevice(), _vkSwapchain, &imgCount, nullptr);
-        _images.resize(imgCount);
-        vkGetSwapchainImagesKHR(device.vkDevice(), _vkSwapchain, &imgCount, _images.data());
+        vkGetSwapchainImagesKHR(device.vkDevice(), _swapchain, &imgCount, nullptr);
+        _images = FixedVector<VkImage>(imgCount);
+        vkGetSwapchainImagesKHR(device.vkDevice(), _swapchain, &imgCount, _images.data());
 
         _imageFormat = surfaceFormat.format;
         _extent = extent;
 
 
-        _imageViews.resize(_images.size());
+        _imageViews = FixedVector<VkImageView>(_images.size());
         for (size_t i = 0; i < _images.size(); i++)
         {
             _imageViews[i] = _context->createImageView(_images[i], _imageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
@@ -185,21 +179,20 @@ namespace nwt
     }
 
     void VulkanSwapchain::destroy() {
-        if (_vkSwapchain == nullptr) {
+        if (_swapchain == VK_NULL_HANDLE) {
             return;
         }
 
-        vkDestroySwapchainKHR(_context->device().vkDevice(), _vkSwapchain, nullptr);
+        vkDestroySwapchainKHR(_context->device().vkDevice(), _swapchain, nullptr);
 
         for (auto&& imageView : _imageViews) {
             vkDestroyImageView(_context->device().vkDevice(), imageView, nullptr);
         }
 
-
-        _vkSwapchain = nullptr;
+        _swapchain = VK_NULL_HANDLE;
         _context = nullptr;
-        _images.clear();
-        _imageViews.clear();
+        // _images.clear();
+        // _imageViews.clear();
 
         LOG_INFO("Swapchain Destroyed!\n");
     }

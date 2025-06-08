@@ -29,7 +29,7 @@ namespace nwt
         }
 
         VulkanPhysicalDevice()
-            : _context(nullptr), _vkPhysicalDevice(nullptr) {
+            : _context(nullptr), _vkPhysicalDevice(VK_NULL_HANDLE) {
         }
 
         VkPhysicalDevice vkPhysicalDevice() const;

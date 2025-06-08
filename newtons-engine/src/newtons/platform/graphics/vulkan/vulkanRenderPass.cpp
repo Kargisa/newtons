@@ -3,26 +3,32 @@
 namespace nwt
 {
     VkRenderPass VulkanRenderPass::vkRenderPass() const {
-        return _vkRenderPass;
+        return _renderPass;
     }
 
     const VkClearColorValue& VulkanRenderPass::vkClearColor() const {
-        return _vkClearColor;
+        return _clearColor;
     }
 
     const VkClearDepthStencilValue& VulkanRenderPass::vkClearDepthStencil() const {
-        return _vkClearDepthStencil;
+        return _clearDepthStencil;
     }
 
     const VkRect2D& VulkanRenderPass::vkRenderArea() const {
-        return _vkRenderArea;
+        return _renderArea;
     }
 
-    const std::vector<VkFramebuffer>& VulkanRenderPass::vkFramebuffers() const {
-        return _vkFramebuffers;
+    // const std::vector<VkFramebuffer>& VulkanRenderPass::vkFramebuffers() const {
+    //     return _vkFramebuffers;
+    // }
+
+    void VulkanRenderPass::setClearColor(VkClearColorValue clearColor) {
+        _clearColor = clearColor;
     }
 
     void VulkanRenderPass::initialize() {
+        _clearColor = { 0.392f, 0.584f, 0.929f };
+
         VkAttachmentDescription colorAttachment{};
         colorAttachment.format = _context->swapchain().vkImageFormat();
         colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -67,6 +73,7 @@ namespace nwt
 
         // std::array<VkAttachmentDescription, 2> attachments = { colorAttachment, depthAttachment };
         std::array<VkAttachmentDescription, 1> attachments = { colorAttachment };
+
         VkRenderPassCreateInfo renderPassInfo{};
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
         renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
@@ -76,60 +83,51 @@ namespace nwt
         renderPassInfo.dependencyCount = 1;
         renderPassInfo.pDependencies = &dependency;
 
-        if (vkCreateRenderPass(_context->device().vkDevice(), &renderPassInfo, nullptr, &_vkRenderPass) != VK_SUCCESS) {
+        if (vkCreateRenderPass(_context->device(), &renderPassInfo, nullptr, &_renderPass) != VK_SUCCESS) {
             throw std::runtime_error("Unable To Create Renderpass!");
         }
 
         LOG_INFO("Render Pass Successfully Created!");
     }
 
-    void VulkanRenderPass::begin(VkCommandBuffer commandBuffer, uint32_t imageIndex) {
-        VkCommandBufferBeginInfo beginInfo{};
-        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        beginInfo.flags = 0; // Optional
-        beginInfo.pInheritanceInfo = nullptr; // Optional
-
-        if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
-            throw std::runtime_error("failed to begin recording command buffer!");
-        }
-
+    void VulkanRenderPass::begin(const VulkanFrameInfo& frameInfo, uint32_t imageIndex) {
         VkRenderPassBeginInfo renderPassInfo{};
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        renderPassInfo.renderPass = _vkRenderPass;
-        renderPassInfo.framebuffer = _vkFramebuffers[imageIndex];
+        renderPassInfo.renderPass = _renderPass;
+        renderPassInfo.framebuffer = _context->framebuffers()[imageIndex];
 
         renderPassInfo.renderArea.offset = { 0, 0 };
         renderPassInfo.renderArea.extent = _context->swapchain().vkExtent();
 
         std::array<VkClearValue, 1> clearValues{};
-        clearValues[0].color = _vkClearColor;
+        clearValues[0].color = _clearColor;
         // clearValues[1].depthStencil = { 1.0f, 0 };
 
         renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
         renderPassInfo.pClearValues = clearValues.data();
 
-        vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+        vkCmdBeginRenderPass(frameInfo.commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
     }
 
-    void VulkanRenderPass::end(VkCommandBuffer commandBuffer) {
-        vkCmdEndRenderPass(commandBuffer);
+    void VulkanRenderPass::end(const VulkanFrameInfo& frameInfo) {
+        vkCmdEndRenderPass(frameInfo.commandBuffer);
     }
 
     void VulkanRenderPass::destroy() {
-        if (_vkRenderPass == nullptr) {
+        if (_renderPass == VK_NULL_HANDLE) {
             return;
         }
 
         VkDevice device = _context->device().vkDevice();
 
-        vkDestroyRenderPass(device, _vkRenderPass, nullptr);
-        for (auto&& framebuffer : _vkFramebuffers) {
-            vkDestroyFramebuffer(device, framebuffer, nullptr);
-        }
+        vkDestroyRenderPass(device, _renderPass, nullptr);
+        // for (auto&& framebuffer : _vkFramebuffers) {
+        //     vkDestroyFramebuffer(device, framebuffer, nullptr);
+        // }
 
-        _vkRenderPass = nullptr;
+        _renderPass = VK_NULL_HANDLE;
         _context = nullptr;
-        _vkFramebuffers.clear();
+        // _vkFramebuffers.clear();
 
         LOG_INFO("Render Pass Destroyed!");
 

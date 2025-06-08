@@ -19,7 +19,12 @@ add_library(newtons-engine STATIC
 "newtons/platform/graphics/vulkan/vulkanRenderPass.cpp"
 "newtons/platform/graphics/vulkan/vulkanPhysicalDevice.cpp"
 "newtons/platform/graphics/vulkan/vulkanDevice.cpp"
-"newtons/platform/graphics/vulkan/vulkanCommand.cpp"
+"newtons/platform/graphics/vulkan/vulkanCommandPool.cpp"
+"newtons/platform/graphics/vulkan/vulkanCommandBuffer.cpp"
+"newtons/platform/graphics/vulkan/vulkanFramebuffer.cpp"
+"newtons/platform/graphics/vulkan/vulkanSemaphore.cpp"
+"newtons/platform/graphics/vulkan/vulkanFence.cpp"
+"newtons/platform/graphics/vulkan/vulkanQueue.cpp"
 )
 # endif()
 

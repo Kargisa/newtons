@@ -11,7 +11,7 @@ namespace nwt
     GraphicsContext* GraphicsContext::create(GraphicsAPI api) {
         switch (api)
         {
-        case GraphicsAPI::VULKAN_API:
+        case GraphicsAPI::VULKAN:
             VulkanContext* context = new VulkanContext();
             context->_api = api;
             return context;

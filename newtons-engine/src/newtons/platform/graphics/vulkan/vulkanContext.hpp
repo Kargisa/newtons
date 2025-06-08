@@ -11,18 +11,19 @@
 #include "vulkanPhysicalDevice.hpp"
 #include "vulkanDevice.hpp"
 #include "fixedVector.hpp"
+#include "vulkanFrameInfo.hpp"
+#include "vulkanCommandPool.hpp"
+#include "vulkanCommandBuffer.hpp"
+#include "vulkanFramebuffer.hpp"
+#include "vulkanSemaphore.hpp"
+#include "vulkanFence.hpp"
+#include "vulkanQueue.hpp"
 
 namespace nwt
 {
-    struct VulkanQueueFamilyIndices
-    {
-        std::optional<uint32_t> graphicsFamily;
-        std::optional<uint32_t> presentFamily;
 
-        inline bool isComplete() const {
-            return graphicsFamily.has_value() && presentFamily.has_value();
-        }
-    };
+
+
 
     // *********************************************
     // *************** VulkanContext ***************
@@ -46,12 +47,7 @@ namespace nwt
 
     private:
         static constexpr int MAX_FRAMES_IN_FLIGHT = 3;
-        int _currentFrame;
-
-        std::vector<VkFence> _inFlightFences;
-        std::vector<VkSemaphore> _imageAvailableSemaphores;
-        std::vector<VkSemaphore> _renderFinishedSemaphores;
-
+        int _currentFrame = 0;
 
         VkInstance _instance;
         std::vector<VkSurfaceKHR> _surfaces;
@@ -60,15 +56,25 @@ namespace nwt
         FixedVector<VulkanPhysicalDevice> _physicalDevices;
         VulkanDevice _device;
 
-        VulkanSwapchain _swapchain;
+        /*
+        Reserved Queue Indices:
+        [0]: Graphics
+        [1]: Present
+        [2]: Transfer
+        [3]: Compute
+        */
+        std::vector<VulkanQueue> _queues;
 
+        VulkanSwapchain _swapchain;
         VulkanRenderPass _renderPass;
 
-    public:
-        // TODO: Refactor
+        FixedVector<VulkanFramebuffer> _framebuffers;
+        FixedVector<VulkanSemaphore> _renderFinishedSemaphores;
 
-        VkCommandPool _graphicsCommandPool;
-        std::vector<VkCommandBuffer> _graphicsCommandBuffers;
+    public:
+        FixedVector<VulkanFrameInfo> _frameInfos;
+
+    public:
 
         // std::vector<VulkanGraphicsPipeline> _graphicsPipelines;
 
@@ -82,48 +88,55 @@ namespace nwt
         VulkanContext() = default;
         virtual ~VulkanContext();
 
-        virtual void init() override;
+        virtual void                                initialze() override;
         virtual void* getNativeContext() override;
 
-        virtual void drawFrame() override;
+        virtual void                                drawFrame() override;
 
-        VkInstance vkInstance() const;
-        VkSurfaceKHR vkSurface() const;
+        VkInstance                                  vkInstance() const;
+        VkSurfaceKHR                                vkSurface() const;
         const VulkanPhysicalDevice& physicalDevice() const;
+
+        const std::vector<VulkanQueue>& queues() const;
+        const VulkanQueue& graphicsQueue() const;
+        const VulkanQueue& presentQueue() const;
+        const VulkanQueue& transferQueue() const;
+
         const VulkanDevice& device() const;
         const VulkanSwapchain& swapchain() const;
+        const FixedVector<VulkanFramebuffer>& framebuffers() const;
 
         VulkanDepthBuffer* getDepth() const;
 
     public:
-        bool checkValidationLayersSupport();
-        bool checkExtensionsSupport(const std::vector<const char*>& requiredExtensions, const std::vector<VkExtensionProperties>& extensions);
-        // VulkanSwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
-        VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
-        VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
-        VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
-        VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
+        bool                                        checkValidationLayersSupport();
+        bool                                        checkExtensionsSupport(const std::vector<const char*>& requiredExtensions, const std::vector<VkExtensionProperties>& extensions);
+        VkImageView                                 createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
 
-        void createInstance();
-        void createSurface();
-        void findPhysicalDevices();
-        void pickPhysicalDevice();
-        void createLogicalDevice();
-        void createSwapchain();
-        void createRenderPass();
+        void                                        createInstance();
+        void                                        createSurface();
+        void                                        findPhysicalDevices();
+        void                                        pickPhysicalDevice();
+        void                                        createLogicalDevice();
+        void                                        selectQueues();
+        void                                        createSwapchain();
+        void                                        getQueues();
+        void                                        createRenderPass();
+        void                                        createFramebuffers();
+        void                                        createFrameInfos();
 
 
-        void createSyncObjects();
+
+
         void createDescriptorSetLayout();
         void createDepthResources();
-        void createGraphicsCommandPool();
         void createCommandBuffers();
-        void createFramebuffers();
         void createGraphicsPipeline(const VulkanShader& shader);
 
-        void cleanupSwapchain();
+        VulkanQueueInfo                             findPresentQueueInfo(const std::vector<VkQueueFamilyProperties>& availableQueueFamilyProps) const;
+        VulkanQueueInfo                             findGraphicsQueueInfo(const std::vector<VkQueueFamilyProperties>& availableQueueFamilyProps) const;
+        VulkanQueueInfo                             findTransferQueueInfo(const std::vector<VkQueueFamilyProperties>& availableQueueFamilyProps) const;
 
-        void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 
     public:
         static GraphicsContext* create();

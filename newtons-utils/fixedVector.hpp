@@ -41,9 +41,7 @@ namespace nwt
             }
 
             T& operator[](size_t index) {
-                Iterator itr = *this;
-                _ptr += index;
-                return *_ptr;
+                return *(_ptr + index);
             }
 
             T* operator->() {
@@ -81,6 +79,7 @@ namespace nwt
 
 
         size_t size() const;
+        // void resize(size_t size);
         T* data() const;
 
         FixedVector<T>& operator=(const FixedVector& other);
@@ -96,14 +95,13 @@ namespace nwt
     template<typename T>
     inline FixedVector<T>::FixedVector(const FixedVector<T>& other)
         : _size(other._size) {
-        _data = reinterpret_cast<T*>(std::malloc(other._size));
-        std::memcpy(_data, other._data, other._size);
+        _data = new T[other._size];
+        std::copy(other._data, other._data + other._size, _data);
     }
 
     template<typename T>
     inline FixedVector<T>::FixedVector(FixedVector<T>&& other) noexcept
-        : _size(other._size) {
-        _data = other._data;
+        : _size(other._size), _data(other._data) {
 
         other._data = nullptr;
         other._size = 0;
@@ -124,6 +122,11 @@ namespace nwt
         return _size;
     }
 
+    // template<typename T>
+    // inline void FixedVector<T>::resize(size_t size){
+
+    // }
+
     template<typename T>
     inline FixedVector<T>& FixedVector<T>::operator=(const FixedVector<T>& other) {
         if (this == &other) {
@@ -133,8 +136,8 @@ namespace nwt
         delete[] _data;
         _size = other.size();
 
-        _data = reinterpret_cast<T*>(std::malloc(other.size()));
-        std::memcpy(_data, other._data, other.size());
+        _data = new T[other._size];
+        std::copy(other._data, other._data + other._size, _data);
 
         return *this;
     }
@@ -143,11 +146,23 @@ namespace nwt
 
     template<typename T>
     inline constexpr T& FixedVector<T>::operator[](size_t n) {
+#ifdef DEBUG
+        if (n >= _size) {
+            throw std::runtime_error("Index out of range");
+        }
+#endif
+
         return _data[n];
     }
 
     template<typename T>
     inline constexpr const T& FixedVector<T>::operator[](size_t n) const {
+#ifdef DEBUG
+        if (n >= _size) {
+            throw std::runtime_error("Index out of range");
+        }
+#endif
+
         return _data[n];
     }
 

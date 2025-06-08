@@ -14,14 +14,9 @@ namespace nwt {
 
 
     public:
-        Application();
-        virtual ~Application();
-
-    public:
-        static void init();
         static void run();
         static Window* window();
-        static GraphicsContext* getGraphcisContext();
+        static GraphicsContext* graphcisContext();
 
     private:
         static void initWindow();

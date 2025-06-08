@@ -15,8 +15,6 @@ namespace nwt {
 
     struct WindowData {
         const char* name;
-        int width;
-        int height;
         EventFunc eventCallback;
     };
 
@@ -28,16 +26,12 @@ namespace nwt {
     public:
         virtual ~Window() = default;
 
-    private:
-        virtual void init() = 0;
+        virtual void initialize(int width, int height) = 0;
         virtual void createCallbacks() = 0;
 
-    public:
-        virtual void setEventCallback(EventFunc func);
-        virtual int getWidth() const;
-        virtual int getHeight() const;
+        virtual void setEventCallback(EventFunc func) = 0;
 
-        virtual void* getNativeWindow() = 0;
+        virtual void* nativeWindow() = 0;
         virtual void framebufferSize(int* width, int* height) = 0;
 
         virtual void destroy() = 0;
