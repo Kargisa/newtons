@@ -146,6 +146,7 @@ namespace nwt
         // LOG_INFO("1: " << i);
         // LOG_INFO("2: " << i);
         uint32_t imageIndex;
+        LOG_INFO(i);
         VkResult result = vkAcquireNextImageKHR(_device.vkDevice(), _swapchain.vkSwapchain(), UINT64_MAX, frameInfo.imageAvailabeSemaphore, VK_NULL_HANDLE, &imageIndex);
 
         const VulkanSemaphore& renderFinishedSemaphore = _renderFinishedSemaphores[imageIndex];
@@ -211,7 +212,8 @@ namespace nwt
         // else if (result != VK_SUCCESS) {
         //     throw std::runtime_error("failed to present swap chain image!");
         // }
-        // std::this_thread::sleep_10:00 Sunday, in Hietzing, Vienname + 1) % MAX_FRAMES_IN_FLIGHT;
+        _currentFrame = (_currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+        // vkDeviceWaitIdle(device());
     }
 
     // *********************************************
@@ -378,7 +380,7 @@ namespace nwt
         }
 
         if (candidates.rbegin()->first > 0) {
-            _selectedPhysicalDeviceIndex = candidates.rbegin()->second;
+            _selectedPhysicalDeviceIndex = (candidates.rbegin()->second);
             VkPhysicalDeviceProperties props;
             vkGetPhysicalDeviceProperties(_physicalDevices[_selectedPhysicalDeviceIndex].vkPhysicalDevice(), &props);
             LOG_INFO("Selected Physical Device: " << props.deviceName << "\n");
