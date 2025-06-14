@@ -1,4 +1,5 @@
 #include "vulkanRenderPass.hpp"
+#include "vulkanFramebuffer.hpp"
 #include "vulkanContext.hpp"
 namespace nwt
 {
@@ -16,6 +17,10 @@ namespace nwt
 
     const VkRect2D& VulkanRenderPass::vkRenderArea() const {
         return _renderArea;
+    }
+
+    const FixedVector<VulkanFramebuffer>& VulkanRenderPass::vkFramebuffers() const {
+        return _framebuffers;
     }
 
     // const std::vector<VkFramebuffer>& VulkanRenderPass::vkFramebuffers() const {
@@ -63,13 +68,13 @@ namespace nwt
         subpass.pColorAttachments = &colorAttachmentRef;
         // subpass.pDepthStencilAttachment = &depthAttachmentRef;
 
-        VkSubpassDependency dependency{};
-        dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-        dependency.dstSubpass = 0;
-        dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-        dependency.srcAccessMask = 0;
-        dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-        dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        // VkSubpassDependency dependency{};
+        // dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+        // dependency.dstSubpass = 0;
+        // dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+        // dependency.srcAccessMask = 0;
+        // dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+        // dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 
         // std::array<VkAttachmentDescription, 2> attachments = { colorAttachment, depthAttachment };
         std::array<VkAttachmentDescription, 1> attachments = { colorAttachment };
@@ -80,11 +85,17 @@ namespace nwt
         renderPassInfo.pAttachments = attachments.data();
         renderPassInfo.subpassCount = 1;
         renderPassInfo.pSubpasses = &subpass;
-        renderPassInfo.dependencyCount = 1;
-        renderPassInfo.pDependencies = &dependency;
+        // renderPassInfo.dependencyCount = 1;
+        // renderPassInfo.pDependencies = &dependency;
 
         if (vkCreateRenderPass(_context->device(), &renderPassInfo, nullptr, &_renderPass) != VK_SUCCESS) {
             throw std::runtime_error("Unable To Create Renderpass!");
+        }
+
+        _framebuffers = FixedVector<VulkanFramebuffer>(_context->swapchain().vkImages().size());
+        for (size_t i = 0; i < _framebuffers.size(); i++) {
+            _framebuffers[i] = VulkanFramebuffer(_context);
+            _framebuffers[i].initialize(*this, _context->swapchain().vkImageViews()[i], _context->swapchain().vkExtent());
         }
 
         LOG_INFO("Render Pass Successfully Created!");
@@ -94,7 +105,7 @@ namespace nwt
         VkRenderPassBeginInfo renderPassInfo{};
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
         renderPassInfo.renderPass = _renderPass;
-        renderPassInfo.framebuffer = _context->framebuffers()[imageIndex];
+        renderPassInfo.framebuffer = _framebuffers[imageIndex];
 
         renderPassInfo.renderArea.offset = { 0, 0 };
         renderPassInfo.renderArea.extent = _context->swapchain().vkExtent();
@@ -118,16 +129,14 @@ namespace nwt
             return;
         }
 
-        VkDevice device = _context->device().vkDevice();
+        for (auto&& framebuffer : _framebuffers) {
+            framebuffer.destroy();
+        }
 
-        vkDestroyRenderPass(device, _renderPass, nullptr);
-        // for (auto&& framebuffer : _vkFramebuffers) {
-        //     vkDestroyFramebuffer(device, framebuffer, nullptr);
-        // }
+        vkDestroyRenderPass(_context->device(), _renderPass, nullptr);
 
         _renderPass = VK_NULL_HANDLE;
         _context = nullptr;
-        // _vkFramebuffers.clear();
 
         LOG_INFO("Render Pass Destroyed!");
 

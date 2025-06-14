@@ -34,7 +34,7 @@ endif()
 
 find_package(Vulkan REQUIRED)
 
-target_link_libraries(newtons-engine PRIVATE newtons-utils PUBLIC glfw PUBLIC Vulkan::Vulkan)
+target_link_libraries(newtons-engine PUBLIC newtons-utils PUBLIC glfw PUBLIC Vulkan::Vulkan)
 
 target_include_directories(newtons-engine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_precompile_headers(newtons-engine PRIVATE "newtons/pch.hpp")

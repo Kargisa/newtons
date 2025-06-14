@@ -31,7 +31,7 @@ namespace nwt
 
     class NWT_API VulkanContext : public GraphicsContext
     {
-#ifdef DEBUG
+#ifdef NWT_DEBUG
         const std::vector<const char*> _validationLayers = { "VK_LAYER_KHRONOS_validation" };
         static constexpr bool _enableValidationLayers = true;
 #else
@@ -68,10 +68,6 @@ namespace nwt
         VulkanSwapchain _swapchain;
         VulkanRenderPass _renderPass;
 
-        FixedVector<VulkanFramebuffer> _framebuffers;
-        FixedVector<VulkanSemaphore> _renderFinishedSemaphores;
-
-    public:
         FixedVector<VulkanFrameInfo> _frameInfos;
 
     public:
@@ -88,7 +84,7 @@ namespace nwt
         VulkanContext() = default;
         virtual ~VulkanContext();
 
-        virtual void                                initialze() override;
+        virtual void                                initialize() override;
         virtual void* getNativeContext() override;
 
         virtual void                                drawFrame() override;
@@ -104,7 +100,6 @@ namespace nwt
 
         const VulkanDevice& device() const;
         const VulkanSwapchain& swapchain() const;
-        const FixedVector<VulkanFramebuffer>& framebuffers() const;
 
         VulkanDepthBuffer* getDepth() const;
 
@@ -122,12 +117,10 @@ namespace nwt
         void                                        createSwapchain();
         void                                        getQueues();
         void                                        createRenderPass();
-        void                                        createFramebuffers();
         void                                        createFrameInfos();
 
 
-
-
+        VkResult present(uint32_t imageIndex, const VulkanSemaphore& semaphore);
         void createDescriptorSetLayout();
         void createDepthResources();
         void createCommandBuffers();

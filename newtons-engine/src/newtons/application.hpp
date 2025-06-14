@@ -20,7 +20,7 @@ namespace nwt {
 
     private:
         static void initWindow();
-        static void initVulkan();
+        static void initGraphics();
         static void mainLoop();
         static void cleanup();
     };

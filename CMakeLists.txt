@@ -16,7 +16,8 @@ enable_testing()
 # Include sub-projects. 
 add_subdirectory ("newtons-utils")
 add_subdirectory ("newtons-engine")
-add_subdirectory ("Lib")
+add_subdirectory ("newtons-editor")
+add_subdirectory ("lib")
 add_subdirectory("game")
 
 

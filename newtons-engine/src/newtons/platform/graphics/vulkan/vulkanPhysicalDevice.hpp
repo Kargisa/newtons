@@ -33,6 +33,7 @@ namespace nwt
         }
 
         VkPhysicalDevice vkPhysicalDevice() const;
+        operator VkPhysicalDevice() const;
 
         uint32_t getRating() const;
         static const std::vector<const char*>& getDeviceExtensions();

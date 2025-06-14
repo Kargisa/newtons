@@ -3,6 +3,7 @@
 #include <vulkan/vulkan.h>
 #include "fixedVector.hpp"
 #include "vulkanFramebuffer.hpp"
+#include "vulkanSemaphore.hpp"
 
 namespace nwt
 {
@@ -25,6 +26,7 @@ namespace nwt
         VkExtent2D _extent;
         FixedVector<VkImage> _images;
         FixedVector<VkImageView> _imageViews;
+        FixedVector<VulkanSemaphore> _renderFinishedSemaphores;
 
     public:
         VulkanSwapchain()
@@ -34,9 +36,6 @@ namespace nwt
         VulkanSwapchain(VulkanContext* context)
             : _context(context), _swapchain(VK_NULL_HANDLE) {
         }
-        // ~VulkanSwapchain();
-
-        VulkanSwapchain(const VulkanSwapchain& other) = delete;
 
         VulkanSwapchain& operator=(const VulkanSwapchain& other);
 
@@ -47,11 +46,14 @@ namespace nwt
         const VkExtent2D& vkExtent() const;
         const FixedVector<VkImage>& vkImages() const;
         const FixedVector<VkImageView>& vkImageViews() const;
+        const FixedVector<VulkanSemaphore>& renderFinishedSemaphores() const;
 
 
         void initialize();
         void destroy();
 
+        void recreate();
+        VkResult nextImage(const VulkanSemaphore& semaphore, uint32_t* imageIndex) const;
         SupportDetails querySupportDetails();
 
         VkSurfaceFormatKHR chooseSurfaceFormat(std::vector<VkSurfaceFormatKHR> formats);

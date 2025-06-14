@@ -16,7 +16,7 @@ namespace nwt {
     public:
         inline virtual ~GraphicsContext() {}
 
-        virtual void initialze() = 0;
+        virtual void initialize() = 0;
         virtual void* getNativeContext() = 0;
 
         virtual void drawFrame() = 0;

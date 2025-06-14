@@ -25,14 +25,6 @@ namespace nwt
 
         _swapchain.destroy();
 
-        for (auto&& semaphore : _renderFinishedSemaphores) {
-            semaphore.destroy();
-        }
-
-        for (auto&& framebuffer : _framebuffers) {
-            framebuffer.destroy();
-        }
-
         for (auto&& frameInfo : _frameInfos) {
             frameInfo.commandPool.destroy();
             frameInfo.fence.destroy();
@@ -52,7 +44,7 @@ namespace nwt
         vkDestroyInstance(_instance, nullptr);
     }
 
-    void VulkanContext::initialze() {
+    void VulkanContext::initialize() {
         createInstance();
         createSurface();
         findPhysicalDevices();
@@ -62,7 +54,6 @@ namespace nwt
         getQueues();
         createSwapchain();
         createRenderPass();
-        createFramebuffers();
         createFrameInfos();
 
 
@@ -71,7 +62,6 @@ namespace nwt
         // createDepthResources();
         // createGraphicsCommandPool();
         // createCommandBuffers();
-        // createFramebuffers();
         /*
         TODO:
         createShaders();
@@ -89,10 +79,6 @@ namespace nwt
 
     const VulkanSwapchain& VulkanContext::swapchain() const {
         return _swapchain;
-    }
-
-    const FixedVector<VulkanFramebuffer>& VulkanContext::framebuffers() const {
-        return _framebuffers;
     }
 
     const VulkanPhysicalDevice& VulkanContext::physicalDevice() const {
@@ -135,32 +121,23 @@ namespace nwt
 
     // TODO: Commandbuffers!!! + sync objects etc
     void VulkanContext::drawFrame() {
-        static uint64_t i = 0;
-        i++;
-
         const VulkanFrameInfo& frameInfo = _frameInfos[_currentFrame];
 
         frameInfo.fence.wait(UINT64_MAX);
         frameInfo.fence.reset();
 
-        // LOG_INFO("1: " << i);
-        // LOG_INFO("2: " << i);
-        uint32_t imageIndex;
-        LOG_INFO(i);
-        VkResult result = vkAcquireNextImageKHR(_device.vkDevice(), _swapchain.vkSwapchain(), UINT64_MAX, frameInfo.imageAvailabeSemaphore, VK_NULL_HANDLE, &imageIndex);
+        uint32_t imageIndex = UINT32_MAX;
+        VkResult result = swapchain().nextImage(frameInfo.imageAvailabeSemaphore, &imageIndex);
 
-        const VulkanSemaphore& renderFinishedSemaphore = _renderFinishedSemaphores[imageIndex];
+        const VulkanSemaphore& renderFinishedSemaphore = swapchain().renderFinishedSemaphores()[imageIndex];
 
-        // if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-            //     recreateSwapChain();
-            //     return;
-            // }
-            // else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
-                //     throw std::runtime_error("failed to acquire swap chain image!");
-                // }
-
-
-        // //updateUniformBuffer(_currentFrame);
+        if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+            _swapchain.recreate();
+            return;
+        }
+        else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
+            throw std::runtime_error("failed to acquire swap chain image!");
+        }
 
         frameInfo.commandBuffer.reset(0);
         frameInfo.commandBuffer.begin();
@@ -188,30 +165,15 @@ namespace nwt
 
         graphicsQueue().submit({ frameInfo.commandBuffer }, { frameInfo.imageAvailabeSemaphore }, { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT }, { renderFinishedSemaphore }, frameInfo.fence);
 
-        VkPresentInfoKHR presentInfo{};
-        presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+        result = present(imageIndex, renderFinishedSemaphore);
 
-        std::array<VkSemaphore, 1> waitSemaphore = { renderFinishedSemaphore };
-        presentInfo.waitSemaphoreCount = waitSemaphore.size();
-        presentInfo.pWaitSemaphores = waitSemaphore.data();
+        if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
+            _swapchain.recreate();
+        }
+        else if (result != VK_SUCCESS) {
+            throw std::runtime_error("failed to present swap chain image!");
+        }
 
-        std::array<VkSwapchainKHR, 1> swapChains = std::array<VkSwapchainKHR, 1>();
-        swapChains[0] = _swapchain;
-
-        presentInfo.swapchainCount = swapChains.size();
-        presentInfo.pSwapchains = swapChains.data();
-        presentInfo.pImageIndices = &imageIndex;
-        presentInfo.pResults = nullptr; // Optional
-
-        result = vkQueuePresentKHR(presentQueue(), &presentInfo);
-
-        // if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
-        //     // recreateSwapChain();
-        //         // _swapchain.framebufferResized = false;
-        // }
-        // else if (result != VK_SUCCESS) {
-        //     throw std::runtime_error("failed to present swap chain image!");
-        // }
         _currentFrame = (_currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
         // vkDeviceWaitIdle(device());
     }
@@ -276,19 +238,19 @@ namespace nwt
 
             if (!found) {
                 success = false;
+                LOG_FAIL("\t" << "Required extension not found: " << requiredExtension);
             }
-
-            LOG_INFO("\t" << "Required extension" << RED_COLOR << (found ? " " : " NOT ") << WHITE_COLOR << "found: " << requiredExtension);
+            else {
+                LOG_INFO("\t" << "Required extension found: " << requiredExtension);
+            }
         }
 
         if (success) {
-            LOG_INFO("\t" << GREEN_COLOR << "ALL " << WHITE_COLOR << "required extensions found");
+            LOG_OK("\t" << "ALL required extensions found");
         }
         else {
-            LOG_INFO("\t" << RED_COLOR << "NOT ALL " << WHITE_COLOR << "required extensions found");
+            LOG_FAIL("\t" << "NOT ALL required extensions found");
         }
-
-        LOG_INFO("\n");
 
         return success;
     }
@@ -360,7 +322,7 @@ namespace nwt
     }
 
     void VulkanContext::createSurface() {
-        _surfaces.resize(1, nullptr);
+        _surfaces.resize(1, VK_NULL_HANDLE);
         Application::window()->createVulkanSurface(_instance, nullptr, &_surfaces[0]);
     }
 
@@ -397,7 +359,7 @@ namespace nwt
 
     void VulkanContext::selectQueues() {
         if (_queues.size() >= 0) {
-            LOG_INFO("selecting queues even though existing!")
+            LOG_INFO("selecting queues even though existing!");
         }
 
         std::vector<VkQueueFamilyProperties> queueProps = physicalDevice().getAvailableQueueFamilyProperties();
@@ -428,25 +390,8 @@ namespace nwt
         _renderPass.initialize();
     }
 
-    void VulkanContext::createFramebuffers() {
-        const FixedVector<VkImageView>& imageViews = swapchain().vkImageViews();
-        _framebuffers = FixedVector<VulkanFramebuffer>(imageViews.size());
-        for (size_t i = 0; i < _framebuffers.size(); i++) {
-            _framebuffers[i] = VulkanFramebuffer(this);
-            _framebuffers[i].initialize(_renderPass, imageViews[i], swapchain().vkExtent());
-        }
-    }
-
     void VulkanContext::createFrameInfos() {
         _frameInfos = FixedVector<VulkanFrameInfo>(MAX_FRAMES_IN_FLIGHT);
-
-        _renderFinishedSemaphores = FixedVector<VulkanSemaphore>(swapchain().vkImageViews().size());
-
-        for (auto&& semaphore : _renderFinishedSemaphores) {
-            semaphore = VulkanSemaphore(this);
-            semaphore.initialize();
-        }
-
 
         uint32_t i = 0;
         for (auto&& frameInfo : _frameInfos) {
@@ -466,6 +411,24 @@ namespace nwt
             frameInfo.imageAvailabeSemaphore.initialize();
             i++;
         }
+    }
+
+    VkResult VulkanContext::present(uint32_t imageIndex, const VulkanSemaphore& semaphore) {
+        VkPresentInfoKHR presentInfo{};
+        presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+
+        std::array<VkSemaphore, 1> waitSemaphore = { semaphore };
+        presentInfo.waitSemaphoreCount = waitSemaphore.size();
+        presentInfo.pWaitSemaphores = waitSemaphore.data();
+
+        std::array<VkSwapchainKHR, 1> swapChains = { _swapchain };
+        presentInfo.swapchainCount = swapChains.size();
+        presentInfo.pSwapchains = swapChains.data();
+
+        presentInfo.pImageIndices = &imageIndex;
+        presentInfo.pResults = nullptr; // Optional
+
+        return vkQueuePresentKHR(presentQueue(), &presentInfo);
     }
 
     VkImageView VulkanContext::createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags) {

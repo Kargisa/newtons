@@ -7,6 +7,7 @@ namespace nwt
 {
     struct VulkanContext;
 
+
     class VulkanSemaphore {
         VulkanContext* _context;
         VkSemaphore _semaphore;

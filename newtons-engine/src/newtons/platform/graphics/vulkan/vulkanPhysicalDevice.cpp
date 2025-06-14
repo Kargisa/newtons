@@ -10,6 +10,12 @@ namespace nwt
         return _vkPhysicalDevice;
     }
 
+    VulkanPhysicalDevice::operator VkPhysicalDevice() const {
+        return _vkPhysicalDevice;
+    }
+
+
+
     uint32_t VulkanPhysicalDevice::getRating() const {
         VkPhysicalDeviceProperties deviceProps;
         VkPhysicalDeviceFeatures deviceFeatures;

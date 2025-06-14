@@ -1,6 +1,5 @@
 #include "application.hpp"
 
-#include <GLFW/glfw3.h>
 #include "newtons/platform/linux/linuxWindow.hpp"
 #include "newtons/platform/windows/windowsWindow.hpp"
 #include "newtons/logging/log.hpp"
@@ -12,7 +11,7 @@ namespace nwt {
 
     void Application::run() {
         initWindow();
-        initVulkan();
+        initGraphics();
 
         mainLoop();
 
@@ -36,7 +35,7 @@ namespace nwt {
 #endif
         _window->initialize(720, 405);
 
-        _window->setEventCallback([&](const Event& e) {
+        _window->setEventCallback([=](const Event& e) {
             switch (e.getEventType())
             {
             case Event::EventType::WindowClosed: {
@@ -54,18 +53,20 @@ namespace nwt {
             });
     }
 
-    void Application::initVulkan() {
+    void Application::initGraphics() {
         _graphicsContext = GraphicsContext::create(GraphicsAPI::VULKAN);
-        _graphicsContext->initialze();
+        _graphicsContext->initialize();
     }
 
     void Application::mainLoop()
     {
         while (_running) {
+            auto start = std::chrono::high_resolution_clock::now();
             glfwPollEvents();
-            // static uint64_t i = 0;
-            // LOG_INFO(i++);
             _graphicsContext->drawFrame();
+            auto end = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<double> duration = (end - start);
+            // LOG_INFO(duration.count() * 1000.0d);
         }
     }
 

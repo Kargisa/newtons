@@ -44,6 +44,10 @@ namespace nwt
         return _imageViews;
     }
 
+    const FixedVector<VulkanSemaphore>& VulkanSwapchain::renderFinishedSemaphores() const {
+        return _renderFinishedSemaphores;
+    }
+
     void VulkanSwapchain::initialize() {
         const VulkanDevice& device = _context->device();
 
@@ -73,9 +77,10 @@ namespace nwt
 
         if (graphicsQueueInfo.family != presentQueueInfo.family) {
             createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-            createInfo.queueFamilyIndexCount = 2;
-            uint32_t queueFamilyIndices[] = { graphicsQueueInfo.family, presentQueueInfo.family };
-            createInfo.pQueueFamilyIndices = queueFamilyIndices;
+
+            std::array<uint32_t, 2> queueFamilyIndices = { graphicsQueueInfo.family, presentQueueInfo.family };
+            createInfo.queueFamilyIndexCount = queueFamilyIndices.size();
+            createInfo.pQueueFamilyIndices = queueFamilyIndices.data();
         }
         else {
             createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
@@ -101,16 +106,18 @@ namespace nwt
 
 
         _imageViews = FixedVector<VkImageView>(_images.size());
-        for (size_t i = 0; i < _images.size(); i++)
-        {
+        _renderFinishedSemaphores = FixedVector<VulkanSemaphore>(_images.size());
+        for (size_t i = 0; i < _images.size(); i++) {
             _imageViews[i] = _context->createImageView(_images[i], _imageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
+            _renderFinishedSemaphores[i] = VulkanSemaphore(_context);
+            _renderFinishedSemaphores[i].initialize();
         }
     }
 
     VulkanSwapchain::SupportDetails VulkanSwapchain::querySupportDetails() {
         VulkanSwapchain::SupportDetails details;
 
-        VkPhysicalDevice phDevice = _context->physicalDevice().vkPhysicalDevice();
+        VkPhysicalDevice phDevice = _context->physicalDevice();
         VkSurfaceKHR surface = _context->vkSurface();
 
         vkGetPhysicalDeviceSurfaceCapabilitiesKHR(phDevice, surface, &details.capabilities);
@@ -138,7 +145,7 @@ namespace nwt
 
 
     VkSurfaceFormatKHR VulkanSwapchain::chooseSurfaceFormat(std::vector<VkSurfaceFormatKHR> formats) {
-        for (auto& availableFormat : formats) {
+        for (auto availableFormat : formats) {
             if (availableFormat.format == VK_FORMAT_R8G8B8_SRGB && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
                 return availableFormat;
         }
@@ -185,8 +192,9 @@ namespace nwt
 
         vkDestroySwapchainKHR(_context->device().vkDevice(), _swapchain, nullptr);
 
-        for (auto&& imageView : _imageViews) {
-            vkDestroyImageView(_context->device().vkDevice(), imageView, nullptr);
+        for (size_t i = 0; i < _imageViews.size(); i++) {
+            vkDestroyImageView(_context->device().vkDevice(), _imageViews[i], nullptr);
+            _renderFinishedSemaphores[i].destroy();
         }
 
         _swapchain = VK_NULL_HANDLE;
@@ -195,6 +203,15 @@ namespace nwt
         // _imageViews.clear();
 
         LOG_INFO("Swapchain Destroyed!\n");
+    }
+
+    void VulkanSwapchain::recreate() {
+        destroy();
+        initialize();
+    }
+
+    VkResult VulkanSwapchain::nextImage(const VulkanSemaphore& semaphore, uint32_t* imageIndex) const {
+        return vkAcquireNextImageKHR(_context->device(), _swapchain, UINT64_MAX, semaphore, VK_NULL_HANDLE, imageIndex);
     }
 
 

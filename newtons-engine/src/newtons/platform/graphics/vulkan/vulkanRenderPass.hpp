@@ -1,7 +1,10 @@
 #pragma once
 
-#include "newtons/pch.hpp"
 #include <vulkan/vulkan.h>
+
+#include "newtons/pch.hpp"
+#include "fixedVector.hpp"
+#include "vulkanFramebuffer.hpp"
 
 
 namespace nwt
@@ -16,8 +19,7 @@ namespace nwt
         VkClearColorValue _clearColor;
         VkClearDepthStencilValue _clearDepthStencil;
         VkRect2D _renderArea;
-
-        // std::vector<VkFramebuffer> _vkFramebuffers;
+        FixedVector<VulkanFramebuffer> _framebuffers;
 
     public:
         VulkanRenderPass()
@@ -32,7 +34,7 @@ namespace nwt
         const VkClearColorValue& vkClearColor() const;
         const VkClearDepthStencilValue& vkClearDepthStencil() const;
         const VkRect2D& vkRenderArea() const;
-        // const std::vector<VkFramebuffer>& vkFramebuffers() const;
+        const FixedVector<VulkanFramebuffer>& vkFramebuffers() const;
 
         void setClearColor(VkClearColorValue clearColor);
 

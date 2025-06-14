@@ -2,11 +2,12 @@
 
 #include "vulkan/vulkan.h"
 #include "newtons/pch.hpp"
-#include "vulkanRenderPass.hpp"
+#include "fixedVector.hpp"
 
 namespace nwt
 {
     struct VulkanContext;
+    struct VulkanRenderPass;
 
     class VulkanFramebuffer {
         VulkanContext* _context;

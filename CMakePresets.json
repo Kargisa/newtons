@@ -12,8 +12,8 @@
         "CMAKE_CXX_COMPILER": "cl.exe",
         "CMAKE_CXX_STANDARD": "20",
         "CMAKE_CXX_FLAGS": "-DNWT_WINDOWS",
-        "CMAKE_CXX_FLAGS_RELEASE": "-DRELEASE /MD",
-        "CMAKE_CXX_FLAGS_DEBUG": "-DDEBUG /MDd"
+        "CMAKE_CXX_FLAGS_RELEASE": "-DNWT_RELEASE /MD",
+        "CMAKE_CXX_FLAGS_DEBUG": "-DNWT_DEBUG /MDd"
       },
       "condition": {
         "type": "equals",
@@ -81,8 +81,8 @@
         "CMAKE_CXX_COMPILER": "g++",
         "CMAKE_CXX_STANDARD": "20",
         "CMAKE_CXX_FLAGS": "-DNWT_LINUX",
-        "CMAKE_CXX_FLAGS_RELEASE": "-DRELEASE",
-        "CMAKE_CXX_FLAGS_DEBUG": "-DDEBUG"
+        "CMAKE_CXX_FLAGS_RELEASE": "-DNWT_RELEASE",
+        "CMAKE_CXX_FLAGS_DEBUG": "-DNWT_DEBUG"
       },
       "architecture": {
         "value": "x64",

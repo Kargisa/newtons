@@ -19,16 +19,11 @@ namespace nwt
         framebufferInfo.height = extent.height;
         framebufferInfo.layers = 1;
 
-        if (vkCreateFramebuffer(_context->device().vkDevice(), &framebufferInfo, nullptr, &_framebuffer) != VK_SUCCESS) {
+        if (vkCreateFramebuffer(_context->device(), &framebufferInfo, nullptr, &_framebuffer) != VK_SUCCESS) {
             throw std::runtime_error("failed to create framebuffer!");
         }
 
         LOG_INFO("Framebuffer Successfully Created!");
-
-        // vkDestroyFramebuffer(_context->device().vkDevice(), _framebuffer, nullptr);
-        // _framebuffer = VK_NULL_HANDLE;
-
-        // LOG_INFO("HEYLJHIULHLIUHJNIKOÖJ");
     }
 
     void VulkanFramebuffer::destroy() {
