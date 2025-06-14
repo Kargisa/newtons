@@ -116,6 +116,10 @@ namespace nwt
         LOG_INFO("Logical Device Destroyed!\n");
     }
 
+    void VulkanDevice::waitIdle() const {
+        vkDeviceWaitIdle(_device);
+    }
+
     VkDevice VulkanDevice::vkDevice() const {
         return _device;
     }

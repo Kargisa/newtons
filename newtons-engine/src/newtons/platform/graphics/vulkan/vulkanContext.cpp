@@ -21,7 +21,7 @@ namespace nwt
 
         LOG_INFO("-------- Cleaning Up --------\n");
 
-        vkDeviceWaitIdle(_device);
+        device().waitIdle();
 
         _swapchain.destroy();
 
@@ -129,8 +129,6 @@ namespace nwt
         uint32_t imageIndex = UINT32_MAX;
         VkResult result = swapchain().nextImage(frameInfo.imageAvailabeSemaphore, &imageIndex);
 
-        const VulkanSemaphore& renderFinishedSemaphore = swapchain().renderFinishedSemaphores()[imageIndex];
-
         if (result == VK_ERROR_OUT_OF_DATE_KHR) {
             _swapchain.recreate();
             return;
@@ -138,6 +136,8 @@ namespace nwt
         else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
             throw std::runtime_error("failed to acquire swap chain image!");
         }
+
+        const VulkanSemaphore& renderFinishedSemaphore = swapchain().renderFinishedSemaphores()[imageIndex];
 
         frameInfo.commandBuffer.reset(0);
         frameInfo.commandBuffer.begin();
@@ -175,7 +175,7 @@ namespace nwt
         }
 
         _currentFrame = (_currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
-        // vkDeviceWaitIdle(device());
+        // device().waitIdle();
     }
 
     // *********************************************
@@ -395,7 +395,7 @@ namespace nwt
 
         uint32_t i = 0;
         for (auto&& frameInfo : _frameInfos) {
-            LOG_INFO("");
+            LOG_SPACE();
 
 
             frameInfo.commandPool = VulkanCommandPool(this);
@@ -405,7 +405,7 @@ namespace nwt
             frameInfo.commandBuffer.initialize(frameInfo.commandPool);
 
             frameInfo.fence = VulkanFence(this);
-            frameInfo.fence.initialize(VK_FENCE_CREATE_SIGNALED_BIT);
+            frameInfo.fence.initialize(true);
 
             frameInfo.imageAvailabeSemaphore = VulkanSemaphore(this);
             frameInfo.imageAvailabeSemaphore.initialize();
@@ -428,7 +428,7 @@ namespace nwt
         presentInfo.pImageIndices = &imageIndex;
         presentInfo.pResults = nullptr; // Optional
 
-        return vkQueuePresentKHR(presentQueue(), &presentInfo);
+        return vkQueuePresentKHR(graphicsQueue(), &presentInfo);
     }
 
     VkImageView VulkanContext::createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags) {

@@ -5,10 +5,10 @@
 namespace nwt
 {
 
-    void VulkanFence::initialize(VkFenceCreateFlags flags) {
+    void VulkanFence::initialize(bool signaled) {
         VkFenceCreateInfo createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-        createInfo.flags = flags;
+        createInfo.flags = signaled ? VK_FENCE_CREATE_SIGNALED_BIT : 0;
 
         if (vkCreateFence(_context->device().vkDevice(), &createInfo, nullptr, &_fence) != VK_SUCCESS) {
             std::runtime_error("Could not create fence!");

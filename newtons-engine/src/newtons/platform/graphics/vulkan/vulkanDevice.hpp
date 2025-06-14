@@ -33,6 +33,7 @@ namespace nwt
         void initialize();
         void destroy();
 
+        void waitIdle() const;
 
         VkDevice vkDevice() const;
         operator VkDevice() const;

@@ -85,7 +85,7 @@ namespace nwt
         virtual ~VulkanContext();
 
         virtual void                                initialize() override;
-        virtual void* getNativeContext() override;
+        virtual void*                               getNativeContext() override;
 
         virtual void                                drawFrame() override;
 

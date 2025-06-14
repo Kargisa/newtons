@@ -24,7 +24,7 @@ namespace nwt
             : _context(context), _fence(fence) {
         }
 
-        void initialize(VkFenceCreateFlags flags);
+        void initialize(bool signaled);
         void destroy();
 
         void wait(uint64_t timeout) const;
