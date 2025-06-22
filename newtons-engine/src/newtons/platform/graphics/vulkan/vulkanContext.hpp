@@ -11,7 +11,6 @@
 #include "vulkanPhysicalDevice.hpp"
 #include "vulkanDevice.hpp"
 #include "fixedVector.hpp"
-#include "vulkanFrameInfo.hpp"
 #include "vulkanCommandPool.hpp"
 #include "vulkanCommandBuffer.hpp"
 #include "vulkanFramebuffer.hpp"
@@ -21,10 +20,6 @@
 
 namespace nwt
 {
-
-
-
-
     // *********************************************
     // *************** VulkanContext ***************
     // *********************************************
@@ -35,7 +30,7 @@ namespace nwt
         const std::vector<const char*> _validationLayers = { "VK_LAYER_KHRONOS_validation" };
         static constexpr bool _enableValidationLayers = true;
 #else
-        const std::vector<const char*> _validationLayers(0);
+        const std::vector<const char*> _validationLayers = {};
         static constexpr bool _enableValidationLayers = false;
 #endif
 
@@ -68,7 +63,16 @@ namespace nwt
         VulkanSwapchain _swapchain;
         VulkanRenderPass _renderPass;
 
-        FixedVector<VulkanFrameInfo> _frameInfos;
+        FixedVector<VulkanFramebuffer> _framebuffers;
+        FixedVector<VulkanSemaphore> _renderFinishedSemaphore;
+
+        FixedVector<VulkanSemaphore> _imageAvailableSemaphores;
+        FixedVector<VulkanCommandPool> _graphicsCommandPools;
+        FixedVector<VulkanCommandBuffer> _graphicsCommandBuffers;
+        FixedVector<VulkanFence> _renderFinishedFence;
+
+
+        bool _windowResized = false;
 
     public:
 
@@ -85,10 +89,11 @@ namespace nwt
         virtual ~VulkanContext();
 
         virtual void                                initialize() override;
-        virtual void*                               getNativeContext() override;
-
         virtual void                                drawFrame() override;
 
+        virtual void onEvent(const Event& event) override;
+
+        virtual void* nativeContext() override;
         VkInstance                                  vkInstance() const;
         VkSurfaceKHR                                vkSurface() const;
         const VulkanPhysicalDevice& physicalDevice() const;
@@ -103,10 +108,18 @@ namespace nwt
 
         VulkanDepthBuffer* getDepth() const;
 
-    public:
+        static GraphicsContext* create();
+
+        VulkanQueueInfo                             findPresentQueueInfo(const std::vector<VkQueueFamilyProperties>& availableQueueFamilyProps) const;
+        VulkanQueueInfo                             findGraphicsQueueInfo(const std::vector<VkQueueFamilyProperties>& availableQueueFamilyProps) const;
+        VulkanQueueInfo                             findTransferQueueInfo(const std::vector<VkQueueFamilyProperties>& availableQueueFamilyProps) const;
+
+        void recreateSwapchainAndFramebuffers(uint32_t width, uint32_t height);
+
         bool                                        checkValidationLayersSupport();
         bool                                        checkExtensionsSupport(const std::vector<const char*>& requiredExtensions, const std::vector<VkExtensionProperties>& extensions);
         VkImageView                                 createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
+    private:
 
         void                                        createInstance();
         void                                        createSurface();
@@ -117,21 +130,16 @@ namespace nwt
         void                                        createSwapchain();
         void                                        getQueues();
         void                                        createRenderPass();
-        void                                        createFrameInfos();
-
+        void                                        createFramebuffers();
+        void                                        createSyncObjects();
+        void                                        createGraphicsCommandPools();
+        void                                        createGraphicsCommandBuffers();
 
         VkResult present(uint32_t imageIndex, const VulkanSemaphore& semaphore);
-        void createDescriptorSetLayout();
-        void createDepthResources();
-        void createCommandBuffers();
-        void createGraphicsPipeline(const VulkanShader& shader);
 
-        VulkanQueueInfo                             findPresentQueueInfo(const std::vector<VkQueueFamilyProperties>& availableQueueFamilyProps) const;
-        VulkanQueueInfo                             findGraphicsQueueInfo(const std::vector<VkQueueFamilyProperties>& availableQueueFamilyProps) const;
-        VulkanQueueInfo                             findTransferQueueInfo(const std::vector<VkQueueFamilyProperties>& availableQueueFamilyProps) const;
+        // void createDescriptorSetLayout();
+        // void createDepthResources();
+        // void createGraphicsPipeline(const VulkanShader& shader);
 
-
-    public:
-        static GraphicsContext* create();
     };
 } // namespace nwt

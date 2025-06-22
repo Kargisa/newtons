@@ -2,9 +2,10 @@
 # add_executable (newtons-editor WIN32 "main.cpp" "obj_reader.hpp" "vertex.hpp" "vertex.cpp" "transformationMatrices.hpp" "mesh.cpp" "mesh.hpp" "stb_image.h")
 # else()
 add_library(newtons-engine STATIC 
+"newtons/application.cpp" 
+"newtons/layerStack.cpp"
 "newtons/main.cpp" 
 "newtons/mesh.cpp" 
-"newtons/application.cpp" 
 "newtons/window/window.cpp" 
 "newtons/window/window.hpp" 
 "newtons/graphics/graphicsContext.cpp"
@@ -25,6 +26,17 @@ add_library(newtons-engine STATIC
 "newtons/platform/graphics/vulkan/vulkanSemaphore.cpp"
 "newtons/platform/graphics/vulkan/vulkanFence.cpp"
 "newtons/platform/graphics/vulkan/vulkanQueue.cpp"
+
+# Dear IMGUI
+"newtons/platform/imgui/external/imgui.cpp"
+"newtons/platform/imgui/external/imgui_demo.cpp"
+"newtons/platform/imgui/external/imgui_draw.cpp"
+"newtons/platform/imgui/external/imgui_impl_glfw.cpp"
+"newtons/platform/imgui/external/imgui_impl_vulkan.cpp"
+"newtons/platform/imgui/external/imgui_tables.cpp"
+"newtons/platform/imgui/external/imgui_widgets.cpp"
+"newtons/platform/imgui/imguiLayer.cpp"
+
 )
 # endif()
 
@@ -34,7 +46,7 @@ endif()
 
 find_package(Vulkan REQUIRED)
 
-target_link_libraries(newtons-engine PUBLIC newtons-utils PUBLIC glfw PUBLIC Vulkan::Vulkan)
+target_link_libraries(newtons-engine PUBLIC newtons-utils PUBLIC glfw PUBLIC Vulkan::Vulkan PUBLIC GPUOpen::VulkanMemoryAllocator)
 
 target_include_directories(newtons-engine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_precompile_headers(newtons-engine PRIVATE "newtons/pch.hpp")

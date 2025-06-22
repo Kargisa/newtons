@@ -103,6 +103,10 @@ namespace nwt
         _data.eventCallback = func;
     }
 
+    void LinuxWindow::pollEvenets() {
+        glfwPollEvents();
+    }
+
     void* LinuxWindow::nativeWindow() {
         return _window;
     }

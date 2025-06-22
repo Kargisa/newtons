@@ -27,7 +27,7 @@ namespace nwt
         void initialize(bool signaled);
         void destroy();
 
-        void wait(uint64_t timeout) const;
+        void wait(uint64_t timeout = UINT64_MAX) const;
         void reset() const;
 
         VkFence vkFence() const;

@@ -8,6 +8,7 @@ namespace nwt {
     bool Application::_running = true;
     Window* Application::_window;
     GraphicsContext* Application::_graphicsContext;
+    LayerStack Application::_layers;
 
     void Application::run() {
         initWindow();
@@ -26,6 +27,18 @@ namespace nwt {
         return _graphicsContext;
     }
 
+    const LayerStack& Application::layers() {
+        return _layers;
+    }
+
+    void Application::attachLayer(Layer* layer) {
+        _layers.attach(layer);
+    }
+
+    void Application::detachLayer(Layer* layer) {
+        _layers.detach(layer);
+    }
+
     void Application::initWindow()
     {
 #ifdef NWT_LINUX
@@ -33,23 +46,19 @@ namespace nwt {
 #elif NWT_WINDOWS
         _window = WindowsWindow::create("NEWTONS");
 #endif
-        _window->initialize(720, 405);
 
-        _window->setEventCallback([=](const Event& e) {
-            switch (e.getEventType())
-            {
-            case Event::EventType::WindowClosed: {
+        _window->initialize(800, 450);
+
+        _window->setEventCallback([&](const Event& e) {
+            if (e.getEventType() == Event::EventType::WindowClosed) {
                 _running = false;
-                break;
-            }
-            case Event::EventType::WindowResized: {
-                const WindowResizedEvent& resizeEvent = dynamic_cast<const WindowResizedEvent&>(e);
-                break;
-            }
-            default:
-                break;
             }
 
+            _graphicsContext->onEvent(e);
+
+            for (auto ritr = _layers.rbegin(); ritr != _layers.rend(); ++ritr) {
+                (*ritr)->onEvent(e);
+            }
             });
     }
 
@@ -61,12 +70,12 @@ namespace nwt {
     void Application::mainLoop()
     {
         while (_running) {
-            auto start = std::chrono::high_resolution_clock::now();
-            glfwPollEvents();
+            _window->pollEvenets();
+            for (auto&& layer : _layers) {
+                layer->update();
+            }
+
             _graphicsContext->drawFrame();
-            auto end = std::chrono::high_resolution_clock::now();
-            std::chrono::duration<double> duration = (end - start);
-            // LOG_INFO(duration.count() * 1000.0d);
         }
     }
 

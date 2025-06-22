@@ -3,8 +3,6 @@
 #include "newtons/pch.hpp"
 #include "vulkan/vulkan.h"
 
-#include "vulkanFrameInfo.hpp"
-
 namespace nwt
 {
     struct VulkanContext;

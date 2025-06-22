@@ -8,7 +8,6 @@ namespace nwt
         LOG_INFO("Queueu Successfully Created! " << _queue);
     }
 
-
     VulkanQueueInfo VulkanQueue::info() const {
         return _queueInfo;
     }
@@ -22,7 +21,7 @@ namespace nwt
 
         submitInfo.commandBufferCount = commandBuffers.size();
         submitInfo.pCommandBuffers = commandBuffers.data();
-        
+
         submitInfo.signalSemaphoreCount = signalSemaphores.size();
         submitInfo.pSignalSemaphores = signalSemaphores.data();
 

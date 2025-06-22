@@ -17,7 +17,8 @@ namespace nwt {
         virtual void createCallbacks() override;
         virtual void* nativeWindow() override;
         virtual void framebufferSize(int* width, int* height) override;
-        virtual void setEventCallback(EventFunc func);
+        virtual void setEventCallback(EventFunc func) override;
+        virtual void pollEvenets() override;
 
         virtual void destroy() override;
 

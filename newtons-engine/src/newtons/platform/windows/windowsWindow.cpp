@@ -104,6 +104,10 @@ namespace nwt
         _data.eventCallback = func;
     }
 
+    void WindowsWindow::pollEvenets() {
+        glfwPollEvents();
+    }
+
     void* WindowsWindow::nativeWindow() {
         return _window;
     }

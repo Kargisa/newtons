@@ -19,10 +19,6 @@ namespace nwt
         return _renderArea;
     }
 
-    const FixedVector<VulkanFramebuffer>& VulkanRenderPass::vkFramebuffers() const {
-        return _framebuffers;
-    }
-
     // const std::vector<VkFramebuffer>& VulkanRenderPass::vkFramebuffers() const {
     //     return _vkFramebuffers;
     // }
@@ -91,21 +87,13 @@ namespace nwt
         if (vkCreateRenderPass(_context->device(), &renderPassInfo, nullptr, &_renderPass) != VK_SUCCESS) {
             throw std::runtime_error("Unable To Create Renderpass!");
         }
-
-        _framebuffers = FixedVector<VulkanFramebuffer>(_context->swapchain().vkImages().size());
-        for (size_t i = 0; i < _framebuffers.size(); i++) {
-            _framebuffers[i] = VulkanFramebuffer(_context);
-            _framebuffers[i].initialize(*this, _context->swapchain().vkImageViews()[i], _context->swapchain().vkExtent());
-        }
-
-        LOG_INFO("Render Pass Successfully Created!");
     }
 
-    void VulkanRenderPass::begin(const VulkanFrameInfo& frameInfo, uint32_t imageIndex) {
+    void VulkanRenderPass::begin(const VulkanCommandBuffer& commandBuffer, const VulkanFramebuffer& framebuffer) {
         VkRenderPassBeginInfo renderPassInfo{};
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
         renderPassInfo.renderPass = _renderPass;
-        renderPassInfo.framebuffer = _framebuffers[imageIndex];
+        renderPassInfo.framebuffer = framebuffer;
 
         renderPassInfo.renderArea.offset = { 0, 0 };
         renderPassInfo.renderArea.extent = _context->swapchain().vkExtent();
@@ -117,20 +105,16 @@ namespace nwt
         renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
         renderPassInfo.pClearValues = clearValues.data();
 
-        vkCmdBeginRenderPass(frameInfo.commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+        vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
     }
 
-    void VulkanRenderPass::end(const VulkanFrameInfo& frameInfo) {
-        vkCmdEndRenderPass(frameInfo.commandBuffer);
+    void VulkanRenderPass::end(const VulkanCommandBuffer& commandBuffer) {
+        vkCmdEndRenderPass(commandBuffer);
     }
 
     void VulkanRenderPass::destroy() {
         if (_renderPass == VK_NULL_HANDLE) {
             return;
-        }
-
-        for (auto&& framebuffer : _framebuffers) {
-            framebuffer.destroy();
         }
 
         vkDestroyRenderPass(_context->device(), _renderPass, nullptr);

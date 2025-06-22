@@ -30,6 +30,7 @@ namespace nwt {
         virtual void createCallbacks() = 0;
 
         virtual void setEventCallback(EventFunc func) = 0;
+        virtual void pollEvenets() = 0;
 
         virtual void* nativeWindow() = 0;
         virtual void framebufferSize(int* width, int* height) = 0;

@@ -25,13 +25,36 @@ namespace nwt
 
         _swapchain.destroy();
 
-        for (auto&& frameInfo : _frameInfos) {
-            frameInfo.commandPool.destroy();
-            frameInfo.fence.destroy();
-            frameInfo.imageAvailabeSemaphore.destroy();
-
-            LOG_INFO("");
+        for (auto&& framebuffer : _framebuffers) {
+            framebuffer.destroy();
         }
+
+        LOG_SPACE();
+
+        for (auto&& semaphore : _renderFinishedSemaphore) {
+            semaphore.destroy();
+        }
+
+        LOG_SPACE();
+
+        for (auto&& semaphore : _imageAvailableSemaphores) {
+            semaphore.destroy();
+        }
+
+        LOG_SPACE();
+
+        for (auto&& fence : _renderFinishedFence) {
+            fence.destroy();
+        }
+
+        LOG_SPACE();
+
+        for (auto&& commandPool : _graphicsCommandPools) {
+            commandPool.destroy();
+        }
+
+        LOG_SPACE();
+
 
         _renderPass.destroy();
 
@@ -54,7 +77,10 @@ namespace nwt
         getQueues();
         createSwapchain();
         createRenderPass();
-        createFrameInfos();
+        createFramebuffers();
+        createGraphicsCommandPools();
+        createGraphicsCommandBuffers();
+        createSyncObjects();
 
 
         // createSyncObjects();
@@ -69,7 +95,7 @@ namespace nwt
         */
     }
 
-    void* VulkanContext::getNativeContext() {
+    void* VulkanContext::nativeContext() {
         return this;
     }
 
@@ -121,62 +147,82 @@ namespace nwt
 
     // TODO: Commandbuffers!!! + sync objects etc
     void VulkanContext::drawFrame() {
-        const VulkanFrameInfo& frameInfo = _frameInfos[_currentFrame];
+        const VulkanSemaphore& imageAvailabeSemaphore = _imageAvailableSemaphores[_currentFrame];
+        const VulkanFence& fence = _renderFinishedFence[_currentFrame];
+        const VulkanCommandBuffer commandBuffer = _graphicsCommandBuffers[_currentFrame];
 
-        frameInfo.fence.wait(UINT64_MAX);
-        frameInfo.fence.reset();
+        fence.wait();
 
         uint32_t imageIndex = UINT32_MAX;
-        VkResult result = swapchain().nextImage(frameInfo.imageAvailabeSemaphore, &imageIndex);
+        VkResult result = swapchain().nextImage(imageAvailabeSemaphore, &imageIndex);
 
         if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-            _swapchain.recreate();
+            int width = 0;
+            int height = 0;
+            Application::window()->framebufferSize(&width, &height);
+            recreateSwapchainAndFramebuffers(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
             return;
         }
         else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
             throw std::runtime_error("failed to acquire swap chain image!");
         }
 
-        const VulkanSemaphore& renderFinishedSemaphore = swapchain().renderFinishedSemaphores()[imageIndex];
+        fence.reset();
 
-        frameInfo.commandBuffer.reset(0);
-        frameInfo.commandBuffer.begin();
+        const VulkanSemaphore& renderFinishedSemaphore = _renderFinishedSemaphore[imageIndex];
 
-        _renderPass.begin(frameInfo, imageIndex);
+        commandBuffer.reset(0);
+        commandBuffer.begin();
 
-        // VkViewport viewport{};
-        // viewport.x = 0.0f;
-        // viewport.y = 0.0f;
-        // viewport.width = static_cast<float>(_swapchain.vkExtent().width);
-        // viewport.height = static_cast<float>(_swapchain.vkExtent().height);
-        // viewport.minDepth = 0.0f;
-        // viewport.maxDepth = 1.0f;
-        // vkCmdSetViewport(frameInfo.commandBuffer, 0, 1, &viewport);
+        _renderPass.begin(commandBuffer, _framebuffers[imageIndex]);
 
-        // VkRect2D scissor{};
-        // scissor.offset = { 0, 0 };
-        // scissor.extent = _swapchain.vkExtent();
-        // vkCmdSetScissor(frameInfo.commandBuffer, 0, 1, &scissor);
+        VkViewport viewport = {};
+        viewport.x = 0.0f;
+        viewport.y = 0.0f;
+        viewport.width = static_cast<float>(_swapchain.vkExtent().width);
+        viewport.height = static_cast<float>(_swapchain.vkExtent().height);
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+        vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 
-        _renderPass.end(frameInfo);
+        VkRect2D scissor = {};
+        scissor.offset = { 0, 0 };
+        scissor.extent = _swapchain.vkExtent();
+        vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-        frameInfo.commandBuffer.end();
+        _renderPass.end(commandBuffer);
+
+        commandBuffer.end();
 
 
-        graphicsQueue().submit({ frameInfo.commandBuffer }, { frameInfo.imageAvailabeSemaphore }, { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT }, { renderFinishedSemaphore }, frameInfo.fence);
+        graphicsQueue().submit({ commandBuffer }, { imageAvailabeSemaphore }, { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT }, { renderFinishedSemaphore }, fence);
 
         result = present(imageIndex, renderFinishedSemaphore);
 
-        if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
-            _swapchain.recreate();
+        if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || _windowResized) {
+            int width = 0;
+            int height = 0;
+            Application::window()->framebufferSize(&width, &height);
+            recreateSwapchainAndFramebuffers(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
         }
         else if (result != VK_SUCCESS) {
             throw std::runtime_error("failed to present swap chain image!");
         }
 
         _currentFrame = (_currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
-        // device().waitIdle();
     }
+
+    void VulkanContext::onEvent(const Event& event) {
+        switch (event.getEventType())
+        {
+        case Event::EventType::WindowResized:
+            _windowResized = true;
+            break;
+        default:
+            break;
+        }
+    }
+
 
     // *********************************************
     // ************** Private Members **************
@@ -269,8 +315,10 @@ namespace nwt
     }
 
     void VulkanContext::createInstance() {
-        if (_enableValidationLayers && !checkValidationLayersSupport())
-            throw std::runtime_error("Validation layers requested, but not available!");
+        if (_enableValidationLayers && !checkValidationLayersSupport()) {
+            LOG_FAIL("Validation layers were requested but are not supported!");
+            throw std::runtime_error("");
+        }
 
         VkApplicationInfo appInfo = {};
         appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -363,8 +411,6 @@ namespace nwt
         }
 
         std::vector<VkQueueFamilyProperties> queueProps = physicalDevice().getAvailableQueueFamilyProperties();
-
-        _queues.clear();
         _queues.reserve(4);
 
         _queues.emplace_back(this, findGraphicsQueueInfo(queueProps));
@@ -374,7 +420,11 @@ namespace nwt
 
     void VulkanContext::createSwapchain() {
         _swapchain = VulkanSwapchain(this);
-        _swapchain.initialize();
+        int width = 0;
+        int height = 0;
+        Application::window()->framebufferSize(&width, &height);
+
+        _swapchain.initialize(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
 
         LOG_INFO("Swapchain Successfully Created!\n");
     }
@@ -383,6 +433,7 @@ namespace nwt
         for (auto&& queue : _queues) {
             queue.initialize();
         }
+        LOG_SPACE();
     }
 
     void VulkanContext::createRenderPass() {
@@ -390,31 +441,58 @@ namespace nwt
         _renderPass.initialize();
     }
 
-    void VulkanContext::createFrameInfos() {
-        _frameInfos = FixedVector<VulkanFrameInfo>(MAX_FRAMES_IN_FLIGHT);
+    void VulkanContext::createFramebuffers() {
+        _framebuffers = FixedVector<VulkanFramebuffer>(_swapchain.vkImages().size());
+        for (size_t i = 0; i < _framebuffers.size(); ++i) {
+            _framebuffers[i] = VulkanFramebuffer(this);
+            _framebuffers[i].initialize(_renderPass, _swapchain.vkImageViews()[i], _swapchain.vkExtent());
+        }
+    }
 
-        uint32_t i = 0;
-        for (auto&& frameInfo : _frameInfos) {
-            LOG_SPACE();
+    void VulkanContext::createSyncObjects() {
+        _renderFinishedFence = FixedVector<VulkanFence>(MAX_FRAMES_IN_FLIGHT);
+        _imageAvailableSemaphores = FixedVector<VulkanSemaphore>(MAX_FRAMES_IN_FLIGHT);
+        _renderFinishedSemaphore = FixedVector<VulkanSemaphore>(_swapchain.vkImages().size());
+
+        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+            _renderFinishedFence[i] = VulkanFence(this);
+            _renderFinishedFence[i].initialize(true);
+
+            _imageAvailableSemaphores[i] = VulkanSemaphore(this);
+            _imageAvailableSemaphores[i].initialize();
+        }
+
+        for (size_t i = 0; i < _renderFinishedSemaphore.size(); i++) {
+            _renderFinishedSemaphore[i] = VulkanSemaphore(this);
+            _renderFinishedSemaphore[i].initialize();
+        }
 
 
-            frameInfo.commandPool = VulkanCommandPool(this);
-            frameInfo.commandPool.initialize(graphicsQueue().info().family, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
+    }
 
-            frameInfo.commandBuffer = VulkanCommandBuffer(this);
-            frameInfo.commandBuffer.initialize(frameInfo.commandPool);
+    void VulkanContext::createGraphicsCommandPools() {
+        _graphicsCommandPools = FixedVector<VulkanCommandPool>(MAX_FRAMES_IN_FLIGHT);
 
-            frameInfo.fence = VulkanFence(this);
-            frameInfo.fence.initialize(true);
+        for (auto&& commandPool : _graphicsCommandPools) {
+            commandPool = VulkanCommandPool(this);
+            commandPool.initialize(graphicsQueue().info().family, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
+        }
 
-            frameInfo.imageAvailabeSemaphore = VulkanSemaphore(this);
-            frameInfo.imageAvailabeSemaphore.initialize();
-            i++;
+    }
+
+    void VulkanContext::createGraphicsCommandBuffers() {
+        _graphicsCommandBuffers = FixedVector<VulkanCommandBuffer>(MAX_FRAMES_IN_FLIGHT);
+
+        size_t index = 0;
+        for (auto&& commandBuffer : _graphicsCommandBuffers) {
+            commandBuffer = VulkanCommandBuffer(this);
+            commandBuffer.initialize(_graphicsCommandPools[index]);
+            ++index;
         }
     }
 
     VkResult VulkanContext::present(uint32_t imageIndex, const VulkanSemaphore& semaphore) {
-        VkPresentInfoKHR presentInfo{};
+        VkPresentInfoKHR presentInfo = {};
         presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 
         std::array<VkSemaphore, 1> waitSemaphore = { semaphore };
@@ -428,7 +506,7 @@ namespace nwt
         presentInfo.pImageIndices = &imageIndex;
         presentInfo.pResults = nullptr; // Optional
 
-        return vkQueuePresentKHR(graphicsQueue(), &presentInfo);
+        return vkQueuePresentKHR(presentQueue(), &presentInfo);
     }
 
     VkImageView VulkanContext::createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags) {
@@ -454,7 +532,7 @@ namespace nwt
     VulkanQueueInfo VulkanContext::findPresentQueueInfo(const std::vector<VkQueueFamilyProperties>& availableQueueFamilyProps) const {
         VulkanQueueInfo queueInfo(-1, 0);
 
-        uint32_t savedFamily = -1;
+        // uint32_t savedFamily = -1;
         uint32_t familyIndex = 0;
         for (auto&& familyProp : availableQueueFamilyProps)
         {
@@ -482,35 +560,35 @@ namespace nwt
                 return queueInfo;
             }
 
-            // puts all queue indices of "usedQueues" that have the save queue family as the current queue family in an "unordered_set"
-            std::unordered_set<uint32_t> usedQueueIndices;
-            for (auto&& usedQueue : _queues) {
-                if (usedQueue.info().family == familyIndex) {
-                    usedQueueIndices.emplace(usedQueue.info().index);
-                }
-            }
+            // // puts all queue indices of "usedQueues" that have the save queue family as the current queue family in an "unordered_set"
+            // std::unordered_set<uint32_t> usedQueueIndices;
+            // for (auto&& usedQueue : _queues) {
+            //     if (usedQueue.info().family == familyIndex) {
+            //         usedQueueIndices.emplace(usedQueue.info().index);
+            //     }
+            // }
 
-            // checks for availavle queue indices in the set
-            // if an index is free, select current queue family and free queue index
-            for (uint32_t i = 0; i < familyProp.queueCount; i++) {
-                if (!usedQueueIndices.contains(i)) {
-                    queueInfo.family = familyIndex;
-                    queueInfo.index = i;
-                    return queueInfo;
-                }
-            }
+            // // checks for availavle queue indices in the set
+            // // if an index is free, select current queue family and free queue index
+            // for (uint32_t i = 0; i < familyProp.queueCount; i++) {
+            //     if (!usedQueueIndices.contains(i)) {
+            //         queueInfo.family = familyIndex;
+            //         queueInfo.index = i;
+            //         return queueInfo;
+            //     }
+            // }
 
             // select current queue family as fallback if none was selected
-            if (savedFamily == -1) {
-                savedFamily = familyIndex;
-            }
+            // if (savedFamily == -1) {
+            //     savedFamily = familyIndex;
+            // }
 
             familyIndex++;
         }
 
         // fallback if no unique queue family was found
         if (queueInfo.family == -1) {
-            queueInfo.family = savedFamily;
+            queueInfo.family = graphicsQueue().info().family;
         }
 
         return queueInfo;
@@ -577,6 +655,7 @@ namespace nwt
 
         return queueInfo;
     }
+
     VulkanQueueInfo VulkanContext::findTransferQueueInfo(const std::vector<VkQueueFamilyProperties>& availableQueueFamilyProps) const {
         VulkanQueueInfo queueInfo(-1, 0);
 
@@ -658,4 +737,21 @@ namespace nwt
         return new VulkanContext();
     }
 
+    void VulkanContext::recreateSwapchainAndFramebuffers(uint32_t width, uint32_t height) {
+        for (auto&& fence : _renderFinishedFence) {
+            fence.wait();
+        }
+
+        _swapchain.destroy();
+        _swapchain = VulkanSwapchain(this);
+        _swapchain.initialize(width, height);
+
+        for (size_t i = 0; i < _framebuffers.size(); i++) {
+            _framebuffers[i].destroy();
+            _framebuffers[i] = VulkanFramebuffer(this);
+            _framebuffers[i].initialize(_renderPass, _swapchain.vkImageViews()[i], _swapchain.vkExtent());
+        }
+
+        _windowResized = false;
+    }
 } // namespace nwt

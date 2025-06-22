@@ -26,7 +26,7 @@ namespace nwt
         VkExtent2D _extent;
         FixedVector<VkImage> _images;
         FixedVector<VkImageView> _imageViews;
-        FixedVector<VulkanSemaphore> _renderFinishedSemaphores;
+        // FixedVector<VulkanSemaphore> _renderFinishedSemaphores;
 
     public:
         VulkanSwapchain()
@@ -37,8 +37,6 @@ namespace nwt
             : _context(context), _swapchain(VK_NULL_HANDLE) {
         }
 
-        VulkanSwapchain& operator=(const VulkanSwapchain& other);
-
         VkSwapchainKHR vkSwapchain() const;
         operator VkSwapchainKHR() const;
 
@@ -46,19 +44,18 @@ namespace nwt
         const VkExtent2D& vkExtent() const;
         const FixedVector<VkImage>& vkImages() const;
         const FixedVector<VkImageView>& vkImageViews() const;
-        const FixedVector<VulkanSemaphore>& renderFinishedSemaphores() const;
+        // const FixedVector<VulkanSemaphore>& renderFinishedSemaphores() const;
 
-
-        void initialize();
+        void initialize(uint32_t windowWidth, uint32_t windowHeight);
         void destroy();
 
-        void recreate();
+        void recreate(uint32_t windowWidth, uint32_t windowHeight);
         VkResult nextImage(const VulkanSemaphore& semaphore, uint32_t* imageIndex) const;
         SupportDetails querySupportDetails();
 
         VkSurfaceFormatKHR chooseSurfaceFormat(std::vector<VkSurfaceFormatKHR> formats);
         VkPresentModeKHR choosePresentMode(std::vector<VkPresentModeKHR> presentModes);
-        VkExtent2D chooseExtent(VkSurfaceCapabilitiesKHR capabilities);
+        VkExtent2D chooseExtent(VkSurfaceCapabilitiesKHR capabilities, uint32_t width, uint32_t height);
 
     };
 

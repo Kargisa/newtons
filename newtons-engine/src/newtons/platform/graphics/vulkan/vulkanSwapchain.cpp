@@ -1,25 +1,10 @@
 #include "vulkanSwapchain.hpp"
 #include "vulkanContext.hpp"
-#include "newtons/application.hpp"
 
 
 
 namespace nwt
 {
-    VulkanSwapchain& VulkanSwapchain::operator=(const VulkanSwapchain& other) {
-        if (this == &other) {
-            return *this;
-        }
-
-        _context = other._context;
-        _swapchain = other._swapchain;
-        _extent = other._extent;
-        _imageFormat = other._imageFormat;
-        _images = other._images;
-        _imageViews = other._imageViews;
-        return *this;
-    }
-
     VkSwapchainKHR VulkanSwapchain::vkSwapchain() const {
         return _swapchain;
     }
@@ -44,18 +29,18 @@ namespace nwt
         return _imageViews;
     }
 
-    const FixedVector<VulkanSemaphore>& VulkanSwapchain::renderFinishedSemaphores() const {
-        return _renderFinishedSemaphores;
-    }
+    // const FixedVector<VulkanSemaphore>& VulkanSwapchain::renderFinishedSemaphores() const {
+    //     return _renderFinishedSemaphores;
+    // }
 
-    void VulkanSwapchain::initialize() {
+    void VulkanSwapchain::initialize(uint32_t windowWidth, uint32_t windowHeight) {
+        LOG_INFO(_context);
         const VulkanDevice& device = _context->device();
-
         SupportDetails swapChainDetails = querySupportDetails();
 
         VkSurfaceFormatKHR surfaceFormat = chooseSurfaceFormat(swapChainDetails.formats);
         VkPresentModeKHR presentMode = choosePresentMode(swapChainDetails.presentModes);
-        VkExtent2D extent = chooseExtent(swapChainDetails.capabilities);
+        VkExtent2D extent = chooseExtent(swapChainDetails.capabilities, windowWidth, windowHeight);
 
         uint32_t imgCount = swapChainDetails.capabilities.minImageCount + 1;
         if (swapChainDetails.capabilities.maxImageCount > 0 && imgCount > swapChainDetails.capabilities.maxImageCount) {
@@ -106,20 +91,19 @@ namespace nwt
 
 
         _imageViews = FixedVector<VkImageView>(_images.size());
-        _renderFinishedSemaphores = FixedVector<VulkanSemaphore>(_images.size());
+        // _renderFinishedSemaphores = FixedVector<VulkanSemaphore>(_images.size());
         for (size_t i = 0; i < _images.size(); i++) {
             _imageViews[i] = _context->createImageView(_images[i], _imageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
-            _renderFinishedSemaphores[i] = VulkanSemaphore(_context);
-            _renderFinishedSemaphores[i].initialize();
+            // _renderFinishedSemaphores[i] = VulkanSemaphore(_context);
+            // _renderFinishedSemaphores[i].initialize();
         }
     }
 
     VulkanSwapchain::SupportDetails VulkanSwapchain::querySupportDetails() {
-        VulkanSwapchain::SupportDetails details;
-
-        VkPhysicalDevice phDevice = _context->physicalDevice();
         VkSurfaceKHR surface = _context->vkSurface();
+        const VkPhysicalDevice& phDevice = _context->physicalDevice();
 
+        VulkanSwapchain::SupportDetails details;
         vkGetPhysicalDeviceSurfaceCapabilitiesKHR(phDevice, surface, &details.capabilities);
 
         uint32_t formatCount = 0;
@@ -165,21 +149,17 @@ namespace nwt
         return VK_PRESENT_MODE_FIFO_KHR;
     }
 
-    VkExtent2D VulkanSwapchain::chooseExtent(VkSurfaceCapabilitiesKHR capabilities) {
+    VkExtent2D VulkanSwapchain::chooseExtent(VkSurfaceCapabilitiesKHR capabilities, uint32_t width, uint32_t height) {
         if (capabilities.currentExtent.width != 0xFFFFFFFF) {
             return capabilities.currentExtent;
         }
-
-        int width;
-        int height;
-        Application::window()->framebufferSize(&width, &height);
 
         VkExtent2D minExtent = capabilities.minImageExtent;
         VkExtent2D maxExtent = capabilities.maxImageExtent;
 
         VkExtent2D extent(
-            std::clamp(static_cast<uint32_t>(width), minExtent.width, maxExtent.width),
-            std::clamp(static_cast<uint32_t>(height), minExtent.height, maxExtent.height)
+            std::clamp(width, minExtent.width, maxExtent.width),
+            std::clamp(height, minExtent.height, maxExtent.height)
         );
 
         return extent;
@@ -194,7 +174,7 @@ namespace nwt
 
         for (size_t i = 0; i < _imageViews.size(); i++) {
             vkDestroyImageView(_context->device().vkDevice(), _imageViews[i], nullptr);
-            _renderFinishedSemaphores[i].destroy();
+            // _renderFinishedSemaphores[i].destroy();
         }
 
         _swapchain = VK_NULL_HANDLE;
@@ -202,12 +182,12 @@ namespace nwt
         // _images.clear();
         // _imageViews.clear();
 
-        LOG_INFO("Swapchain Destroyed!\n");
+        LOG_INFO("Swapchain Destroyed!");
     }
 
-    void VulkanSwapchain::recreate() {
+    void VulkanSwapchain::recreate(uint32_t windowWidth, uint32_t windowHeight) {
         destroy();
-        initialize();
+        initialize(windowWidth, windowHeight);
     }
 
     VkResult VulkanSwapchain::nextImage(const VulkanSemaphore& semaphore, uint32_t* imageIndex) const {

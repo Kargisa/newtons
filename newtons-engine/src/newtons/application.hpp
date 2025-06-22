@@ -4,19 +4,26 @@
 #include "application.hpp"
 #include "newtons/window/window.hpp"
 #include "newtons/graphics/graphicsContext.hpp"
+#include "layer.hpp"
+#include "layerStack.hpp"
 
 namespace nwt {
 
-    class NWT_API Application {
+    class Application {
         static bool _running;
         static Window* _window;
         static GraphicsContext* _graphicsContext;
-
+        static LayerStack _layers;
 
     public:
         static void run();
         static Window* window();
         static GraphicsContext* graphcisContext();
+
+        static const LayerStack& layers();
+
+        static void attachLayer(Layer* layer);
+        static void detachLayer(Layer* layer);
 
     private:
         static void initWindow();
