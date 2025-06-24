@@ -31,6 +31,8 @@ namespace nwt
 
 
         VkRenderPass vkRenderPass() const;
+        operator VkRenderPass() const;
+
         const VkClearColorValue& vkClearColor() const;
         const VkClearDepthStencilValue& vkClearDepthStencil() const;
         const VkRect2D& vkRenderArea() const;

@@ -20,7 +20,7 @@ namespace obj {
 		std::vector<Index> indices;
 	};
 
-	std::vector<std::string> SplitString(const std::string& str, char delim) {
+	std::vector<std::string> splitString(const std::string& str, char delim) {
 		std::vector<std::string> result;
 		std::string current;
 		for (int i = 0; i < str.size(); i++) {
@@ -36,7 +36,7 @@ namespace obj {
 		return result;
 	}
 
-	void ReadObjFile(const char* path, Object& object) {
+	void readObjFile(const char* path, Object& object) {
 		std::ifstream file(path);
 		if (!file.is_open()) {
 			throw std::runtime_error("Failed to open obj file");
@@ -49,7 +49,7 @@ namespace obj {
 				continue;
 			}
 
-			std::vector<std::string> parts = SplitString(line, ' ');
+			std::vector<std::string> parts = splitString(line, ' ');
 			std::string& type = parts[0];
 
 
@@ -70,7 +70,7 @@ namespace obj {
 			}
 			else if (type == "f") {
 				for (size_t i = 1; i < parts.size(); i++) {
-					std::vector<std::string> indices = SplitString(parts[i], '/');
+					std::vector<std::string> indices = splitString(parts[i], '/');
 					object.indices.emplace_back(
 						static_cast<size_t>(std::stoi(indices[0])) - 1,
 						static_cast<size_t>(std::stoi(indices[1])) - 1,

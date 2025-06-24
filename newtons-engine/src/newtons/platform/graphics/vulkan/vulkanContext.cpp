@@ -6,6 +6,7 @@
 #include "mathf.hpp"
 #include "newtons/application.hpp"
 #include "vulkanSwapchain.hpp"
+#include "newtons/io/file.hpp"
 
 #include <thread>
 #include <bitset>
@@ -23,7 +24,11 @@ namespace nwt
 
         device().waitIdle();
 
+        _trianglePipeline.destroy();
+
         _swapchain.destroy();
+
+        LOG_SPACE();
 
         for (auto&& framebuffer : _framebuffers) {
             framebuffer.destroy();
@@ -55,7 +60,6 @@ namespace nwt
 
         LOG_SPACE();
 
-
         _renderPass.destroy();
 
         _device.destroy();
@@ -82,8 +86,13 @@ namespace nwt
         createGraphicsCommandBuffers();
         createSyncObjects();
 
+        //INFO: Debug:
+        FixedVector<char> vertSpirV = FileReader::readSpirV("../../../../assets/shaders/compiledShaders/triangleVert.spv");
+        FixedVector<char> fragSpirV = FileReader::readSpirV("../../../../assets/shaders/compiledShaders/triangleFrag.spv");
 
-        // createSyncObjects();
+        _trianglePipeline = VulkanGraphicsPipeline(this);
+        _trianglePipeline.initialize(reinterpret_cast<uint32_t*>(vertSpirV.data()), vertSpirV.size(), reinterpret_cast<uint32_t*>(fragSpirV.data()), fragSpirV.size());
+
         // createDescriptorSetLayout();
         // createDepthResources();
         // createGraphicsCommandPool();
@@ -139,22 +148,25 @@ namespace nwt
         throw std::runtime_error("Depth Not Implemented");
     }
 
+    const VulkanRenderPass& VulkanContext::renderPass() const {
+        return _renderPass;
+    }
+
     // ----------- Debugging ----------
     float r = 0.392f;
     float g = 0.584f;
     float b = 0.929f;
     // ------------------------------
 
-    // TODO: Commandbuffers!!! + sync objects etc
     void VulkanContext::drawFrame() {
         const VulkanSemaphore& imageAvailabeSemaphore = _imageAvailableSemaphores[_currentFrame];
         const VulkanFence& fence = _renderFinishedFence[_currentFrame];
-        const VulkanCommandBuffer commandBuffer = _graphicsCommandBuffers[_currentFrame];
+        const VulkanCommandBuffer& commandBuffer = _graphicsCommandBuffers[_currentFrame];
 
         fence.wait();
 
         uint32_t imageIndex = UINT32_MAX;
-        VkResult result = swapchain().nextImage(imageAvailabeSemaphore, &imageIndex);
+        VkResult result = _swapchain.nextImage(imageAvailabeSemaphore, &imageIndex);
 
         if (result == VK_ERROR_OUT_OF_DATE_KHR) {
             int width = 0;
@@ -176,19 +188,8 @@ namespace nwt
 
         _renderPass.begin(commandBuffer, _framebuffers[imageIndex]);
 
-        VkViewport viewport = {};
-        viewport.x = 0.0f;
-        viewport.y = 0.0f;
-        viewport.width = static_cast<float>(_swapchain.vkExtent().width);
-        viewport.height = static_cast<float>(_swapchain.vkExtent().height);
-        viewport.minDepth = 0.0f;
-        viewport.maxDepth = 1.0f;
-        vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
-
-        VkRect2D scissor = {};
-        scissor.offset = { 0, 0 };
-        scissor.extent = _swapchain.vkExtent();
-        vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+        _trianglePipeline.bind(commandBuffer);
+        _trianglePipeline.draw(commandBuffer, 3, 1, 0, 0);
 
         _renderPass.end(commandBuffer);
 
@@ -447,6 +448,7 @@ namespace nwt
             _framebuffers[i] = VulkanFramebuffer(this);
             _framebuffers[i].initialize(_renderPass, _swapchain.vkImageViews()[i], _swapchain.vkExtent());
         }
+        LOG_SPACE();
     }
 
     void VulkanContext::createSyncObjects() {
@@ -462,12 +464,14 @@ namespace nwt
             _imageAvailableSemaphores[i].initialize();
         }
 
+        LOG_SPACE();
+
         for (size_t i = 0; i < _renderFinishedSemaphore.size(); i++) {
             _renderFinishedSemaphore[i] = VulkanSemaphore(this);
             _renderFinishedSemaphore[i].initialize();
         }
 
-
+        LOG_SPACE();
     }
 
     void VulkanContext::createGraphicsCommandPools() {
@@ -478,6 +482,7 @@ namespace nwt
             commandPool.initialize(graphicsQueue().info().family, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
         }
 
+        LOG_SPACE();
     }
 
     void VulkanContext::createGraphicsCommandBuffers() {
@@ -489,6 +494,8 @@ namespace nwt
             commandBuffer.initialize(_graphicsCommandPools[index]);
             ++index;
         }
+
+        LOG_SPACE();
     }
 
     VkResult VulkanContext::present(uint32_t imageIndex, const VulkanSemaphore& semaphore) {

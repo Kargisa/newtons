@@ -17,6 +17,7 @@
 #include "vulkanSemaphore.hpp"
 #include "vulkanFence.hpp"
 #include "vulkanQueue.hpp"
+#include "vulkanGraphicsPipeline.hpp"
 
 namespace nwt
 {
@@ -70,9 +71,10 @@ namespace nwt
         FixedVector<VulkanCommandPool> _graphicsCommandPools;
         FixedVector<VulkanCommandBuffer> _graphicsCommandBuffers;
         FixedVector<VulkanFence> _renderFinishedFence;
-
-
         bool _windowResized = false;
+
+        // INFO: DEBUG
+        VulkanGraphicsPipeline _trianglePipeline;
 
     public:
 
@@ -105,6 +107,7 @@ namespace nwt
 
         const VulkanDevice& device() const;
         const VulkanSwapchain& swapchain() const;
+        const VulkanRenderPass& renderPass() const;
 
         VulkanDepthBuffer* getDepth() const;
 

@@ -9,13 +9,11 @@
 namespace nwt {
 
 	struct VulkanVertex {
-        Vec3 pos;
-        Vec3 color;
-        Vec2 texCoord;
-        static VkVertexInputBindingDescription getBindingDescription();
-        static std::array<VkVertexInputAttributeDescription, 3> getAttributeDescriptions();
-
-        bool operator==(const VulkanVertex& vert) const;
+		Vec3 pos;
+		Vec3 color;
+		Vec2 texCoord;
+		static VkVertexInputBindingDescription bindingDescription();
+		static std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions();
 	};
 
 } //namespace nwt

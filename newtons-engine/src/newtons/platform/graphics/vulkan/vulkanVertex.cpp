@@ -2,7 +2,7 @@
 
 namespace nwt {
 
-    VkVertexInputBindingDescription VulkanVertex::getBindingDescription() {
+    VkVertexInputBindingDescription VulkanVertex::bindingDescription() {
         VkVertexInputBindingDescription bindingDescription{};
         bindingDescription.binding = 0;
         bindingDescription.stride = sizeof(VulkanVertex);
@@ -11,7 +11,7 @@ namespace nwt {
         return bindingDescription;
     }
 
-    std::array<VkVertexInputAttributeDescription, 3> VulkanVertex::getAttributeDescriptions() {
+    std::array<VkVertexInputAttributeDescription, 3> VulkanVertex::attributeDescriptions() {
         std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions{};
 
         attributeDescriptions[0].binding = 0;
@@ -31,9 +31,4 @@ namespace nwt {
 
         return attributeDescriptions;
     }
-
-    bool VulkanVertex::operator==(const VulkanVertex& vert) const {
-        return pos == vert.pos && color == vert.color && texCoord == vert.texCoord;
-    }
-
 } // namespace nwt

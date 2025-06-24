@@ -5,7 +5,8 @@ add_library(newtons-engine STATIC
 "newtons/application.cpp" 
 "newtons/layerStack.cpp"
 "newtons/main.cpp" 
-"newtons/mesh.cpp" 
+"newtons/mesh.cpp"
+"newtons/io/file.cpp"
 "newtons/window/window.cpp" 
 "newtons/window/window.hpp" 
 "newtons/graphics/graphicsContext.cpp"
@@ -15,7 +16,6 @@ add_library(newtons-engine STATIC
 "newtons/platform/linux/linuxWindow.cpp" 
 "newtons/platform/windows/windowsWindow.cpp" 
 "newtons/platform/graphics/vulkan/vulkanVertex.cpp" 
-"newtons/platform/graphics/vulkan/vulkanShader.cpp"
 "newtons/platform/graphics/vulkan/vulkanSwapchain.cpp"
 "newtons/platform/graphics/vulkan/vulkanRenderPass.cpp"
 "newtons/platform/graphics/vulkan/vulkanPhysicalDevice.cpp"
@@ -26,6 +26,8 @@ add_library(newtons-engine STATIC
 "newtons/platform/graphics/vulkan/vulkanSemaphore.cpp"
 "newtons/platform/graphics/vulkan/vulkanFence.cpp"
 "newtons/platform/graphics/vulkan/vulkanQueue.cpp"
+"newtons/platform/graphics/vulkan/vulkanGraphicsPipeline.cpp"
+"newtons/platform/graphics/vulkan/vulkanShaderModule.cpp"
 
 # Dear IMGUI
 "newtons/platform/imgui/external/imgui.cpp"

@@ -1,15 +1,8 @@
 cd $(dirname "$0")
 
 
-glslc shader.vert -o vert.spv
-glslc shader.frag -o frag.spv
+glslc shader.vert -o ./compiledShaders/vert.spv
+glslc shader.frag -o ./compiledShaders/frag.spv
 
-cp vert.spv compiledShaders
-cp frag.spv compiledShaders
-
-
-glslc triangle.vert -o triangleVert.spv
-glslc triangle.frag -o triangleFrag.spv
-
-cp triangleVert.spv compiledShaders
-cp triangleFrag.spv compiledShaders
+glslc triangle.vert -o ./compiledShaders/triangleVert.spv
+glslc triangle.frag -o ./compiledShaders/triangleFrag.spv

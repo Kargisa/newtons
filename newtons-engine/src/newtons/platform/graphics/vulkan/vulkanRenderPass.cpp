@@ -7,6 +7,10 @@ namespace nwt
         return _renderPass;
     }
 
+    VulkanRenderPass::operator VkRenderPass() const {
+        return _renderPass;
+    }
+
     const VkClearColorValue& VulkanRenderPass::vkClearColor() const {
         return _clearColor;
     }
@@ -64,13 +68,13 @@ namespace nwt
         subpass.pColorAttachments = &colorAttachmentRef;
         // subpass.pDepthStencilAttachment = &depthAttachmentRef;
 
-        // VkSubpassDependency dependency{};
-        // dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-        // dependency.dstSubpass = 0;
-        // dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-        // dependency.srcAccessMask = 0;
-        // dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-        // dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        VkSubpassDependency dependency{};
+        dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+        dependency.dstSubpass = 0;
+        dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependency.srcAccessMask = 0;
+        dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
         // std::array<VkAttachmentDescription, 2> attachments = { colorAttachment, depthAttachment };
         std::array<VkAttachmentDescription, 1> attachments = { colorAttachment };
@@ -81,8 +85,8 @@ namespace nwt
         renderPassInfo.pAttachments = attachments.data();
         renderPassInfo.subpassCount = 1;
         renderPassInfo.pSubpasses = &subpass;
-        // renderPassInfo.dependencyCount = 1;
-        // renderPassInfo.pDependencies = &dependency;
+        renderPassInfo.dependencyCount = 1;
+        renderPassInfo.pDependencies = &dependency;
 
         if (vkCreateRenderPass(_context->device(), &renderPassInfo, nullptr, &_renderPass) != VK_SUCCESS) {
             throw std::runtime_error("Unable To Create Renderpass!");
