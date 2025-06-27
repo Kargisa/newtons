@@ -1,18 +1,23 @@
 #include "mesh.hpp"
 
-namespace nwt{
-void Mesh::recalculateNormals()
-{
-    normals.clear();
-
-    for (size_t i = 0; i < indices.size(); i += 3)
-    {
-        Vec3 v1 = vertices[indices[i + 0]];
-        Vec3 v2 = vertices[indices[i + 1]];
-        Vec3 v3 = vertices[indices[i + 2]];
-
-        Vec3 v12 = v2 - v1;
-        Vec3 v13 = v3 - v1;
+namespace nwt {
+    std::vector<Vec3>& Mesh::vertices() {
+        return _vertices;
     }
-}
+
+    std::vector<Vec3>& Mesh::normals() {
+        return _normals;
+    }
+
+    std::vector<Vec3>& Mesh::vertexColors() {
+        return _vertexColors;
+    }
+
+    std::vector<Vec2>& Mesh::texCoords() {
+        return _texCoords;
+    }
+
+    std::vector<uint32_t>& Mesh::indices() {
+        return _indices;
+    }
 }

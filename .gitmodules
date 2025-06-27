@@ -8,3 +8,6 @@
 [submodule "lib/glfw"]
 	path = lib/glfw
 	url = https://github.com/glfw/glfw
+[submodule "lib/SPIRV-Reflect"]
+	path = lib/SPIRV-Reflect
+	url = https://github.com/KhronosGroup/SPIRV-Reflect

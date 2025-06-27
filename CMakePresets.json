@@ -13,7 +13,12 @@
         "CMAKE_CXX_STANDARD": "20",
         "CMAKE_CXX_FLAGS": "-DNWT_WINDOWS",
         "CMAKE_CXX_FLAGS_RELEASE": "-DNWT_RELEASE /MD",
-        "CMAKE_CXX_FLAGS_DEBUG": "-DNWT_DEBUG /MDd"
+        "CMAKE_CXX_FLAGS_DEBUG": "-DNWT_DEBUG /MDd",
+        "SPIRV_REFLECT_STATIC_LIB": "ON",
+        "SPIRV_REFLECT_EXECUTABLE": "OFF",
+        "SPIRV_REFLECT_EXAMPLES": "OFF",
+        "SPIRV_REFLECT_TESTS": "OFF",
+        "NWT_UTILS_TESTS": "OFF"
       },
       "condition": {
         "type": "equals",
@@ -82,7 +87,10 @@
         "CMAKE_CXX_STANDARD": "20",
         "CMAKE_CXX_FLAGS": "-DNWT_LINUX",
         "CMAKE_CXX_FLAGS_RELEASE": "-DNWT_RELEASE",
-        "CMAKE_CXX_FLAGS_DEBUG": "-DNWT_DEBUG"
+        "CMAKE_CXX_FLAGS_DEBUG": "-DNWT_DEBUG",
+        "SPIRV_REFLECT_STATIC_LIB": "ON",
+        "SPIRV_REFLECT_EXECUTABLE": "OFF",
+        "NWT_UTILS_TESTS": "OFF"
       },
       "architecture": {
         "value": "x64",

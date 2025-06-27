@@ -18,8 +18,8 @@ namespace nwt
         LOG_INFO("Command Buffer Successfully Created!");
     }
 
-    void VulkanCommandBuffer::reset(VkCommandBufferResetFlags flags) const {
-        vkResetCommandBuffer(_buffer, flags);
+    void VulkanCommandBuffer::reset() const {
+        vkResetCommandBuffer(_buffer, 0);
     }
 
     void VulkanCommandBuffer::begin() const {

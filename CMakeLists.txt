@@ -11,7 +11,6 @@ endif()
 
 project ("newtons")
 
-enable_testing()
 
 # Include sub-projects. 
 add_subdirectory ("newtons-utils")

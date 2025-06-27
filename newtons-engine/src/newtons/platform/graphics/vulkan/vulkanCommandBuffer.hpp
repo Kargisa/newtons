@@ -28,7 +28,7 @@ namespace nwt
         void initialize(const VulkanCommandPool& pool);
         void destroy();
 
-        void reset(VkCommandBufferResetFlags flags) const;
+        void reset() const;
 
         void begin() const;
         void end() const;

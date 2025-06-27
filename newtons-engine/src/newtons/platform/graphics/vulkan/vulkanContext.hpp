@@ -25,7 +25,7 @@ namespace nwt
     // *************** VulkanContext ***************
     // *********************************************
 
-    class NWT_API VulkanContext : public GraphicsContext
+    class VulkanContext : public GraphicsContext
     {
 #ifdef NWT_DEBUG
         const std::vector<const char*> _validationLayers = { "VK_LAYER_KHRONOS_validation" };

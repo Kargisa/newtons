@@ -1,20 +1,18 @@
-# if (WIN32)
-# add_executable (newtons-editor WIN32 "main.cpp" "obj_reader.hpp" "vertex.hpp" "vertex.cpp" "transformationMatrices.hpp" "mesh.cpp" "mesh.hpp" "stb_image.h")
-# else()
+
 add_library(newtons-engine STATIC 
-"newtons/application.cpp" 
+"newtons/application.cpp"
 "newtons/layerStack.cpp"
-"newtons/main.cpp" 
+"newtons/main.cpp"
 "newtons/mesh.cpp"
 "newtons/io/file.cpp"
-"newtons/window/window.cpp" 
-"newtons/window/window.hpp" 
+"newtons/window/window.cpp"
+"newtons/window/window.hpp"
 "newtons/graphics/graphicsContext.cpp"
-"newtons/graphics/graphicsFrame.cpp" 
-"newtons/graphics/graphics.cpp" 
-"newtons/platform/graphics/vulkan/vulkanContext.cpp" 
-"newtons/platform/linux/linuxWindow.cpp" 
-"newtons/platform/windows/windowsWindow.cpp" 
+"newtons/graphics/graphicsFrame.cpp"
+"newtons/graphics/graphics.cpp"
+"newtons/platform/graphics/vulkan/vulkanContext.cpp"
+"newtons/platform/linux/linuxWindow.cpp"
+"newtons/platform/windows/windowsWindow.cpp"
 "newtons/platform/graphics/vulkan/vulkanVertex.cpp" 
 "newtons/platform/graphics/vulkan/vulkanSwapchain.cpp"
 "newtons/platform/graphics/vulkan/vulkanRenderPass.cpp"
@@ -40,15 +38,21 @@ add_library(newtons-engine STATIC
 "newtons/platform/imgui/imguiLayer.cpp"
 
 )
-# endif()
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
-  set_property(TARGET newtons-engine PROPERTY CXX_STANDARD 26)
+  set_property(TARGET newtons-engine PROPERTY CXX_STANDARD 23)
 endif()
 
 find_package(Vulkan REQUIRED)
 
-target_link_libraries(newtons-engine PUBLIC newtons-utils PUBLIC glfw PUBLIC Vulkan::Vulkan PUBLIC GPUOpen::VulkanMemoryAllocator)
+target_link_libraries(newtons-engine 
+PUBLIC newtons-utils 
+PUBLIC glfw 
+PUBLIC Vulkan::Vulkan 
+PUBLIC GPUOpen::VulkanMemoryAllocator
+PUBLIC spirv-reflect-static
+)
+
 
 target_include_directories(newtons-engine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_precompile_headers(newtons-engine PRIVATE "newtons/pch.hpp")

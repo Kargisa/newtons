@@ -183,7 +183,7 @@ namespace nwt
 
         const VulkanSemaphore& renderFinishedSemaphore = _renderFinishedSemaphore[imageIndex];
 
-        commandBuffer.reset(0);
+        commandBuffer.reset();
         commandBuffer.begin();
 
         _renderPass.begin(commandBuffer, _framebuffers[imageIndex]);

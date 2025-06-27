@@ -5,23 +5,32 @@
 #include <vector>
 #include <cstdint>
 
-namespace nwt{
-struct Mesh{
-    std::vector<Vec3> vertices;
-    std::vector<uint32_t> indices;
-    std::vector<Vec3> normals;
-    std::vector<Vec2> texCoords;
-    std::vector<Vec3> vertColors;
+namespace nwt {
+    class Mesh {
+        std::vector<Vec3> _vertices;
+        std::vector<Vec3> _normals;
+        std::vector<Vec3> _vertexColors;
+        std::vector<Vec2> _texCoords;
+        std::vector<uint32_t> _indices;
 
-    Mesh(const std::vector<Vec3>& vertices, const std::vector<uint32_t>& indices, const std::vector<Vec2>& texCoords, const std::vector<Vec3>& vertColors)
-        : vertices(vertices), indices(indices), texCoords(texCoords), vertColors(vertColors){}
+    public:
+        Mesh(const std::vector<Vec3>& vertices, const std::vector<uint32_t>& indices, const std::vector<Vec2>& texCoords, const std::vector<Vec3>& vertColors)
+            : _vertices(vertices), _indices(indices), _texCoords(texCoords), _vertexColors(vertColors) {
+        }
 
-    Mesh(const std::vector<Vec3>& vertices, const std::vector<uint32_t>& indices, const std::vector<Vec2>& texCoords)
-        : vertices(vertices), indices(indices), texCoords(texCoords){}
-    
-    Mesh(const std::vector<Vec3>& vertices, const std::vector<uint32_t>& indices)
-        : vertices(vertices), indices(indices){}
+        Mesh(const std::vector<Vec3>& vertices, const std::vector<uint32_t>& indices, const std::vector<Vec2>& texCoords)
+            : _vertices(vertices), _indices(indices), _texCoords(texCoords) {
+        }
 
-    void recalculateNormals();
-};
+        Mesh(const std::vector<Vec3>& vertices, const std::vector<uint32_t>& indices)
+            : _vertices(vertices), _indices(indices) {
+        }
+
+        std::vector<Vec3>& vertices();
+        std::vector<Vec3>& normals();
+        std::vector<Vec3>& vertexColors();
+        std::vector<Vec2>& texCoords();
+        std::vector<uint32_t>& indices();
+
+    };
 }
