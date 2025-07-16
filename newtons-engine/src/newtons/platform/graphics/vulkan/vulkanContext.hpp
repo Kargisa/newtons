@@ -19,6 +19,8 @@
 #include "vulkanQueue.hpp"
 #include "vulkanGraphicsPipeline.hpp"
 
+#include "vk_mem_alloc.h"
+
 namespace nwt
 {
     // *********************************************
@@ -66,15 +68,22 @@ namespace nwt
 
         FixedVector<VulkanFramebuffer> _framebuffers;
         FixedVector<VulkanSemaphore> _renderFinishedSemaphore;
-
         FixedVector<VulkanSemaphore> _imageAvailableSemaphores;
         FixedVector<VulkanCommandPool> _graphicsCommandPools;
         FixedVector<VulkanCommandBuffer> _graphicsCommandBuffers;
         FixedVector<VulkanFence> _renderFinishedFence;
         bool _windowResized = false;
 
+        VmaAllocator _allocator;
+
+        VulkanCommandPool _copyCommandPool;
+        VulkanCommandBuffer _copyCommandBuffer;
+
         // INFO: DEBUG
         VulkanGraphicsPipeline _trianglePipeline;
+        VulkanBuffer vertexBuffer;
+        VulkanBuffer indexBuffer;
+
 
     public:
 
@@ -109,6 +118,8 @@ namespace nwt
         const VulkanSwapchain& swapchain() const;
         const VulkanRenderPass& renderPass() const;
 
+        VmaAllocator vmaAllocator() const;
+
         VulkanDepthBuffer* getDepth() const;
 
         static GraphicsContext* create();
@@ -122,21 +133,25 @@ namespace nwt
         bool                                        checkValidationLayersSupport();
         bool                                        checkExtensionsSupport(const std::vector<const char*>& requiredExtensions, const std::vector<VkExtensionProperties>& extensions);
         VkImageView                                 createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
+
+        void copyBuffer(const VulkanBuffer& srcBuffer, const VulkanBuffer& dstBuffer);
+
+
     private:
 
         void                                        createInstance();
         void                                        createSurface();
         void                                        findPhysicalDevices();
         void                                        pickPhysicalDevice();
-        void                                        createLogicalDevice();
         void                                        selectQueues();
+        void                                        createLogicalDevice();
+        void                                        initializeQueues();
+        void                                        createVmaAllocator();
         void                                        createSwapchain();
-        void                                        getQueues();
         void                                        createRenderPass();
         void                                        createFramebuffers();
         void                                        createSyncObjects();
-        void                                        createGraphicsCommandPools();
-        void                                        createGraphicsCommandBuffers();
+        void                                        createCommandObjects();
 
         VkResult present(uint32_t imageIndex, const VulkanSemaphore& semaphore);
 

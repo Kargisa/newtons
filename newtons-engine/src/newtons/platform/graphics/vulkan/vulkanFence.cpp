@@ -32,6 +32,11 @@ namespace nwt
         vkResetFences(_context->device().vkDevice(), 1, &_fence);
     }
 
+    VkResult VulkanFence::status() const {
+        return vkGetFenceStatus(_context->device(), _fence);
+    }
+
+
     VkFence VulkanFence::vkFence() const {
         return _fence;
     }

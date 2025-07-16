@@ -16,7 +16,7 @@ namespace nwt
 
 
 
-    uint32_t VulkanPhysicalDevice::getRating() const {
+    uint32_t VulkanPhysicalDevice::rating() const {
         VkPhysicalDeviceProperties deviceProps;
         VkPhysicalDeviceFeatures deviceFeatures;
         vkGetPhysicalDeviceProperties(_vkPhysicalDevice, &deviceProps);
@@ -36,7 +36,7 @@ namespace nwt
 
         int score = 0;
         if (deviceProps.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
-            score += 1000;
+            score += 1024;
         }
 
         score += deviceProps.limits.maxImageDimension2D;

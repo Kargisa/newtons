@@ -11,6 +11,10 @@
 #include <thread>
 #include <bitset>
 
+#include "vulkanReflect.hpp"
+
+#define VK_VERSION VK_API_VERSION_1_3
+
 namespace nwt
 {
     const std::vector<const char*>& VulkanContext::validationLayers() const {
@@ -19,10 +23,13 @@ namespace nwt
 
 
     VulkanContext::~VulkanContext() {
-
         LOG_INFO("-------- Cleaning Up --------\n");
 
         device().waitIdle();
+
+        vertexBuffer.destroy();
+        indexBuffer.destroy();
+        vmaDestroyAllocator(_allocator);
 
         _trianglePipeline.destroy();
 
@@ -60,7 +67,12 @@ namespace nwt
 
         LOG_SPACE();
 
+        _copyCommandPool.destroy();
+
+        LOG_SPACE();
+
         _renderPass.destroy();
+
 
         _device.destroy();
 
@@ -78,12 +90,12 @@ namespace nwt
         pickPhysicalDevice();
         selectQueues();
         createLogicalDevice();
-        getQueues();
+        initializeQueues();
+        createVmaAllocator();
         createSwapchain();
         createRenderPass();
         createFramebuffers();
-        createGraphicsCommandPools();
-        createGraphicsCommandBuffers();
+        createCommandObjects();
         createSyncObjects();
 
         //INFO: Debug:
@@ -93,15 +105,48 @@ namespace nwt
         _trianglePipeline = VulkanGraphicsPipeline(this);
         _trianglePipeline.initialize(reinterpret_cast<uint32_t*>(vertSpirV.data()), vertSpirV.size(), reinterpret_cast<uint32_t*>(fragSpirV.data()), fragSpirV.size());
 
+        VulkanBuffer v_stagingBuffer = VulkanBuffer(this);
+        v_stagingBuffer.initialize(VulkanBufferType::STAGING_BUFFER, sizeof(Vec3) * 3);
+
+        std::array<Vec3, 3> vertices;
+        vertices[0] = Vec3{ 0.5, 0.5, 0 };
+        vertices[1] = Vec3{ -0.5, 0.5, 0 };
+        vertices[2] = Vec3{ 0.0, -0.5, 0 };
+
+        void* v_data;
+        vmaMapMemory(_allocator, v_stagingBuffer.vmaAllocation(), &v_data);
+        memcpy(v_data, &vertices, sizeof(Vec3) * vertices.size());
+        vmaUnmapMemory(_allocator, v_stagingBuffer.vmaAllocation());
+
+        vertexBuffer = VulkanBuffer(this);
+        vertexBuffer.initialize(sizeof(Vec3) * vertices.size(), VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VMA_MEMORY_USAGE_AUTO, 0);
+
+        copyBuffer(v_stagingBuffer, vertexBuffer);
+        v_stagingBuffer.destroy();
+
+
+        VulkanBuffer i_stagingBuffer = VulkanBuffer(this);
+        i_stagingBuffer.initialize(VulkanBufferType::STAGING_BUFFER, sizeof(uint32_t) * 3);
+
+        std::array<uint32_t, 3> indices = { 0, 1, 2 };
+
+        void* i_data;
+        vmaMapMemory(_allocator, i_stagingBuffer.vmaAllocation(), &i_data);
+        memcpy(i_data, &indices, sizeof(uint32_t) * indices.size());
+        vmaUnmapMemory(_allocator, i_stagingBuffer.vmaAllocation());
+
+        indexBuffer = VulkanBuffer(this);
+        indexBuffer.initialize(sizeof(uint32_t) * indices.size(), VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VMA_MEMORY_USAGE_AUTO, 0);
+
+        copyBuffer(i_stagingBuffer, indexBuffer);
+        i_stagingBuffer.destroy();
+
+        VulkanReflect::spirvReflectExample(reinterpret_cast<uint32_t*>(fragSpirV.data()), fragSpirV.size());
+
         // createDescriptorSetLayout();
         // createDepthResources();
         // createGraphicsCommandPool();
         // createCommandBuffers();
-        /*
-        TODO:
-        createShaders();
-        createGraphicsPieplines();
-        */
     }
 
     void* VulkanContext::nativeContext() {
@@ -145,11 +190,16 @@ namespace nwt
     }
 
     VulkanDepthBuffer* VulkanContext::getDepth() const {
-        throw std::runtime_error("Depth Not Implemented");
+        LOG_FAIL("Depth Not Implemented");
+        throw std::runtime_error("");
     }
 
     const VulkanRenderPass& VulkanContext::renderPass() const {
         return _renderPass;
+    }
+
+    VmaAllocator VulkanContext::vmaAllocator() const {
+        return _allocator;
     }
 
     // ----------- Debugging ----------
@@ -159,9 +209,10 @@ namespace nwt
     // ------------------------------
 
     void VulkanContext::drawFrame() {
+
         const VulkanSemaphore& imageAvailabeSemaphore = _imageAvailableSemaphores[_currentFrame];
         const VulkanFence& fence = _renderFinishedFence[_currentFrame];
-        const VulkanCommandBuffer& commandBuffer = _graphicsCommandBuffers[_currentFrame];
+        const VulkanCommandBuffer& graphicsCommandBuffer = _graphicsCommandBuffers[_currentFrame];
 
         fence.wait();
 
@@ -176,27 +227,31 @@ namespace nwt
             return;
         }
         else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
-            throw std::runtime_error("failed to acquire swap chain image!");
+            LOG_FAIL("Failed to acquire swapchain image!");
+            throw std::runtime_error("");
         }
 
         fence.reset();
 
         const VulkanSemaphore& renderFinishedSemaphore = _renderFinishedSemaphore[imageIndex];
 
-        commandBuffer.reset();
-        commandBuffer.begin();
+        graphicsCommandBuffer.reset();
+        graphicsCommandBuffer.begin();
 
-        _renderPass.begin(commandBuffer, _framebuffers[imageIndex]);
+        _renderPass.begin(graphicsCommandBuffer, _framebuffers[imageIndex]);
 
-        _trianglePipeline.bind(commandBuffer);
-        _trianglePipeline.draw(commandBuffer, 3, 1, 0, 0);
+        _trianglePipeline.bind(graphicsCommandBuffer);
+        _trianglePipeline.bindVertexBuffer(graphicsCommandBuffer, { vertexBuffer });
+        _trianglePipeline.bindIndexBuffer(graphicsCommandBuffer, indexBuffer);
+        _trianglePipeline.drawIndexed(graphicsCommandBuffer, 3, 1, 0, 0, 0);
+        // _trianglePipeline.draw(graphicsCommandBuffer, 3, 1, 0, 0);
 
-        _renderPass.end(commandBuffer);
+        _renderPass.end(graphicsCommandBuffer);
 
-        commandBuffer.end();
+        graphicsCommandBuffer.end();
 
 
-        graphicsQueue().submit({ commandBuffer }, { imageAvailabeSemaphore }, { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT }, { renderFinishedSemaphore }, fence);
+        graphicsQueue().submit({ graphicsCommandBuffer }, { imageAvailabeSemaphore }, { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT }, { renderFinishedSemaphore }, fence);
 
         result = present(imageIndex, renderFinishedSemaphore);
 
@@ -207,7 +262,8 @@ namespace nwt
             recreateSwapchainAndFramebuffers(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
         }
         else if (result != VK_SUCCESS) {
-            throw std::runtime_error("failed to present swap chain image!");
+            LOG_FAIL("Failed to present swap chain image!");
+            throw std::runtime_error("");
         }
 
         _currentFrame = (_currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
@@ -237,7 +293,7 @@ namespace nwt
         std::vector<VkLayerProperties> availableLayers(layerCount);
         vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
 
-        for (const char* layerName : _validationLayers)
+        for (auto&& layerName : _validationLayers)
         {
             bool layerFound = false;
 
@@ -325,7 +381,7 @@ namespace nwt
         appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
         appInfo.pApplicationName = "NEWTONS";
         appInfo.applicationVersion = VK_MAKE_VERSION(0, 0, 1);
-        appInfo.apiVersion = VK_API_VERSION_1_3;
+        appInfo.apiVersion = VK_VERSION;
 
         VkInstanceCreateInfo createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
@@ -385,7 +441,7 @@ namespace nwt
 
         size_t index = 0;
         for (auto&& device : _physicalDevices) {
-            uint32_t score = device.getRating();
+            uint32_t score = device.rating();
             candidates.insert(std::make_pair(score, index));
             index++;
         }
@@ -393,7 +449,7 @@ namespace nwt
         if (candidates.rbegin()->first > 0) {
             _selectedPhysicalDeviceIndex = (candidates.rbegin()->second);
             VkPhysicalDeviceProperties props;
-            vkGetPhysicalDeviceProperties(_physicalDevices[_selectedPhysicalDeviceIndex].vkPhysicalDevice(), &props);
+            vkGetPhysicalDeviceProperties(physicalDevice(), &props);
             LOG_INFO("Selected Physical Device: " << props.deviceName << "\n");
         }
         else
@@ -403,12 +459,14 @@ namespace nwt
     void VulkanContext::createLogicalDevice() {
         _device = VulkanDevice(this, &_physicalDevices[_selectedPhysicalDeviceIndex]);
         _device.initialize();
+
+
         LOG_INFO("Logical Device Created!\n");
     }
 
     void VulkanContext::selectQueues() {
-        if (_queues.size() >= 0) {
-            LOG_INFO("selecting queues even though existing!");
+        if (_queues.size() > 0) {
+            LOG_WARN("selecting queues even though existing!");
         }
 
         std::vector<VkQueueFamilyProperties> queueProps = physicalDevice().getAvailableQueueFamilyProperties();
@@ -420,21 +478,32 @@ namespace nwt
     }
 
     void VulkanContext::createSwapchain() {
-        _swapchain = VulkanSwapchain(this);
         int width = 0;
         int height = 0;
         Application::window()->framebufferSize(&width, &height);
 
+        _swapchain = VulkanSwapchain(this);
         _swapchain.initialize(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
 
         LOG_INFO("Swapchain Successfully Created!\n");
     }
 
-    void VulkanContext::getQueues() {
+    void VulkanContext::initializeQueues() {
         for (auto&& queue : _queues) {
             queue.initialize();
         }
         LOG_SPACE();
+    }
+
+    void VulkanContext::createVmaAllocator() {
+        VmaAllocatorCreateInfo info = {};
+        info.instance = vkInstance();
+        info.device = device();
+        info.physicalDevice = physicalDevice();
+        info.vulkanApiVersion = VK_VERSION;
+        info.flags = 0;
+
+        vmaCreateAllocator(&info, &_allocator);
     }
 
     void VulkanContext::createRenderPass() {
@@ -474,7 +543,7 @@ namespace nwt
         LOG_SPACE();
     }
 
-    void VulkanContext::createGraphicsCommandPools() {
+    void VulkanContext::createCommandObjects() {
         _graphicsCommandPools = FixedVector<VulkanCommandPool>(MAX_FRAMES_IN_FLIGHT);
 
         for (auto&& commandPool : _graphicsCommandPools) {
@@ -482,10 +551,9 @@ namespace nwt
             commandPool.initialize(graphicsQueue().info().family, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
         }
 
+        // LOG_INFO("Successfully Created Graphics Command Pools!");
         LOG_SPACE();
-    }
 
-    void VulkanContext::createGraphicsCommandBuffers() {
         _graphicsCommandBuffers = FixedVector<VulkanCommandBuffer>(MAX_FRAMES_IN_FLIGHT);
 
         size_t index = 0;
@@ -495,16 +563,25 @@ namespace nwt
             ++index;
         }
 
+        // LOG_INFO("Successfully Created Graphics Command Buffers!");
+        LOG_SPACE();
+
+        _copyCommandPool = VulkanCommandPool(this);
+        _copyCommandPool.initialize(transferQueue().info().family, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
+
+        _copyCommandBuffer = VulkanCommandBuffer(this);
+        _copyCommandBuffer.initialize(_copyCommandPool);
+
         LOG_SPACE();
     }
 
-    VkResult VulkanContext::present(uint32_t imageIndex, const VulkanSemaphore& semaphore) {
+    VkResult VulkanContext::present(uint32_t imageIndex, const VulkanSemaphore& waitSemaphore) {
         VkPresentInfoKHR presentInfo = {};
         presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 
-        std::array<VkSemaphore, 1> waitSemaphore = { semaphore };
-        presentInfo.waitSemaphoreCount = waitSemaphore.size();
-        presentInfo.pWaitSemaphores = waitSemaphore.data();
+        std::array<VkSemaphore, 1> waitSemaphores = { waitSemaphore };
+        presentInfo.waitSemaphoreCount = waitSemaphores.size();
+        presentInfo.pWaitSemaphores = waitSemaphores.data();
 
         std::array<VkSwapchainKHR, 1> swapChains = { _swapchain };
         presentInfo.swapchainCount = swapChains.size();
@@ -534,6 +611,24 @@ namespace nwt
         }
 
         return imageView;
+    }
+
+    void VulkanContext::copyBuffer(const VulkanBuffer& srcBuffer, const VulkanBuffer& dstBuffer) {
+        VkBufferCopy region = {};
+        region.srcOffset = 0;
+        region.dstOffset = 0;
+        region.size = srcBuffer.vmaAllocationInfo().allocationInfo.size;
+
+        _copyCommandBuffer.reset();
+        _copyCommandBuffer.begin();
+
+        constexpr uint32_t regionCount = 1;
+        vkCmdCopyBuffer(_copyCommandBuffer, srcBuffer, dstBuffer, regionCount, &region);
+
+        _copyCommandBuffer.end();
+
+        transferQueue().submit({ _copyCommandBuffer }, {}, {}, {}, {});
+        device().waitIdle();
     }
 
     VulkanQueueInfo VulkanContext::findPresentQueueInfo(const std::vector<VkQueueFamilyProperties>& availableQueueFamilyProps) const {
@@ -665,6 +760,8 @@ namespace nwt
 
     VulkanQueueInfo VulkanContext::findTransferQueueInfo(const std::vector<VkQueueFamilyProperties>& availableQueueFamilyProps) const {
         VulkanQueueInfo queueInfo(-1, 0);
+
+        // return graphicsQueue().info();
 
         uint32_t savedFamily = -1;
         uint32_t familyIndex = 0;

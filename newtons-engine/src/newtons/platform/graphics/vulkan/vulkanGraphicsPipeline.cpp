@@ -1,5 +1,6 @@
 #include "vulkanGraphicsPipeline.hpp"
 #include "vulkanVertex.hpp"
+#include "vulkanVertexInfo.hpp"
 #include "vulkanContext.hpp"
 
 namespace nwt
@@ -41,18 +42,18 @@ namespace nwt
 
         VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
 
-        auto vertexBindingDescription = VulkanVertex::bindingDescription();
-        auto vertexAttributeDescriptions = VulkanVertex::attributeDescriptions();
+        constexpr auto vertexBindingDescriptions = VulkanVertexInfo::bindingDescriptions();
+        constexpr auto vertexAttributeDescriptions = VulkanVertexInfo::attributeDescriptions();
 
         vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-        // vertexInputInfo.vertexBindingDescriptionCount = 1;
-        // vertexInputInfo.pVertexBindingDescriptions = &vertexBindingDescription;
-        vertexInputInfo.vertexBindingDescriptionCount = 0;
-        vertexInputInfo.pVertexBindingDescriptions = nullptr; // Optional
-        // vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(vertexAttributeDescriptions.size());
-        // vertexInputInfo.pVertexAttributeDescriptions = vertexAttributeDescriptions.data();
-        vertexInputInfo.vertexAttributeDescriptionCount = 0;
-        vertexInputInfo.pVertexAttributeDescriptions = nullptr; // Optional
+        vertexInputInfo.vertexBindingDescriptionCount = static_cast<uint32_t>(vertexBindingDescriptions.size());
+        vertexInputInfo.pVertexBindingDescriptions = vertexBindingDescriptions.data();
+        // vertexInputInfo.vertexBindingDescriptionCount = 0;
+        // vertexInputInfo.pVertexBindingDescriptions = nullptr; // Optional
+        vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(vertexAttributeDescriptions.size());
+        vertexInputInfo.pVertexAttributeDescriptions = vertexAttributeDescriptions.data();
+        // vertexInputInfo.vertexAttributeDescriptionCount = 0;
+        // vertexInputInfo.pVertexAttributeDescriptions = nullptr; // Optional
 
         // Pipeline Stages
 
@@ -132,7 +133,7 @@ namespace nwt
             throw std::runtime_error("failed to create pipeline layout!");
         }
 
-        VkGraphicsPipelineCreateInfo pipelineInfo{};
+        VkGraphicsPipelineCreateInfo pipelineInfo = {};
         pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
         pipelineInfo.stageCount = static_cast<uint32_t>(shaderStages.size());
         pipelineInfo.pStages = shaderStages.data();
@@ -171,10 +172,6 @@ namespace nwt
         LOG_INFO("Graphics Pipeline Destroyed!");
     }
 
-    void VulkanGraphicsPipeline::draw(const VulkanCommandBuffer& commandBuffer, uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance) const {
-        vkCmdDraw(commandBuffer, vertexCount, instanceCount, firstVertex, firstInstance);
-    }
-
     void VulkanGraphicsPipeline::bind(const VulkanCommandBuffer& commandBuffer) const {
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, _pipeline);
 
@@ -191,5 +188,22 @@ namespace nwt
         scissor.offset = { 0, 0 };
         scissor.extent = _context->swapchain().vkExtent();
         vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+    }
+
+    void VulkanGraphicsPipeline::bindVertexBuffer(const VulkanCommandBuffer& commandBuffer, const std::vector<VkBuffer>& vertexBuffers) const {
+        std::vector<VkDeviceSize> offsets(vertexBuffers.size(), 0);
+        vkCmdBindVertexBuffers(commandBuffer, 0, vertexBuffers.size(), vertexBuffers.data(), offsets.data());
+    }
+
+    void VulkanGraphicsPipeline::bindIndexBuffer(const VulkanCommandBuffer& commandBuffer, const VulkanBuffer& indexBuffer) const {
+        vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+    }
+
+    void VulkanGraphicsPipeline::draw(const VulkanCommandBuffer& commandBuffer, uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance) const {
+        vkCmdDraw(commandBuffer, vertexCount, instanceCount, firstVertex, firstInstance);
+    }
+
+    void VulkanGraphicsPipeline::drawIndexed(const VulkanCommandBuffer& commandBuffer, uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex, int32_t vertexOffset, uint32_t firstInstance) const {
+        vkCmdDrawIndexed(commandBuffer, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
     }
 } // namespace nwt

@@ -43,7 +43,7 @@ namespace nwt
         void initialize();
 
         VulkanQueueInfo info() const;
-        void submit(const std::vector<VkCommandBuffer>& commandBuffers, const std::vector<VkSemaphore>& waitSemaphores, const std::vector<VkPipelineStageFlags>& waitStages, std::vector<VkSemaphore> signalSemaphores, const VkFence& fence) const;
+        void submit(const std::vector<VkCommandBuffer>& commandBuffers, const std::vector<VkSemaphore>& waitSemaphores, const std::vector<VkPipelineStageFlags>& waitStages, const std::vector<VkSemaphore>& signalSemaphores, const VkFence& fence) const;
 
         VkQueue vkQueue() const;
         operator VkQueue() const;

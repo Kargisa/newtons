@@ -33,14 +33,14 @@ namespace nwt
     //     return _renderFinishedSemaphores;
     // }
 
-    void VulkanSwapchain::initialize(uint32_t windowWidth, uint32_t windowHeight) {
+    void VulkanSwapchain::initialize(uint32_t width, uint32_t height) {
         LOG_INFO(_context);
         const VulkanDevice& device = _context->device();
         SupportDetails swapChainDetails = querySupportDetails();
 
         VkSurfaceFormatKHR surfaceFormat = chooseSurfaceFormat(swapChainDetails.formats);
         VkPresentModeKHR presentMode = choosePresentMode(swapChainDetails.presentModes);
-        VkExtent2D extent = chooseExtent(swapChainDetails.capabilities, windowWidth, windowHeight);
+        VkExtent2D extent = chooseExtent(swapChainDetails.capabilities, width, height);
 
         uint32_t imgCount = swapChainDetails.capabilities.minImageCount + 1;
         if (swapChainDetails.capabilities.maxImageCount > 0 && imgCount > swapChainDetails.capabilities.maxImageCount) {

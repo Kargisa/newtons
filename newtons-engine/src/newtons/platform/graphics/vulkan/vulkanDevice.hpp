@@ -15,11 +15,11 @@ namespace nwt
     private:
 
         VulkanContext* _context;
-        VulkanPhysicalDevice* _physicalDevice;
+        const VulkanPhysicalDevice* _physicalDevice;
         VkDevice _device;
 
     public:
-        VulkanDevice(VulkanContext* context, VulkanPhysicalDevice* physicalDevice)
+        VulkanDevice(VulkanContext* context, const VulkanPhysicalDevice* physicalDevice)
             : _context(context), _physicalDevice(physicalDevice), _device(VK_NULL_HANDLE) {
         }
         VulkanDevice()

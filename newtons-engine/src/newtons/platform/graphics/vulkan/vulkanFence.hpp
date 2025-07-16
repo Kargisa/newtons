@@ -29,6 +29,7 @@ namespace nwt
 
         void wait(uint64_t timeout = UINT64_MAX) const;
         void reset() const;
+        VkResult status() const;
 
         VkFence vkFence() const;
         operator VkFence() const;

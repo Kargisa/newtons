@@ -12,7 +12,7 @@ namespace nwt
         return _queueInfo;
     }
 
-    void VulkanQueue::submit(const std::vector<VkCommandBuffer>& commandBuffers, const std::vector<VkSemaphore>& waitSemaphores, const std::vector<VkPipelineStageFlags>& waitStages, std::vector<VkSemaphore> signalSemaphores, const VkFence& fence) const {
+    void VulkanQueue::submit(const std::vector<VkCommandBuffer>& commandBuffers, const std::vector<VkSemaphore>& waitSemaphores, const std::vector<VkPipelineStageFlags>& waitStages, const std::vector<VkSemaphore>& signalSemaphores, const VkFence& fence) const {
         VkSubmitInfo submitInfo{};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
         submitInfo.waitSemaphoreCount = waitSemaphores.size();

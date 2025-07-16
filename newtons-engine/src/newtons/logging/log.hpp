@@ -1,7 +1,8 @@
 #pragma once
 
-#include <stdio.h>
+#include <iostream>
 #include <chrono>
+#include <cassert>
 
 namespace nwt
 {
@@ -66,6 +67,8 @@ namespace nwt
 
 #define LOG_SPACE() std::cout << std::endl;
 
+#define LOG_ASSERT(condition) assert(condition);
+
 #else
 
 #define LOG_INFO(x);
@@ -73,6 +76,8 @@ namespace nwt
 #define LOG_OK(x);
 #define LOG_FAIL(x);
 #define LOG_SPACE();
+#define LOG_ASSERT(condition);
+
 
 #endif    
 } // namespace nwt

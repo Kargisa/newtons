@@ -5,6 +5,7 @@
 
 #include "vulkanShaderModule.hpp"
 #include "vulkanCommandBuffer.hpp"
+#include "vulkanBuffer.hpp"
 
 namespace nwt
 {
@@ -27,6 +28,9 @@ namespace nwt
         void destroy();
 
         void bind(const VulkanCommandBuffer& commandBuffer) const;
+        void bindVertexBuffer(const VulkanCommandBuffer& commandBuffer, const std::vector<VkBuffer>& vertexBuffers) const;
+        void bindIndexBuffer(const VulkanCommandBuffer& commandBuffer, const VulkanBuffer& indexBuffer) const;
         void draw(const VulkanCommandBuffer& commandBuffer, uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance) const;
+        void drawIndexed(const VulkanCommandBuffer& commandBuffer, uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex, int32_t vertexOffset, uint32_t firstInstance) const;
     };
 } // namespace nwt

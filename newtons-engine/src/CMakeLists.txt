@@ -26,6 +26,14 @@ add_library(newtons-engine STATIC
 "newtons/platform/graphics/vulkan/vulkanQueue.cpp"
 "newtons/platform/graphics/vulkan/vulkanGraphicsPipeline.cpp"
 "newtons/platform/graphics/vulkan/vulkanShaderModule.cpp"
+"newtons/platform/graphics/vulkan/vulkanReflect.cpp"
+"newtons/platform/graphics/vulkan/vulkanBuffer.cpp"
+"newtons/platform/graphics/vulkan/vulkanVertexInfo.cpp"
+
+#VMA
+"newtons/platform/graphics/vulkan/vmaUsages.cpp"
+
+
 
 # Dear IMGUI
 "newtons/platform/imgui/external/imgui.cpp"

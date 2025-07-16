@@ -46,10 +46,10 @@ namespace nwt
         const FixedVector<VkImageView>& vkImageViews() const;
         // const FixedVector<VulkanSemaphore>& renderFinishedSemaphores() const;
 
-        void initialize(uint32_t windowWidth, uint32_t windowHeight);
+        void initialize(uint32_t width, uint32_t height);
         void destroy();
 
-        void recreate(uint32_t windowWidth, uint32_t windowHeight);
+        void recreate(uint32_t width, uint32_t height);
         VkResult nextImage(const VulkanSemaphore& semaphore, uint32_t* imageIndex) const;
         SupportDetails querySupportDetails();
 
