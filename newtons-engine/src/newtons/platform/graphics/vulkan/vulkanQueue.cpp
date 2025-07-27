@@ -37,4 +37,9 @@ namespace nwt
     VulkanQueue::operator VkQueue() const {
         return _queue;
     }
+
+    void VulkanQueue::waitIdle() const {
+        LOG_WARN("Waiting for queue to idle!");
+        vkQueueWaitIdle(_queue);
+    }
 } // namespace nwt

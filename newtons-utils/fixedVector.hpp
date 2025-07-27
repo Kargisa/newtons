@@ -66,7 +66,7 @@ namespace nwt
 
     public:
         FixedVector(size_t size)
-            : _size(size), _data(new T[size]) {
+            : _size(size), _data(size == 0 ? nullptr : new T[size]) {
         }
 
         FixedVector()
@@ -83,6 +83,7 @@ namespace nwt
         T* data() const;
 
         FixedVector<T>& operator=(const FixedVector& other);
+        FixedVector<T>& operator=(FixedVector&& other) noexcept;
         constexpr T& operator[](size_t n);
         constexpr const T& operator[](size_t n) const;
 
@@ -142,6 +143,21 @@ namespace nwt
         return *this;
     }
 
+    template<typename T>
+    inline FixedVector<T>& FixedVector<T>::operator=(FixedVector<T>&& other) noexcept {
+        if (this == &other) {
+            return *this;
+        }
+
+        delete[] _data;
+        _size = other.size();
+        _data = other._data;
+
+        other._size = 0;
+        other._data = nullptr;
+
+        return *this;
+    }
 
 
     template<typename T>
@@ -149,18 +165,18 @@ namespace nwt
 #ifdef DEBUG
         if (n >= _size) {
             throw std::runtime_error("Index out of range");
-        }
+    }
 #endif
 
         return _data[n];
-    }
+}
 
     template<typename T>
     inline constexpr const T& FixedVector<T>::operator[](size_t n) const {
 #ifdef DEBUG
         if (n >= _size) {
             throw std::runtime_error("Index out of range");
-        }
+    }
 #endif
 
         return _data[n];

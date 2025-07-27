@@ -71,13 +71,15 @@ namespace nwt
         FixedVector<VulkanSemaphore> _imageAvailableSemaphores;
         FixedVector<VulkanCommandPool> _graphicsCommandPools;
         FixedVector<VulkanCommandBuffer> _graphicsCommandBuffers;
-        FixedVector<VulkanFence> _renderFinishedFence;
+        FixedVector<VulkanFence> _renderFinishedFences;
         bool _windowResized = false;
 
         VmaAllocator _allocator;
 
-        VulkanCommandPool _copyCommandPool;
-        VulkanCommandBuffer _copyCommandBuffer;
+        FixedVector<VulkanCommandPool> _copyCommandPools;
+        FixedVector<VulkanCommandBuffer> _transferCommandBuffers;
+        FixedVector<VulkanFence> _transferFinishedFences;
+        std::vector<VulkanBufferCopyInfo> _bufferCopyInfos;
 
         // INFO: DEBUG
         VulkanGraphicsPipeline _trianglePipeline;
@@ -134,8 +136,8 @@ namespace nwt
         bool                                        checkExtensionsSupport(const std::vector<const char*>& requiredExtensions, const std::vector<VkExtensionProperties>& extensions);
         VkImageView                                 createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
 
-        void copyBuffer(const VulkanBuffer& srcBuffer, const VulkanBuffer& dstBuffer);
-
+        void copyBuffer(const VulkanBuffer& srcBuffer, const VulkanBuffer& dstBuffer, VkPipelineStageFlags pipelineStage, VkAccessFlags accessFlag);
+        std::shared_ptr<VulkanBuffer> createBuffer();
 
     private:
 

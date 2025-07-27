@@ -10,6 +10,7 @@ namespace nwt {
     GraphicsContext* Application::_graphicsContext;
     LayerStack Application::_layers;
 
+
     void Application::run() {
         initWindow();
         initGraphics();

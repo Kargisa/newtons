@@ -40,12 +40,14 @@ namespace nwt
             : _context(context), _queue(queue), _queueInfo(queueInfo) {
         }
 
+        VkQueue vkQueue() const;
+        operator VkQueue() const;
+
         void initialize();
 
         VulkanQueueInfo info() const;
         void submit(const std::vector<VkCommandBuffer>& commandBuffers, const std::vector<VkSemaphore>& waitSemaphores, const std::vector<VkPipelineStageFlags>& waitStages, const std::vector<VkSemaphore>& signalSemaphores, const VkFence& fence) const;
+        void waitIdle() const;
 
-        VkQueue vkQueue() const;
-        operator VkQueue() const;
     };
 } // namespace nwt

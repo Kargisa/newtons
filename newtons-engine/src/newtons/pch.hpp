@@ -17,6 +17,7 @@
 #include <functional>
 #include <cstring>
 #include <queue>
+#include <atomic>
 
 #include "logging/log.hpp"
 #include "newtons/api.hpp"

@@ -31,6 +31,8 @@ namespace nwt
         indexBuffer.destroy();
         vmaDestroyAllocator(_allocator);
 
+        LOG_SPACE();
+
         _trianglePipeline.destroy();
 
         _swapchain.destroy();
@@ -55,24 +57,31 @@ namespace nwt
 
         LOG_SPACE();
 
-        for (auto&& fence : _renderFinishedFence) {
+        for (auto&& fence : _renderFinishedFences) {
             fence.destroy();
         }
 
         LOG_SPACE();
 
-        for (auto&& commandPool : _graphicsCommandPools) {
-            commandPool.destroy();
+        for (auto&& fence : _transferFinishedFences) {
+            fence.destroy();
         }
 
         LOG_SPACE();
 
-        _copyCommandPool.destroy();
+        for (auto&& pool : _graphicsCommandPools) {
+            pool.destroy();
+        }
+
+        LOG_SPACE();
+
+        for (auto&& pool : _copyCommandPools) {
+            pool.destroy();
+        }
 
         LOG_SPACE();
 
         _renderPass.destroy();
-
 
         _device.destroy();
 
@@ -113,33 +122,32 @@ namespace nwt
         vertices[1] = Vec3{ -0.5, 0.5, 0 };
         vertices[2] = Vec3{ 0.0, -0.5, 0 };
 
+
         void* v_data;
-        vmaMapMemory(_allocator, v_stagingBuffer.vmaAllocation(), &v_data);
+        v_stagingBuffer.mapMemory(&v_data);
         memcpy(v_data, &vertices, sizeof(Vec3) * vertices.size());
-        vmaUnmapMemory(_allocator, v_stagingBuffer.vmaAllocation());
+        v_stagingBuffer.unmapMemory();
 
         vertexBuffer = VulkanBuffer(this);
         vertexBuffer.initialize(sizeof(Vec3) * vertices.size(), VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VMA_MEMORY_USAGE_AUTO, 0);
 
-        copyBuffer(v_stagingBuffer, vertexBuffer);
-        v_stagingBuffer.destroy();
+        copyBuffer(v_stagingBuffer, vertexBuffer, VK_PIPELINE_STAGE_VERTEX_INPUT_BIT, VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT);
 
-
-        VulkanBuffer i_stagingBuffer = VulkanBuffer(this);
-        i_stagingBuffer.initialize(VulkanBufferType::STAGING_BUFFER, sizeof(uint32_t) * 3);
 
         std::array<uint32_t, 3> indices = { 0, 1, 2 };
 
+        VulkanBuffer i_stagingBuffer = VulkanBuffer(this);
+        i_stagingBuffer.initialize(VulkanBufferType::STAGING_BUFFER, sizeof(uint32_t) * indices.size());
+
         void* i_data;
-        vmaMapMemory(_allocator, i_stagingBuffer.vmaAllocation(), &i_data);
+        i_stagingBuffer.mapMemory(&i_data);
         memcpy(i_data, &indices, sizeof(uint32_t) * indices.size());
-        vmaUnmapMemory(_allocator, i_stagingBuffer.vmaAllocation());
+        i_stagingBuffer.unmapMemory();
 
         indexBuffer = VulkanBuffer(this);
         indexBuffer.initialize(sizeof(uint32_t) * indices.size(), VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VMA_MEMORY_USAGE_AUTO, 0);
 
-        copyBuffer(i_stagingBuffer, indexBuffer);
-        i_stagingBuffer.destroy();
+        copyBuffer(i_stagingBuffer, indexBuffer, VK_PIPELINE_STAGE_VERTEX_INPUT_BIT, VK_ACCESS_INDEX_READ_BIT);
 
         VulkanReflect::spirvReflectExample(reinterpret_cast<uint32_t*>(fragSpirV.data()), fragSpirV.size());
 
@@ -209,12 +217,61 @@ namespace nwt
     // ------------------------------
 
     void VulkanContext::drawFrame() {
+        const VulkanFence& transferFinishedFence = _transferFinishedFences[_currentFrame];
+        const VulkanCommandBuffer& transferCommandbuffer = _transferCommandBuffers[_currentFrame];
+
+        transferFinishedFence.reset();
+
+        transferCommandbuffer.reset();
+        transferCommandbuffer.begin();
+
+        for (auto&& info : _bufferCopyInfos) {
+            VkBufferCopy region = {};
+            region.dstOffset = 0;
+            region.srcOffset = 0;
+            region.size = info.dstBuffer.vmaAllocationInfo().allocationInfo.size;
+
+            vkCmdCopyBuffer(transferCommandbuffer, info.srcBuffer, info.dstBuffer, 1, &region);
+        }
+
+        FixedVector<VkBufferMemoryBarrier> barriers(_bufferCopyInfos.size());
+
+        int i = 0;
+        for (auto&& info : _bufferCopyInfos) {
+            VkBufferMemoryBarrier barrier = {};
+            barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+            barrier.buffer = info.dstBuffer;
+            barrier.offset = 0;
+            barrier.size = VK_WHOLE_SIZE;
+            barrier.srcQueueFamilyIndex = transferQueue().info().family;
+            barrier.dstQueueFamilyIndex = graphicsQueue().info().family;
+            barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+            barrier.dstAccessMask = 0;
+
+            barriers[i++] = barrier;
+        }
+
+        vkCmdPipelineBarrier(
+            transferCommandbuffer,
+            VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+            0,
+            0, VK_NULL_HANDLE,
+            barriers.size(), barriers.data(),
+            0, VK_NULL_HANDLE
+        );
+
+        // _bufferCopyInfos.clear();
+
+        transferCommandbuffer.end();
+        transferQueue().submit({ transferCommandbuffer }, {}, {}, {}, { transferFinishedFence });
+        transferFinishedFence.wait();
+        _bufferCopyInfos.clear();
 
         const VulkanSemaphore& imageAvailabeSemaphore = _imageAvailableSemaphores[_currentFrame];
-        const VulkanFence& fence = _renderFinishedFence[_currentFrame];
+        const VulkanFence& renderFinishedFence = _renderFinishedFences[_currentFrame];
         const VulkanCommandBuffer& graphicsCommandBuffer = _graphicsCommandBuffers[_currentFrame];
 
-        fence.wait();
+        renderFinishedFence.wait();
 
         uint32_t imageIndex = UINT32_MAX;
         VkResult result = _swapchain.nextImage(imageAvailabeSemaphore, &imageIndex);
@@ -231,12 +288,33 @@ namespace nwt
             throw std::runtime_error("");
         }
 
-        fence.reset();
+        renderFinishedFence.reset();
 
         const VulkanSemaphore& renderFinishedSemaphore = _renderFinishedSemaphore[imageIndex];
 
         graphicsCommandBuffer.reset();
         graphicsCommandBuffer.begin();
+
+        // for (auto&& info : _bufferCopyInfos) {
+        //     VkBufferMemoryBarrier barrier = {};
+        //     barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+        //     barrier.buffer = info.dstBuffer;
+        //     barrier.offset = 0;
+        //     barrier.size = VK_WHOLE_SIZE;
+        //     barrier.srcQueueFamilyIndex = transferQueue().info().family;
+        //     barrier.dstQueueFamilyIndex = graphicsQueue().info().family;
+        //     barrier.srcAccessMask = 0;
+        //     barrier.dstAccessMask = info.dstAccessMask;
+
+        //     vkCmdPipelineBarrier(
+        //         graphicsCommandBuffer,
+        //         VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, info.dstStageMask,
+        //         0,
+        //         0, VK_NULL_HANDLE,
+        //         1, &barrier,
+        //         0, VK_NULL_HANDLE
+        //     );
+        // }
 
         _renderPass.begin(graphicsCommandBuffer, _framebuffers[imageIndex]);
 
@@ -251,7 +329,7 @@ namespace nwt
         graphicsCommandBuffer.end();
 
 
-        graphicsQueue().submit({ graphicsCommandBuffer }, { imageAvailabeSemaphore }, { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT }, { renderFinishedSemaphore }, fence);
+        graphicsQueue().submit({ graphicsCommandBuffer }, { imageAvailabeSemaphore }, { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT }, { renderFinishedSemaphore }, renderFinishedFence);
 
         result = present(imageIndex, renderFinishedSemaphore);
 
@@ -434,7 +512,8 @@ namespace nwt
     void VulkanContext::pickPhysicalDevice() {
 
         if (_physicalDevices.size() == 0) {
-            throw std::runtime_error("failed to find GPUs with Vulkan support!");
+            LOG_FAIL("Failed to find GPU with Vulkan support!");
+            throw std::runtime_error("");
         }
 
         std::multimap<uint32_t, size_t> candidates;
@@ -521,13 +600,17 @@ namespace nwt
     }
 
     void VulkanContext::createSyncObjects() {
-        _renderFinishedFence = FixedVector<VulkanFence>(MAX_FRAMES_IN_FLIGHT);
+        _renderFinishedFences = FixedVector<VulkanFence>(MAX_FRAMES_IN_FLIGHT);
+        _transferFinishedFences = FixedVector<VulkanFence>(MAX_FRAMES_IN_FLIGHT);
         _imageAvailableSemaphores = FixedVector<VulkanSemaphore>(MAX_FRAMES_IN_FLIGHT);
         _renderFinishedSemaphore = FixedVector<VulkanSemaphore>(_swapchain.vkImages().size());
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-            _renderFinishedFence[i] = VulkanFence(this);
-            _renderFinishedFence[i].initialize(true);
+            _renderFinishedFences[i] = VulkanFence(this);
+            _renderFinishedFences[i].initialize(true);
+
+            _transferFinishedFences[i] = VulkanFence(this);
+            _transferFinishedFences[i].initialize(false);
 
             _imageAvailableSemaphores[i] = VulkanSemaphore(this);
             _imageAvailableSemaphores[i].initialize();
@@ -545,7 +628,6 @@ namespace nwt
 
     void VulkanContext::createCommandObjects() {
         _graphicsCommandPools = FixedVector<VulkanCommandPool>(MAX_FRAMES_IN_FLIGHT);
-
         for (auto&& commandPool : _graphicsCommandPools) {
             commandPool = VulkanCommandPool(this);
             commandPool.initialize(graphicsQueue().info().family, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
@@ -555,7 +637,6 @@ namespace nwt
         LOG_SPACE();
 
         _graphicsCommandBuffers = FixedVector<VulkanCommandBuffer>(MAX_FRAMES_IN_FLIGHT);
-
         size_t index = 0;
         for (auto&& commandBuffer : _graphicsCommandBuffers) {
             commandBuffer = VulkanCommandBuffer(this);
@@ -566,11 +647,21 @@ namespace nwt
         // LOG_INFO("Successfully Created Graphics Command Buffers!");
         LOG_SPACE();
 
-        _copyCommandPool = VulkanCommandPool(this);
-        _copyCommandPool.initialize(transferQueue().info().family, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
+        _copyCommandPools = FixedVector<VulkanCommandPool>(MAX_FRAMES_IN_FLIGHT);
+        for (auto&& pool : _copyCommandPools) {
+            pool = VulkanCommandPool(this);
+            pool.initialize(transferQueue().info().family, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
+        }
 
-        _copyCommandBuffer = VulkanCommandBuffer(this);
-        _copyCommandBuffer.initialize(_copyCommandPool);
+        LOG_SPACE();
+
+        _transferCommandBuffers = FixedVector<VulkanCommandBuffer>(MAX_FRAMES_IN_FLIGHT);
+        index = 0;
+        for (auto&& buffer : _transferCommandBuffers) {
+            buffer = VulkanCommandBuffer(this);
+            buffer.initialize(_copyCommandPools[index]);
+            ++index;
+        }
 
         LOG_SPACE();
     }
@@ -613,22 +704,12 @@ namespace nwt
         return imageView;
     }
 
-    void VulkanContext::copyBuffer(const VulkanBuffer& srcBuffer, const VulkanBuffer& dstBuffer) {
-        VkBufferCopy region = {};
-        region.srcOffset = 0;
-        region.dstOffset = 0;
-        region.size = srcBuffer.vmaAllocationInfo().allocationInfo.size;
+    void VulkanContext::copyBuffer(const VulkanBuffer& srcBuffer, const VulkanBuffer& dstBuffer, VkPipelineStageFlags pipelineStage, VkAccessFlags accessFlag) {
+        _bufferCopyInfos.emplace_back(srcBuffer, dstBuffer, pipelineStage, accessFlag);
+    }
 
-        _copyCommandBuffer.reset();
-        _copyCommandBuffer.begin();
-
-        constexpr uint32_t regionCount = 1;
-        vkCmdCopyBuffer(_copyCommandBuffer, srcBuffer, dstBuffer, regionCount, &region);
-
-        _copyCommandBuffer.end();
-
-        transferQueue().submit({ _copyCommandBuffer }, {}, {}, {}, {});
-        device().waitIdle();
+    std::shared_ptr<VulkanBuffer> VulkanContext::createBuffer() {
+        return std::make_shared<VulkanBuffer>(this);
     }
 
     VulkanQueueInfo VulkanContext::findPresentQueueInfo(const std::vector<VkQueueFamilyProperties>& availableQueueFamilyProps) const {
@@ -842,7 +923,7 @@ namespace nwt
     }
 
     void VulkanContext::recreateSwapchainAndFramebuffers(uint32_t width, uint32_t height) {
-        for (auto&& fence : _renderFinishedFence) {
+        for (auto&& fence : _renderFinishedFences) {
             fence.wait();
         }
 
