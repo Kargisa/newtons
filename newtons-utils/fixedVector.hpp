@@ -6,6 +6,7 @@
 
 namespace nwt
 {
+    // Class for fixed size heap allocated arrays
     template<typename T>
     class FixedVector {
 

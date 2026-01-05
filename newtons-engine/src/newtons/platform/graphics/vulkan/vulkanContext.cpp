@@ -114,8 +114,8 @@ namespace nwt
         _trianglePipeline = VulkanGraphicsPipeline(this);
         _trianglePipeline.initialize(reinterpret_cast<uint32_t*>(vertSpirV.data()), vertSpirV.size(), reinterpret_cast<uint32_t*>(fragSpirV.data()), fragSpirV.size());
 
-        VulkanBuffer v_stagingBuffer = VulkanBuffer(this);
-        v_stagingBuffer.initialize(VulkanBufferType::STAGING_BUFFER, sizeof(Vec3) * 3);
+        VulkanBuffer v_stagingBuffer = VulkanBuffer(this, sizeof(Vec3) * 3);
+        v_stagingBuffer.initialize(VulkanBufferType::STAGING_BUFFER);
 
         std::array<Vec3, 3> vertices;
         vertices[0] = Vec3{ 0.5, 0.5, 0 };
@@ -128,24 +128,24 @@ namespace nwt
         memcpy(v_data, &vertices, sizeof(Vec3) * vertices.size());
         v_stagingBuffer.unmapMemory();
 
-        vertexBuffer = VulkanBuffer(this);
-        vertexBuffer.initialize(sizeof(Vec3) * vertices.size(), VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VMA_MEMORY_USAGE_AUTO, 0);
+        vertexBuffer = VulkanBuffer(this, sizeof(Vec3) * vertices.size());
+        vertexBuffer.initialize(VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VMA_MEMORY_USAGE_AUTO, 0);
 
         copyBuffer(v_stagingBuffer, vertexBuffer, VK_PIPELINE_STAGE_VERTEX_INPUT_BIT, VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT);
 
 
         std::array<uint32_t, 3> indices = { 0, 1, 2 };
 
-        VulkanBuffer i_stagingBuffer = VulkanBuffer(this);
-        i_stagingBuffer.initialize(VulkanBufferType::STAGING_BUFFER, sizeof(uint32_t) * indices.size());
+        VulkanBuffer i_stagingBuffer = VulkanBuffer(this, sizeof(uint32_t) * indices.size());
+        i_stagingBuffer.initialize(VulkanBufferType::STAGING_BUFFER);
 
         void* i_data;
         i_stagingBuffer.mapMemory(&i_data);
         memcpy(i_data, &indices, sizeof(uint32_t) * indices.size());
         i_stagingBuffer.unmapMemory();
 
-        indexBuffer = VulkanBuffer(this);
-        indexBuffer.initialize(sizeof(uint32_t) * indices.size(), VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VMA_MEMORY_USAGE_AUTO, 0);
+        indexBuffer = VulkanBuffer(this, sizeof(uint32_t) * indices.size());
+        indexBuffer.initialize(VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VMA_MEMORY_USAGE_AUTO, 0);
 
         copyBuffer(i_stagingBuffer, indexBuffer, VK_PIPELINE_STAGE_VERTEX_INPUT_BIT, VK_ACCESS_INDEX_READ_BIT);
 
@@ -229,7 +229,7 @@ namespace nwt
             VkBufferCopy region = {};
             region.dstOffset = 0;
             region.srcOffset = 0;
-            region.size = info.dstBuffer.vmaAllocationInfo().allocationInfo.size;
+            region.size = info.dstBuffer.size();
 
             vkCmdCopyBuffer(transferCommandbuffer, info.srcBuffer, info.dstBuffer, 1, &region);
         }
@@ -260,7 +260,6 @@ namespace nwt
             0, VK_NULL_HANDLE
         );
 
-        // _bufferCopyInfos.clear();
 
         transferCommandbuffer.end();
         transferQueue().submit({ transferCommandbuffer }, {}, {}, {}, { transferFinishedFence });
@@ -708,9 +707,9 @@ namespace nwt
         _bufferCopyInfos.emplace_back(srcBuffer, dstBuffer, pipelineStage, accessFlag);
     }
 
-    std::shared_ptr<VulkanBuffer> VulkanContext::createBuffer() {
-        return std::make_shared<VulkanBuffer>(this);
-    }
+    // std::shared_ptr<VulkanBuffer> VulkanContext::createBuffer() {
+    //     return std::make_shared<VulkanBuffer>(this);
+    // }
 
     VulkanQueueInfo VulkanContext::findPresentQueueInfo(const std::vector<VkQueueFamilyProperties>& availableQueueFamilyProps) const {
         VulkanQueueInfo queueInfo(-1, 0);

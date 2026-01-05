@@ -34,9 +34,9 @@ namespace nwt
     // }
 
     void VulkanSwapchain::initialize(uint32_t width, uint32_t height) {
-        LOG_INFO(_context);
         const VulkanDevice& device = _context->device();
         SupportDetails swapChainDetails = querySupportDetails();
+
 
         VkSurfaceFormatKHR surfaceFormat = chooseSurfaceFormat(swapChainDetails.formats);
         VkPresentModeKHR presentMode = choosePresentMode(swapChainDetails.presentModes);
@@ -77,7 +77,6 @@ namespace nwt
         createInfo.clipped = VK_TRUE;
         createInfo.oldSwapchain = VK_NULL_HANDLE;
 
-
         if (vkCreateSwapchainKHR(device.vkDevice(), &createInfo, nullptr, &_swapchain) != VK_SUCCESS) {
             throw std::runtime_error("failed to create swapchain");
         }
@@ -86,9 +85,9 @@ namespace nwt
         _images = FixedVector<VkImage>(imgCount);
         vkGetSwapchainImagesKHR(device.vkDevice(), _swapchain, &imgCount, _images.data());
 
+
         _imageFormat = surfaceFormat.format;
         _extent = extent;
-
 
         _imageViews = FixedVector<VkImageView>(_images.size());
         // _renderFinishedSemaphores = FixedVector<VulkanSemaphore>(_images.size());
@@ -99,6 +98,7 @@ namespace nwt
         }
     }
 
+    // INFO: Heavy performance tank under repeated swapchain recreation 
     VulkanSwapchain::SupportDetails VulkanSwapchain::querySupportDetails() {
         VkSurfaceKHR surface = _context->vkSurface();
         const VkPhysicalDevice& phDevice = _context->physicalDevice();
@@ -107,7 +107,7 @@ namespace nwt
         vkGetPhysicalDeviceSurfaceCapabilitiesKHR(phDevice, surface, &details.capabilities);
 
         uint32_t formatCount = 0;
-        vkGetPhysicalDeviceSurfaceFormatsKHR(phDevice, surface, &formatCount, nullptr);
+        vkGetPhysicalDeviceSurfaceFormatsKHR(phDevice, surface, &formatCount, nullptr); // very expensive should be cached
 
         if (formatCount != 0)
         {

@@ -16,21 +16,22 @@ namespace nwt
         std::atomic<size_t>* _atomicCount;
         VkBuffer _buffer;
         VmaAllocation _allocation;
+        VkDeviceSize _size;
 
         // INFO: Debug
         // std::string name;
 
     public:
         VulkanBuffer()
-            : _context(nullptr), _allocation(nullptr), _buffer(VK_NULL_HANDLE), _atomicCount(new std::atomic<size_t>(1)) {
+            : _context(nullptr), _size(0), _allocation(nullptr), _buffer(VK_NULL_HANDLE), _atomicCount(new std::atomic<size_t>(1)) {
         }
 
-        VulkanBuffer(VulkanContext* context)
-            : _context(context), _allocation(nullptr), _buffer(VK_NULL_HANDLE), _atomicCount(new std::atomic<size_t>(1)) {
+        VulkanBuffer(VulkanContext* context, VkDeviceSize size)
+            : _context(context), _size(size), _allocation(nullptr), _buffer(VK_NULL_HANDLE), _atomicCount(new std::atomic<size_t>(1)) {
         }
 
         VulkanBuffer(const VulkanBuffer& other)
-            : _context(other._context), _atomicCount(other._atomicCount), _buffer(other._buffer), _allocation(other._allocation) {
+            : _context(other._context), _size(other._size), _atomicCount(other._atomicCount), _buffer(other._buffer), _allocation(other._allocation) {
             addAtomicCount();
         }
 
@@ -44,11 +45,13 @@ namespace nwt
         VkBuffer vkBuffer() const;
         operator VkBuffer() const;
 
+        VkDeviceSize size() const;
+
         VmaAllocation vmaAllocation() const;
         VmaAllocationInfo2 vmaAllocationInfo() const;
 
-        void initialize(VkDeviceSize bufferSize, VkBufferUsageFlags bufferUsage, VmaMemoryUsage memoryUsage, VmaAllocationCreateFlags allocationFlags);
-        void initialize(VulkanBufferType type, VkDeviceSize bufferSize);
+        void initialize(VkBufferUsageFlags bufferUsage, VmaMemoryUsage memoryUsage, VmaAllocationCreateFlags allocationFlags);
+        void initialize(VulkanBufferType type);
         void destroy();
 
         VkResult mapMemory(void** ppData) const;

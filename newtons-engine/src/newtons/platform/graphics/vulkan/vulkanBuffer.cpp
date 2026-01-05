@@ -16,6 +16,7 @@ namespace nwt
         _atomicCount = other._atomicCount;
         _buffer = other._buffer;
         _allocation = other._allocation;
+        _size = other._size;
 
         addAtomicCount();
         return *this;
@@ -29,6 +30,10 @@ namespace nwt
         return _buffer;
     }
 
+    VkDeviceSize VulkanBuffer::size() const {
+        return _size;
+    }
+
     VmaAllocation VulkanBuffer::vmaAllocation() const {
         return _allocation;
     }
@@ -39,10 +44,10 @@ namespace nwt
         return info;
     }
 
-    void VulkanBuffer::initialize(VkDeviceSize bufferSize, VkBufferUsageFlags bufferUsage, VmaMemoryUsage memoryUsage, VmaAllocationCreateFlags allocationFlags) {
+    void VulkanBuffer::initialize(VkBufferUsageFlags bufferUsage, VmaMemoryUsage memoryUsage, VmaAllocationCreateFlags allocationFlags) {
         VkBufferCreateInfo createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-        createInfo.size = bufferSize;
+        createInfo.size = _size;
         createInfo.usage = bufferUsage;
         createInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
@@ -57,11 +62,11 @@ namespace nwt
         }
     }
 
-    void VulkanBuffer::initialize(VulkanBufferType type, VkDeviceSize bufferSize) {
+    void VulkanBuffer::initialize(VulkanBufferType type) {
         switch (type)
         {
         case VulkanBufferType::STAGING_BUFFER:
-            initialize(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_AUTO, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT);
+            initialize(VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_AUTO, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT);
             break;
         default:
             LOG_FAIL("No VulkanBufferType of " << static_cast<int>(type) << ". Could not create Buffer");
