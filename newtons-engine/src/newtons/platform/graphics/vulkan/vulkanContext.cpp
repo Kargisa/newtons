@@ -161,6 +161,10 @@ namespace nwt
         return this;
     }
 
+    GraphicsAPI VulkanContext::getAPI() const {
+        return GraphicsAPI::VULKAN;
+    }
+
     const VulkanDevice& VulkanContext::device() const {
         return _device;
     }
@@ -229,7 +233,7 @@ namespace nwt
             VkBufferCopy region = {};
             region.dstOffset = 0;
             region.srcOffset = 0;
-            region.size = info.dstBuffer.size();
+            region.size = info.srcBuffer.size();
 
             vkCmdCopyBuffer(transferCommandbuffer, info.srcBuffer, info.dstBuffer, 1, &region);
         }

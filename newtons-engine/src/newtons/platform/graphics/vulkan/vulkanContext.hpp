@@ -101,12 +101,16 @@ namespace nwt
         VulkanContext() = default;
         virtual ~VulkanContext();
 
-        virtual void                                initialize() override;
-        virtual void                                drawFrame() override;
+        virtual void initialize() override;
+        virtual void drawFrame() override;
 
         virtual void onEvent(const Event& event) override;
 
         virtual void* nativeContext() override;
+
+        virtual GraphicsAPI getAPI() const override;
+
+
         VkInstance                                  vkInstance() const;
         VkSurfaceKHR                                vkSurface() const;
         const VulkanPhysicalDevice& physicalDevice() const;

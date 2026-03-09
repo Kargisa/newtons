@@ -24,11 +24,8 @@ namespace nwt {
         virtual void onEvent(const Event& event) = 0;
         virtual void* nativeContext() = 0;
 
-        GraphicsAPI getAPI() const;
+        virtual GraphicsAPI getAPI() const = 0;
 
         static GraphicsContext* create(GraphicsAPI api);
-
-    private:
-        GraphicsAPI _api;
     };
 } // namespace nwt
